@@ -40,7 +40,7 @@ module Sunshine
       end
     end
 
-    def checkout_codebase(server, options={})
+    def checkout_codebase(server)
       server.run command(:checkout_codebase)
     end
 
