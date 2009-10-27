@@ -9,14 +9,14 @@ module Sunshine
       app
     end
 
-    attr_reader :name, :repo, :deploy_path, :deploy_servers, :deploy_options
+    attr_reader :name, :repo, :deploy_path, :current_path, :checkout_path, :deploy_servers, :deploy_options
 
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
       @deploy_options = Hash === args.first ? args.shift : {}
-      update_attributes
 
       load_config(config_file) if config_file
+      update_attributes
 
       yield(self) if block_given?
     end
@@ -35,29 +35,40 @@ module Sunshine
     def deploy!
       deploy_servers.each do |server|
         checkout_codebase server
-        run_healthcheck server
-        check_version server
+        make_deploy_info_file server
+        # app servers must start here
+        # run_healthcheck server
       end
     end
 
     def checkout_codebase(server)
-      server.run command(:checkout_codebase)
+      @repo.checkout_to(server, @checkout_path)
     end
 
     def run_healthcheck(server)
       server.run command(:healthcheck)
     end
 
-    def check_version(server)
-      server.run command(:check_version)
+    def make_deploy_directories(server)
+    end
+
+    def make_deploy_info_file(server)
+      info = []
+      info << "deployed_at: #{Time.now.to_i}"
+      info << "deployed_by: #{server.user}"
+      info << "scm_url: #{@repo.url}"
+      info << "scm_rev: #{@repo.revision}"
+      server.make_file! "#{@current_path}/VERSION", info.join("\n")
     end
 
     private
 
     def update_attributes(config_hash=@deploy_options)
-      @repo = config_hash[:repo]
+      @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])
       @name = config_hash[:name]
       @deploy_path = config_hash[:deploy_path]
+      @current_path = "#{@deploy_path}/current"
+      @checkout_path = "#{@deploy_path}/revisions/#{@repo.revision}"
       server_list = config_hash[:deploy_servers] || ["#{Sunshine.deploy_env}-#{@name}.atti.com"]
       @deploy_servers = server_list.map do |ds|
         Sunshine::DeployServer.new(ds, self)

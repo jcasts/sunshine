@@ -1,10 +1,10 @@
 :defaults:
-  :name: app_name
-  :repo: svn://somerepo.com/app_name
+  :name: envoy
+  :repo:
+    :type: svn
+    :url:  svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/trunk
 
-  :deploy_path: /users/nextgen/app_name/
+  :deploy_path: /users/nextgen/envoy
 
   :deploy_servers:
-    - "user@server1.test.com"
-    - "user@server2.test.com"
-    - "user@server3.test.com"
+    - "nextgen@np4.wc1.yellowpages.com"

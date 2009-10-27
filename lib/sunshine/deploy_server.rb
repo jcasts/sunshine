@@ -9,6 +9,11 @@ module Sunshine
       @app = app
     end
 
+    def make_file!(filepath, content)
+      run "test -f #{filepath} && rm #{filepath}"
+      run "echo '#{content}' >> #{filepath}"
+    end
+
     def run(string_cmd)
       true
     end

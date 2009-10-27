@@ -4,10 +4,10 @@ class TestApp < Test::Unit::TestCase
 
   def setup
     @config_file = "test/fixtures/app_configs/test_app.yml"
-    @config = {:name => "test",
-               :repo => "http://repo.com/test",
-               :deploy_servers => ["test@s1.com","test@s2.com"],
-               :deploy_path => "deploy/path/test"}
+    @config = {:name => "parity",
+               :repo => {:type => "svn", :url => "svn://subversion.flight.yellowpages.com/argo/parity/trunk"},
+               :deploy_servers => ["nextgen@np5.wc1.yellowpages.com"],
+               :deploy_path => "/users/nextgen/parity"}
   end
 
   def teardown
@@ -39,21 +39,16 @@ class TestApp < Test::Unit::TestCase
       end
     end
 
-    %w{checkout_codebase healthcheck check_version}.each do |cmd_name|
-      Sunshine::Commands.class_eval <<-STR
-        def self.#{cmd_name}(opt)
-          "#{cmd_name} command for \#{opt[:name]}"
-        end
-      STR
-    end
-
     app = Sunshine::App.deploy @config do
       yield_called = true
     end
 
-    run_results = %w{checkout_codebase healthcheck check_version}.map do |cmd|
-       "#{cmd} command for #{@config[:name]}"
-    end
+    run_results = []
+    checkout_path = "#{app.deploy_path}/revisions/#{app.repo.revision}"
+    run_results << "test -d #{checkout_path} && rm -rf #{checkout_path}"
+    run_results << "mkdir #{checkout_path} && svn checkout -r #{app.repo.revision} #{app.repo.url} #{checkout_path}"
+    run_results << "test -f #{app.current_path}/VERSION && rm #{app.current_path}/VERSION"
+    run_results << "echo 'deployed_at: #{Time.now.to_i}\ndeployed_by: nextgen\nscm_url: #{app.repo.url}\nscm_rev: #{app.repo.revision}' >> #{app.current_path}/VERSION"
 
     app.deploy_servers.each do |server|
       assert_equal run_results, server.run_log
@@ -66,7 +61,8 @@ class TestApp < Test::Unit::TestCase
 
   def assert_attributes_equal(attr_hash, app)
     assert_equal attr_hash[:name], app.name
-    assert_equal attr_hash[:repo], app.repo
+    assert_equal attr_hash[:repo][:url], app.repo.url
+    assert_equal attr_hash[:repo][:type], app.repo.class.name.split("::").last[0..-5].downcase
     assert_equal attr_hash[:deploy_path], app.deploy_path
 
     attr_hash[:deploy_servers].each_with_index do |server_def, i|
