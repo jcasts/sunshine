@@ -3,7 +3,7 @@ module Sunshine
   class SvnRepo < Repo
 
     def update_repo_info
-      response = Sunshine.run_local("svn log #{@url} -l1 --xml")
+      response = Sunshine.run_local("svn log #{@url} --limit 1 --xml")
       @revision = response.match(/revision="(.*)">/)[1]
       @committer = response.match(/<author>(.*)<\/author>/)[1]
       true

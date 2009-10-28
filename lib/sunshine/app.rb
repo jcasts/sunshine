@@ -49,9 +49,6 @@ module Sunshine
       server.run command(:healthcheck)
     end
 
-    def make_deploy_directories(server)
-    end
-
     def make_deploy_info_file(server)
       info = []
       info << "deployed_at: #{Time.now.to_i}"

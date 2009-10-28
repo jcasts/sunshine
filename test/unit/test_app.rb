@@ -68,7 +68,7 @@ class TestApp < Test::Unit::TestCase
     attr_hash[:deploy_servers].each_with_index do |server_def, i|
       user, url = server_def.split("@")
       assert_equal user, app.deploy_servers[i].user
-      assert_equal url, app.deploy_servers[i].url
+      assert_equal url, app.deploy_servers[i].host
     end
   end
 
