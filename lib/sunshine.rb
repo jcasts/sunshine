@@ -2,6 +2,7 @@ require 'yaml'
 require 'open3'
 require 'net/ssh'
 require 'net/scp'
+require 'erb'
 
 
 module Sunshine

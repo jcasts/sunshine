@@ -9,11 +9,13 @@ module Sunshine
       app
     end
 
-    attr_reader :name, :repo, :deploy_path, :current_path, :checkout_path, :deploy_servers, :deploy_options
+    attr_reader :name, :repo, :deploy_servers, :deploy_options
+    attr_reader :deploy_path, :current_path, :checkout_path, :shared_path
 
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
       @deploy_options = Hash === args.first ? args.shift : {}
+      @deploy_block = block
 
       load_config(config_file) if config_file
       update_attributes
@@ -23,6 +25,10 @@ module Sunshine
 
     def [](key)
       @deploy_options[key]
+    end
+
+    def runtime_binding
+      @deploy_block ? @deploy_block.binding : Thread.main.send(:binding)
     end
 
     def load_config(config_file)
@@ -66,6 +72,7 @@ module Sunshine
       @deploy_path = config_hash[:deploy_path]
       @current_path = "#{@deploy_path}/current"
       @checkout_path = "#{@deploy_path}/revisions/#{@repo.revision}"
+      @shared_path = "#{@deploy_path}/shared"
       server_list = config_hash[:deploy_servers] || ["#{Sunshine.deploy_env}-#{@name}.atti.com"]
       @deploy_servers = server_list.map do |ds|
         Sunshine::DeployServer.new(ds, self)
