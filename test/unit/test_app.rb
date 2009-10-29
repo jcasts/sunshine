@@ -7,7 +7,7 @@ class TestApp < Test::Unit::TestCase
     @config = {:name => "parity",
                :repo => {:type => "svn", :url => "svn://subversion.flight.yellowpages.com/argo/parity/trunk"},
                :deploy_servers => ["nextgen@np5.wc1.yellowpages.com"],
-               :deploy_path => "/users/nextgen/parity"}
+               :deploy_path => "/usr/local/nextgen/parity"}
   end
 
   def teardown

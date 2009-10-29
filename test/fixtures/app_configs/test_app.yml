@@ -4,7 +4,7 @@
     :type: svn
     :url:  svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/trunk
 
-  :deploy_path: /users/nextgen/envoy
+  :deploy_path: /usr/local/nextgen/envoy
 
   :deploy_servers:
     - "nextgen@np4.wc1.yellowpages.com"
