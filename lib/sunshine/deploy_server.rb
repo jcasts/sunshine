@@ -39,8 +39,8 @@ module Sunshine
       run "echo '#{content}' >> #{filepath}"
     end
 
-    def run(string_cmd)
-      @ssh_session.exec!(string_cmd)
+    def run(string_cmd, &block)
+      @ssh_session.exec!(string_cmd, &block)
     end
 
   end
