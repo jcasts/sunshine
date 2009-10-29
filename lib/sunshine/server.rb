@@ -5,6 +5,7 @@ module Sunshine
     CONFIG_DIR = "../server_configs"
 
     attr_reader :app, :name, :pid, :log_files, :config_template
+    attr_reader :restart_cmd, :start_cmd, :stop_cmd
 
     def initialize(app, options={})
       @app = app
@@ -20,6 +21,8 @@ module Sunshine
       @config_template = options[:config_template] || "../server_configs/#{@name}.conf.erb"
       @config_path = options[:config_path] || "#{@app.current_path}/server_config"
       @config_file_path = "#{@config_path}/#{@name}.conf"
+
+      @restart_cmd = nil
     end
 
     def setup_deploy_servers(&block)
@@ -48,8 +51,14 @@ module Sunshine
     end
 
     def restart
-      stop
-      start
+      if restart_cmd
+        @app.deploy_server.each do |deploy_server|
+          deploy_server.run(restart_cmd)
+        end
+      else
+        stop
+        start
+      end
     end
 
     private

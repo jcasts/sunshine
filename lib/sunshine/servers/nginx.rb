@@ -4,23 +4,14 @@ module Sunshine
 
     def initialize(app, options={})
       super
+
+      @start_cmd = "/home/ypc/sbin/nginx -c #{@config_path}"
+      @stop_cmd = "test -f /home/ypc/sbin/nginx && kill -QUIT `cat #{@pid}`"
+      @restart_cmd = "test -f /home/ypc/sbin/nginx && kill -HUP `cat #{@pid}` || /home/ypc/sbin/nginx -c #{@config_path}"
+
       @log_files = {:impressions => "#{@log_path}/impressions.log",
                     :stderr => "#{@log_path}/error.log",
                     :stdout => "#{@log_path}/access.log"}
-    end
-
-    def start_cmd
-      "/home/ypc/sbin/nginx -c #{@config_path}"
-    end
-
-    def stop_cmd
-      "test -f /home/ypc/sbin/nginx && kill -QUIT `cat #{@pid}`"
-    end
-
-    def restart
-      @app.deploy_servers.each do |deploy_server|
-        deploy_server.run "test -f /home/ypc/sbin/nginx && kill -HUP `cat #{@pid}` || /home/ypc/sbin/nginx -c #{@config_path}"
-      end
     end
 
     def setup_deploy_servers(&block)
