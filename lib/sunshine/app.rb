@@ -27,10 +27,6 @@ module Sunshine
       @deploy_options[key]
     end
 
-    def runtime_binding
-      @deploy_block ? @deploy_block.binding : Thread.main.send(:binding)
-    end
-
     def load_config(config_file)
       config_hash = YAML.load_file(config_file)
       config_hash = (config_hash[:defaults] || {}).merge(config_hash[Sunshine.deploy_env] || {})

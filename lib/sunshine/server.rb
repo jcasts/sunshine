@@ -65,7 +65,7 @@ module Sunshine
 
     def build_server_config
       str = File.read(@config_template)
-      ERB.new(str, nil, '-').result(@app.runtime_binding)
+      ERB.new(str, nil, '-').result(binding)
     end
 
     def start_cmd
