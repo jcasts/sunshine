@@ -25,6 +25,15 @@ module Sunshine
       @ssh_session = nil
     end
 
+    def upload(from_path, to_path, options={}, &block)
+      raise Errno::ENOENT, "No such file or directory - #{from_path}" unless File.exists?(from_path)
+      @ssh_session.scp.upload!(from_path, to_path, options, &block)
+    end
+
+    def download(from_path, to_path, options={}, &block)
+      @ssh_session.scp.download!(from_path, to_path, options, &block)
+    end
+
     def make_file!(filepath, content)
       run "test -f #{filepath} && rm #{filepath}"
       run "echo '#{content}' >> #{filepath}"

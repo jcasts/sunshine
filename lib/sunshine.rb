@@ -1,5 +1,7 @@
 require 'yaml'
-require "open3"
+require 'open3'
+require 'net/ssh'
+require 'net/scp'
 
 
 module Sunshine
