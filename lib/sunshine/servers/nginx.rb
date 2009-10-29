@@ -19,7 +19,7 @@ module Sunshine
 
     def restart
       @app.deploy_servers.each do |deploy_server|
-        deploy_servers.run "test -f /home/ypc/sbin/nginx && kill -HUP `cat #{@pid}` || /home/ypc/sbin/nginx -c #{@config_path}"
+        deploy_server.run "test -f /home/ypc/sbin/nginx && kill -HUP `cat #{@pid}` || /home/ypc/sbin/nginx -c #{@config_path}"
       end
     end
 
