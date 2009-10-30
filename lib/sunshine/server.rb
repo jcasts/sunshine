@@ -4,9 +4,9 @@ module Sunshine
 
     CONFIG_DIR = "../server_configs"
 
-    attr_reader :app, :name, :pid, :log_files, :config_template
+    attr_reader :app, :name, :pid, :log_files, :config_template, :config_path, :config_file_path
     attr_reader :restart_cmd, :start_cmd, :stop_cmd
-    attr_reader :public_domain, :port
+    attr_reader :public_domain, :port, :processes, :target
 
     def initialize(app, options={})
       @app = app
@@ -26,19 +26,15 @@ module Sunshine
       @restart_cmd = nil
 
       @port = options[:port] || 80
-      @target = options[:point_to] || app
+      @processes = options[:processes] || 1
+      @target = options[:point_to] || @app
     end
 
     def setup_deploy_servers(&block)
       @app.deploy_servers.each do |deploy_server|
-        deploy_server.make_file!(@config_file_path, server_config)
+        deploy_server.make_file!(@config_file_path, build_server_config(binding))
         yield(deploy_server) if block_given?
       end
-    end
-
-    def server_config(force=false)
-      @server_config = build_server_config if !@server_config || force
-      @server_config
     end
 
     def start(&block)
@@ -68,9 +64,9 @@ module Sunshine
 
     private
 
-    def build_server_config
+    def build_server_config(custom_binding=nil)
       str = File.read(@config_template)
-      ERB.new(str, nil, '-').result(binding)
+      ERB.new(str, nil, '-').result(custom_binding || binding)
     end
 
     def start_cmd

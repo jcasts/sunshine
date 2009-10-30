@@ -1,0 +1,119 @@
+<% darwin = deploy_server.os_name =~ /^darwin$/i %>
+
+worker_processes  2;
+pid               <%= pid %>;
+error_log         <%= log_files[:stderr] %> info;
+
+events {
+  worker_connections  1024;
+  <% unless darwin %>
+  use epoll;
+  <% end %>
+}
+
+http {
+  client_body_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
+  proxy_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
+
+  include       mime.types;
+  default_type  application/octet-stream;
+
+  log_format atti_main '$remote_addr - $remote_user [$time_local] '
+                      '"$request" $status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_cookie" $request_time '
+                      '$upstream_http_x_urid';
+  access_log <%= log_files[:stdout] %> atti_main;
+
+  
+  include  <%= config_file_path %>;
+  
+  
+  ##
+  # gZip config
+  gzip              on;
+  gzip_disable      "MSIE [1-6]\.";
+  gzip_min_length   1100;
+  gzip_buffers      4 8k;
+  gzip_http_version 1.0;
+  gzip_comp_level   5;
+  gzip_proxied      any;
+  gzip_types        text/plain text/html text/css application/x-javascript application/xml application/xml+rss text/javascript;
+
+  upstream app_server {
+    server 0:<%= port %> fail_timeout=0;
+  }
+
+  ##
+  # 301 redirect www to non-www host.
+  server {
+    listen <%= port %>;
+    server_name www.<%= public_domain %>;
+    rewrite ^/(.*) http://<%= public_domain %>/$1 permanent;
+  }
+
+  ##
+  # Main server definition.
+  server {
+    listen <%= port %> default;
+    server_name <%= public_domain %>;
+    port_in_redirect off; # needed for the F5, unfortunately
+    server_name_in_redirect off;
+    root <%= app.current_path %>/public;
+
+    log_format partner_api '$remote_addr - $remote_user [$time_local] '
+                           '"$request" $status $body_bytes_sent "$http_referer" '
+                           '"$http_user_agent" "$http_cookie" $request_time '
+                           '$upstream_status $upstream_response_time';
+
+    location = /images/li.gif {
+      empty_gif;
+      access_log <%= log_files[:impressions] %> atti_main;
+      break;
+    }
+
+    location ~* /images/(accepted_li|logging_impressions|logging_clicks|logging_requests|xlc|xlr|xli|api_result|lni).gif$ {
+      empty_gif;
+    }
+
+    ##
+    # Protect system controller.
+    location /_priv/ {
+      allow 10.0.0.0/8;
+      allow 12.186.229.30;
+      allow 12.186.229.32;
+      allow 12.186.229.34;
+      allow 12.186.229.36;
+      allow 12.186.229.38;
+      allow 12.186.229.40;
+      allow 198.87.24.254;
+      allow 198.87.24.253;
+      deny all;
+
+      proxy_pass http://app_server;
+    }
+    
+    ##
+    # Main proxy
+    location / {
+      <% if darwin %>
+      ssi on;
+      <% end %>
+      if (-f $request_filename) {
+        break;
+      }
+
+      include  <%= config_path %>/nginx_proxy.conf;
+      expires -1;
+
+      if (!-f $request_filename) {
+        proxy_pass http://app_server;
+        break;
+      }
+      error_page   500 502 503 504  /500.html;
+      location = /500.html {
+        root <%= app.current_path %>/public;
+      }
+    }
+  }
+
+}

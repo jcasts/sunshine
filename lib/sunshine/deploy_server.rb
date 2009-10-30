@@ -43,6 +43,10 @@ module Sunshine
       @ssh_session.exec!(string_cmd, &block)
     end
 
+    def os_name
+      @os_name ||= run("uname -s").strip
+    end
+
   end
 
 end
