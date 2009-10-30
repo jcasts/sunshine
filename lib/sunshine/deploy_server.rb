@@ -42,7 +42,10 @@ module Sunshine
     end
 
     def run(string_cmd, &block)
-      @ssh_session.exec!(string_cmd, &block)
+      @ssh_session.exec!(string_cmd) do |channel, stream, data|
+        yield(stream, data) if block_given?
+        raise(SSHCmdError, "#{@user}@#{host}: #{data}") if stream == :stderr
+      end
     end
 
     def os_name
