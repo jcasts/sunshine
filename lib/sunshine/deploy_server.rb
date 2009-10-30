@@ -2,6 +2,8 @@ module Sunshine
 
   class DeployServer
 
+    class SSHCmdError < CmdError; end
+
     attr_reader :host, :user, :app
 
     def initialize(user_at_host, app, options={})

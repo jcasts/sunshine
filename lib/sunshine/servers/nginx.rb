@@ -6,8 +6,8 @@ module Sunshine
       super
 
       @start_cmd = "/home/ypc/sbin/nginx -c #{@config_path}"
-      @stop_cmd = "test -f /home/ypc/sbin/nginx && kill -QUIT `cat #{@pid}`"
-      @restart_cmd = "test -f /home/ypc/sbin/nginx && kill -HUP `cat #{@pid}` || /home/ypc/sbin/nginx -c #{@config_path}"
+      @stop_cmd = "test -f #{@pid} && kill -QUIT `cat #{@pid}`"
+      @restart_cmd = "test -f #{@pid} && kill -HUP `cat #{@pid}` || /home/ypc/sbin/nginx -c #{@config_path}"
 
       @log_files = {:impressions => "#{@log_path}/impressions.log",
                     :stderr => "#{@log_path}/error.log",
