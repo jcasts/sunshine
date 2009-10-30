@@ -38,6 +38,8 @@ module Sunshine
       deploy_servers.each do |server|
         checkout_codebase server
         make_deploy_info_file server
+        set_current_app_dir(server, @checkout_path)
+        # if we implement yield in 'deploy!', put it here
         # app servers must start here
         # run_healthcheck server
       end
@@ -57,7 +59,11 @@ module Sunshine
       info << "deployed_by: #{server.user}"
       info << "scm_url: #{@repo.url}"
       info << "scm_rev: #{@repo.revision}"
-      server.make_file! "#{@current_path}/VERSION", info.join("\n")
+      server.make_file! "#{@checkout_path}/VERSION", info.join("\n")
+    end
+
+    def set_current_app_dir(server, new_dir)
+      server.run "ln -f #{new_dir} #{@current_path}"
     end
 
     private
