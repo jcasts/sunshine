@@ -48,7 +48,7 @@ module Sunshine
     end
 
     def run_healthcheck(server)
-      server.run command(:healthcheck)
+      # TODO
     end
 
     def make_deploy_info_file(server)
@@ -74,10 +74,6 @@ module Sunshine
       @deploy_servers = server_list.map do |ds|
         Sunshine::DeployServer.new(ds, self)
       end
-    end
-
-    def command(cmd_name)
-      Sunshine::Commands.method(cmd_name).call(self)
     end
 
   end
