@@ -38,6 +38,7 @@ module Sunshine
 
     def server_config(force=false)
       @server_config = build_server_config if !@server_config || force
+      @server_config
     end
 
     def start(&block)
