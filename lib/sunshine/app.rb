@@ -9,7 +9,7 @@ module Sunshine
       app
     end
 
-    attr_reader :name, :repo, :deploy_servers, :deploy_options
+    attr_reader :name, :repo, :public_domain_name, :deploy_servers, :deploy_options
     attr_reader :deploy_path, :current_path, :checkout_path, :shared_path
 
     def initialize(*args, &block)
@@ -65,6 +65,7 @@ module Sunshine
     def update_attributes(config_hash=@deploy_options)
       @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])
       @name = config_hash[:name]
+      @public_domain_name = config_hash[:public_domain_name] || "#{@name}.atti.com"
       @deploy_path = config_hash[:deploy_path]
       @current_path = "#{@deploy_path}/current"
       @checkout_path = "#{@deploy_path}/revisions/#{@repo.revision}"

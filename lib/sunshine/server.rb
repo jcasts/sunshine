@@ -6,6 +6,7 @@ module Sunshine
 
     attr_reader :app, :name, :pid, :log_files, :config_template
     attr_reader :restart_cmd, :start_cmd, :stop_cmd
+    attr_reader :public_domain, :port
 
     def initialize(app, options={})
       @app = app
@@ -23,6 +24,9 @@ module Sunshine
       @config_file_path = "#{@config_path}/#{@name}.conf"
 
       @restart_cmd = nil
+
+      @port = options[:port] || 80
+      @target = options[:point_to] || app
     end
 
     def setup_deploy_servers(&block)
