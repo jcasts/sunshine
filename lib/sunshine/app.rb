@@ -38,35 +38,52 @@ module Sunshine
       deploy_servers.each do |server|
         checkout_codebase server
         make_deploy_info_file server
-        set_current_app_dir(server, @checkout_path)
+        set_current_app_dir(@checkout_path, server)
         # if we implement yield in 'deploy!', put it here
         # app servers must start here
         # run_healthcheck server
       end
     end
 
-    def checkout_codebase(server)
-      @repo.checkout_to(server, @checkout_path)
+    def checkout_codebase(deploy_server=nil)
+      deploy_server_list(deploy_server) do |ds|
+        @repo.checkout_to(ds, @checkout_path)
+      end
     end
 
-    def run_healthcheck(server)
+    def run_healthcheck(server=nil)
       # TODO
     end
 
-    def make_deploy_info_file(server)
+    def make_deploy_info_file(deploy_server=nil)
       info = []
       info << "deployed_at: #{Time.now.to_i}"
-      info << "deployed_by: #{server.user}"
+      info << "deployed_by: #{Sunshine.run_local("whoami")}"
       info << "scm_url: #{@repo.url}"
       info << "scm_rev: #{@repo.revision}"
-      server.make_file! "#{@checkout_path}/VERSION", info.join("\n")
+      contents = info.join("\n")
+      deploy_server_list(deploy_server) do |ds|
+        ds.make_file! "#{@checkout_path}/VERSION", contents
+      end
     end
 
-    def set_current_app_dir(server, new_dir)
-      server.run "ln -f #{new_dir} #{@current_path}"
+    def set_current_app_dir(new_dir, deploy_server=nil)
+      deploy_server_list(deploy_server) do |ds|
+        ds.run "ln -f #{new_dir} #{@current_path}"
+      end
     end
 
     private
+
+    def deploy_server_list(server=nil, &block)
+      server_list = server.nil? deploy_servers : [server]
+      if block_given?
+        server_list.each do |deploy_server|
+          yield deploy_server
+        end
+      end
+      server_list
+    end
 
     def update_attributes(config_hash=@deploy_options)
       @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])

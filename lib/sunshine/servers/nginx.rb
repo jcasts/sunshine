@@ -4,8 +4,6 @@ module Sunshine
 
     def initialize(app, options={})
       super
-
-
       @log_files = {:impressions => "#{@log_path}/impressions.log",
                     :stderr => "#{@log_path}/error.log",
                     :stdout => "#{@log_path}/access.log"}

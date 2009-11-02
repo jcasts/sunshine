@@ -33,7 +33,7 @@ module Sunshine
       stdin, stdout, stderr = popen3(str)
       stderr = stderr.read
       raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless stderr.empty?
-      stdout.read
+      stdout.read.strip
     end
 
   end
