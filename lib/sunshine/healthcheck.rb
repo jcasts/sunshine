@@ -21,22 +21,16 @@ module Sunshine
     end
 
     def enable!
-      @app.deploy_servers.each do |ds|
-        ds.run "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file}; touch #{@hc_file}"
-      end
+      @app.deploy_servers.run "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file}; touch #{@hc_file}"
     end
 
     def disable!
-      @app.deploy_servers.each do |ds|
-        ds.run "touch #{@hc_disabled_file} && rm -f#{@hc_file}"
-      end
+      @app.deploy_servers.run "touch #{@hc_disabled_file} && rm -f#{@hc_file}"
     end
 
     def remove!
-      @app.deploy_servers.each do |ds|
-        ds.run "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file}"
-        ds.run "test -f #{@hc_file} && rm -f #{@hc_file}"
-      end
+      @app.deploy_servers.run "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file};\
+      test -f #{@hc_file} && rm -f #{@hc_file}"
     end
 
     private

@@ -46,9 +46,8 @@ module Sunshine
     end
 
     def checkout_codebase(deploy_server=nil)
-      deploy_server_list(deploy_server) do |ds|
-        @repo.checkout_to(ds, @checkout_path)
-      end
+      deploy_server ||= @deploy_servers
+      @repo.checkout_to(deploy_server, @checkout_path)
     end
 
     def run_healthcheck(server=nil)
@@ -56,36 +55,34 @@ module Sunshine
     end
 
     def make_deploy_info_file(deploy_server=nil)
+      deploy_server ||= @deploy_servers
       info = []
       info << "deployed_at: #{Time.now.to_i}"
       info << "deployed_by: #{Sunshine.run_local("whoami")}"
       info << "scm_url: #{@repo.url}"
       info << "scm_rev: #{@repo.revision}"
       contents = info.join("\n")
-      deploy_server_list(deploy_server) do |ds|
-        ds.make_file! "#{@checkout_path}/VERSION", contents
-      end
+      deploy_server.make_file! "#{@checkout_path}/VERSION", contents
     end
 
     def update_current_dir(deploy_server=nil)
+      deploy_server ||= @deploy_servers
       set_current_app_dir(@checkout_path, deploy_server)
     end
 
     def set_current_app_dir(new_dir, deploy_server=nil)
-      deploy_server_list(deploy_server) do |ds|
-        ds.run "ln -f #{new_dir} #{@current_path}"
-      end
+      deploy_server ||= @deploy_servers
+      deploy_server.run "ln -f #{new_dir} #{@current_path}"
     end
 
     def install_libs(deploy_server=nil)
+      deploy_server ||= @deploy_servers
       # TODO: probably will implement tpkg
     end
 
     def install_gems(deploy_server=nil)
-      deploy_server_list(deploy_server) do |ds|
-        ds.run "gem install geminstaller"
-        ds.run "geminstaller"
-      end
+      deploy_server ||= @deploy_servers
+      deploy_server.run "gem install geminstaller; geminstaller"
     end
 
     private
@@ -109,9 +106,12 @@ module Sunshine
       @checkout_path = "#{@deploy_path}/revisions/#{@repo.revision}"
       @shared_path = "#{@deploy_path}/shared"
       server_list = config_hash[:deploy_servers] || ["#{Sunshine.deploy_env}-#{@name}.atti.com"]
-      @deploy_servers = server_list.map do |ds|
+
+      # TODO: make sure we never instantiate 2 same deploy servers... would be bad!
+      deploy_server_arr = server_list.map do |ds|
         Sunshine::DeployServer.new(ds, self)
       end
+      @deploy_servers = DeployServerDispatcher.new(*deploy_server_arr)
     end
 
   end
