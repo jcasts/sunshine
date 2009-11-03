@@ -38,7 +38,7 @@ module Sunshine
       deploy_servers.each do |server|
         checkout_codebase server
         make_deploy_info_file server
-        set_current_app_dir(@checkout_path, server)
+        update_current_dir server
         # if we implement yield in 'deploy!', put it here
         # app servers must start here
         # run_healthcheck server
@@ -67,9 +67,24 @@ module Sunshine
       end
     end
 
+    def update_current_dir(deploy_server=nil)
+      set_current_app_dir(@checkout_path, deploy_server)
+    end
+
     def set_current_app_dir(new_dir, deploy_server=nil)
       deploy_server_list(deploy_server) do |ds|
         ds.run "ln -f #{new_dir} #{@current_path}"
+      end
+    end
+
+    def install_libs(deploy_server=nil)
+      # TODO: probably will implement tpkg
+    end
+
+    def install_gems(deploy_server=nil)
+      deploy_server_list(deploy_server) do |ds|
+        ds.run "gem install geminstaller"
+        ds.run "geminstaller"
       end
     end
 
