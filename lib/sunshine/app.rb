@@ -11,6 +11,7 @@ module Sunshine
 
     attr_reader :name, :repo, :public_domain_name, :deploy_servers, :deploy_options
     attr_reader :deploy_path, :current_path, :checkout_path, :shared_path
+    attr_reader :health
 
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
@@ -48,10 +49,6 @@ module Sunshine
     def checkout_codebase(deploy_server=nil)
       deploy_server ||= @deploy_servers
       @repo.checkout_to(deploy_server, @checkout_path)
-    end
-
-    def run_healthcheck(server=nil)
-      # TODO
     end
 
     def make_deploy_info_file(deploy_server=nil)
@@ -105,6 +102,8 @@ module Sunshine
       @current_path = "#{@deploy_path}/current"
       @checkout_path = "#{@deploy_path}/revisions/#{@repo.revision}"
       @shared_path = "#{@deploy_path}/shared"
+      @health = Healthcheck.new(self)
+
       server_list = config_hash[:deploy_servers] || ["#{Sunshine.deploy_env}-#{@name}.atti.com"]
 
       # TODO: make sure we never instantiate 2 same deploy servers... would be bad!
