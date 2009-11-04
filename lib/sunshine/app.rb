@@ -79,7 +79,7 @@ module Sunshine
 
     def install_gems(deploy_server=nil)
       deploy_server ||= @deploy_servers
-      deploy_server.run "gem install geminstaller; geminstaller"
+      deploy_server.run "gem install geminstaller; cd #{@checkout_path} && geminstaller"
     end
 
     private

@@ -53,9 +53,7 @@ module Sunshine
 
     def restart
       if restart_cmd
-        @app.deploy_server.each do |deploy_server|
-          deploy_server.run(restart_cmd)
-        end
+        @app.deploy_servers.run(restart_cmd)
       else
         stop
         start

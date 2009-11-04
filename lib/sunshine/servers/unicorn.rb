@@ -12,6 +12,13 @@ module Sunshine
       cmd << "pkill -9 -f '#{app.current_path}/.*/#{@pid_file}'"
     end
 
+    def setup_deploy_servers(&block)
+      super do |deploy_server|
+        deploy_server.run "gem install #{self.name}"
+        yield(deploy_server) if block_given?
+      end
+    end
+
   end
 
 end
