@@ -11,18 +11,21 @@ module Sunshine
       @user ||= options[:user]
       @password = options[:password]
       @app = app
+      @ssh_session = nil
     end
 
     def connect
+      return if connected?
       args = [@host, @user, @password].compact
       @ssh_session = Net::SSH.start(*args)
     end
 
     def connected?
-      @ssh_session && !@ssh_session.closed?
+      !@ssh_session.nil? && !@ssh_session.closed?
     end
 
     def disconnect
+      return unless connected?
       @ssh_session.close
       @ssh_session = nil
     end
@@ -42,10 +45,13 @@ module Sunshine
     end
 
     def run(string_cmd, &block)
+      stdout = ""
       @ssh_session.exec!(string_cmd) do |channel, stream, data|
+        stdout << data if stream == :stdout
         yield(stream, data) if block_given?
         raise(SSHCmdError, "#{@user}@#{host}: #{data}") if stream == :stderr
       end
+      stdout
     end
 
     def os_name
