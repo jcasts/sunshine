@@ -3,7 +3,6 @@ require 'test/test_helper'
 class TestApp < Test::Unit::TestCase
 
   def setup
-    @config_file = "test/fixtures/app_configs/test_app.yml"
     @config = {:name => "parity",
                :repo => {:type => "svn", :url => "svn://subversion.flight.yellowpages.com/argo/parity/trunk"},
                :deploy_servers => ["nextgen@np5.wc1.yellowpages.com"],
@@ -14,8 +13,8 @@ class TestApp < Test::Unit::TestCase
   end
 
   def test_initialize_with_config_file
-    app = Sunshine::App.new @config_file
-    config = YAML.load_file(@config_file)[:defaults]
+    app = Sunshine::App.new TEST_APP_CONFIG_FILE
+    config = YAML.load_file(TEST_APP_CONFIG_FILE)[:defaults]
     assert_attributes_equal config, app
   end
 
@@ -25,7 +24,7 @@ class TestApp < Test::Unit::TestCase
   end
 
   def test_initialize_with_options_and_config_file
-    app = Sunshine::App.new @config_file, @config
+    app = Sunshine::App.new TEST_APP_CONFIG_FILE, @config
     assert_attributes_equal @config, app
   end
 
