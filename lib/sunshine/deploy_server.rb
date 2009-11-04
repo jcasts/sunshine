@@ -2,7 +2,16 @@ module Sunshine
 
   class DeployServer
 
-    class SSHCmdError < CmdError; end
+    class SSHCmdError < CmdError
+
+      attr_reader :deploy_server
+
+      def initialize(message=nil, deploy_server=nil)
+        @deploy_server = deploy_server
+        super(message)
+      end
+
+    end
 
     attr_reader :host, :user, :app
 
@@ -49,7 +58,7 @@ module Sunshine
       @ssh_session.exec!(string_cmd) do |channel, stream, data|
         stdout << data if stream == :stdout
         yield(stream, data) if block_given?
-        raise(SSHCmdError, "#{@user}@#{host}: #{data}") if stream == :stderr
+        raise SSHCmdError.new(data, self) if stream == :stderr
       end
       stdout
     end

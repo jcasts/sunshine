@@ -1,5 +1,6 @@
 require 'test/test_helper'
 
+# TODO: abstract hitting a live server to something else.
 class TestDeployServer < Test::Unit::TestCase
 
   def setup
@@ -22,19 +23,22 @@ class TestDeployServer < Test::Unit::TestCase
   end
 
   def test_run
-    assert_equal "test\n", @deploy_server.run("echo 'test'")
+    assert_equal "line1\nline2\n", @deploy_server.run("echo 'line1'; echo 'line2'")
   end
 
   def test_run_with_block
-    i = 0
     @deploy_server.run("echo 'line1'; echo 'line2'") do |stream, data|
-      i = i.next
       assert_equal :stdout, stream
-      assert_equal "line#{i}\n", data
+      assert_equal "line1\nline2\n", data
     end
   end
 
   def test_run_with_stderr
+    @deploy_server.run("echo 'this is an error' 1>&2")
+    raise "Didn't raise SSHCmdError on stderr stream"
+  rescue Sunshine::DeployServer::SSHCmdError => e
+    assert_equal "this is an error\n", e.message
+    assert_equal @deploy_server, e.deploy_server
   end
 
   def test_os_name
