@@ -33,4 +33,9 @@ class TestDeployServer < Test::Unit::TestCase
   def test_run_with_stderr
   end
 
+  def test_os_name
+    @deploy_server.connect
+    assert_equal "linux", @deploy_server.os_name
+  end
+
 end

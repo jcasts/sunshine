@@ -55,7 +55,7 @@ module Sunshine
     end
 
     def os_name
-      @os_name ||= run("uname -s").strip
+      @os_name ||= run("uname -s").strip.downcase
     end
 
   end
