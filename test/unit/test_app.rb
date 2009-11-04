@@ -47,11 +47,13 @@ class TestApp < Test::Unit::TestCase
     checkout_path = "#{app.deploy_path}/revisions/#{app.repo.revision}"
     run_results << "test -d #{checkout_path} && rm -rf #{checkout_path}"
     run_results << "mkdir #{checkout_path} && svn checkout -r #{app.repo.revision} #{app.repo.url} #{checkout_path}"
-    run_results << "test -f #{app.current_path}/VERSION && rm #{app.current_path}/VERSION"
-    run_results << "echo 'deployed_at: #{Time.now.to_i}\ndeployed_by: nextgen\nscm_url: #{app.repo.url}\nscm_rev: #{app.repo.revision}' >> #{app.current_path}/VERSION"
+    run_results << "test -f #{app.checkout_path}/VERSION && rm #{app.checkout_path}/VERSION"
+    run_results << "echo 'deployed_at: #{Time.now.to_i}\ndeployed_by: #{Sunshine.run_local("whoami")}\nscm_url: #{app.repo.url}\nscm_rev: #{app.repo.revision}' >> #{app.checkout_path}/VERSION"
 
     app.deploy_servers.each do |server|
-      assert_equal run_results, server.run_log
+      run_results.each_index do |i|
+        assert_equal run_results[i], server.run_log[i]
+      end
     end
     assert yield_called
   end

@@ -36,7 +36,7 @@ module Sunshine
     private
 
     def server_file_exists?(deploy_server, file)
-      "true" == deploy_server.run "(test -f #{file} && echo 'true') || echo 'false'"
+      "true" == deploy_server.run("(test -f #{file} && echo 'true') || echo 'false'")
     end
 
   end

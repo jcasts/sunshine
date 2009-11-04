@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'yaml'
 require 'open3'
 require 'net/ssh'
@@ -7,9 +8,14 @@ require 'erb'
 
 module Sunshine
 
+  class CmdError < Exception; end
+
   require 'sunshine/repo'
   require 'sunshine/repos/svn_repo'
 
+  require 'sunshine/healthcheck'
+
+  require 'sunshine/deploy_server_dispatcher'
   require 'sunshine/deploy_server'
   require 'sunshine/app'
 
@@ -18,8 +24,6 @@ module Sunshine
   require "sunshine/servers/unicorn"
   require "sunshine/servers/rainbows"
 
-
-  class CmdError < Exception; end
 
   class << self
 

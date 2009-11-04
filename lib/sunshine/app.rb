@@ -85,7 +85,7 @@ module Sunshine
     private
 
     def deploy_server_list(server=nil, &block)
-      server_list = server.nil? deploy_servers : [server]
+      server_list = server.nil? ? deploy_servers : [server]
       if block_given?
         server_list.each do |deploy_server|
           yield deploy_server
