@@ -41,6 +41,21 @@ class TestDeployServer < Test::Unit::TestCase
     assert_equal @deploy_server, e.deploy_server
   end
 
+  def test_upload
+    @deploy_server.upload("test/fixtures/sunshine_test", "sunshine_test", :recursive => true)
+    test = @deploy_server.run "test -f sunshine_test/test_upload && echo 'true' || echo 'false'"
+    assert_equal "true\n", test
+    @deploy_server.run "rm -rf sunshine_test"
+  end
+
+  def test_download
+    @deploy_server.upload("test/fixtures/sunshine_test", "sunshine_test", :recursive => true)
+    @deploy_server.download("sunshine_test", ".", :recursive => true)
+    assert File.exists?("sunshine_test/test_upload")
+    @deploy_server.run "rm -rf sunshine_test"
+    FileUtils.rm_rf "sunshine_test"
+  end
+
   def test_os_name
     assert_equal "linux", @deploy_server.os_name
   end
