@@ -56,6 +56,13 @@ class TestDeployServer < Test::Unit::TestCase
     FileUtils.rm_rf "sunshine_test"
   end
 
+  def test_make_file!
+    @deploy_server.make_file!("sunshine_test_file", "test data")
+    file_read = @deploy_server.run "cat sunshine_test_file"
+    assert_equal "test data\n", file_read
+    @deploy_server.run "rm sunshine_test_file"
+  end
+
   def test_os_name
     assert_equal "linux", @deploy_server.os_name
   end
