@@ -4,9 +4,11 @@ module Sunshine
 
     def self.deploy(*args, &block)
       app = new *args
+      Sunshine.info :app, "Beginning deploy of #{app.name}"
       app.deploy_servers.connect
       app.deploy!
       yield(app) if block_given?
+      Sunshine.info :app, "Finishing deploy of #{app.name}"
       app.deploy_servers.disconnect
       app
     end
@@ -72,7 +74,7 @@ module Sunshine
     end
 
     def set_current_app_dir(new_dir, deploy_server=nil)
-      Sunshine.info :app, "Symlinking #{new_dir} to #{@current_path}"
+      Sunshine.info :app, "Symlinking #{new_dir} -> #{@current_path}"
       deploy_server ||= @deploy_servers
       deploy_server.run "ln -sfT #{new_dir} #{@current_path}"
     end
