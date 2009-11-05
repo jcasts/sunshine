@@ -10,7 +10,7 @@ module Sunshine
     end
 
     def start_cmd
-      "/home/ypc/sbin/nginx -c #{@config_path}"
+      "/home/ypc/sbin/nginx -c #{@config_file_path}"
     end
 
     def stop_cmd

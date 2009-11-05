@@ -2,7 +2,7 @@ module Sunshine
 
   class Server
 
-    CONFIG_DIR = "../server_configs"
+    CONFIG_DIR = "server_configs"
 
     attr_reader :app, :name, :pid, :log_files, :config_template, :config_path, :config_file_path
     attr_reader :restart_cmd, :start_cmd, :stop_cmd
@@ -19,7 +19,7 @@ module Sunshine
         :stdout => (options[:stdout_log] || "#{@log_path}/#{@name}_stdout.log")
       }
 
-      @config_template = options[:config_template] || "../server_configs/#{@name}.conf.erb"
+      @config_template = options[:config_template] || "server_configs/#{@name}.conf.erb"
       @config_path = options[:config_path] || "#{@app.current_path}/server_config"
       @config_file_path = "#{@config_path}/#{@name}.conf"
 
@@ -31,13 +31,17 @@ module Sunshine
     end
 
     def setup_deploy_servers(&block)
+      Sunshine.info @name, "Setting up #{@name} server"
       @app.deploy_servers.each do |deploy_server|
+        deploy_server.run "mkdir -p #{@config_path}"
         deploy_server.make_file!(@config_file_path, build_server_config(binding))
         yield(deploy_server) if block_given?
       end
     end
 
     def start(&block)
+      setup_deploy_servers
+      Sunshine.info @name, "Starting #{@name} server"
       @app.deploy_servers.each do |deploy_server|
         deploy_server.run(start_cmd)
         yield(deploy_server) if block_given?
@@ -45,6 +49,7 @@ module Sunshine
     end
 
     def stop(&block)
+      Sunshine.info @name, "Stopping #{@name} server"
       @app.deploy_servers.each do |deploy_server|
         deploy_server.run(stop_cmd)
         yield(deploy_server) if block_given?

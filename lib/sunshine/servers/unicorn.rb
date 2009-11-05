@@ -7,9 +7,9 @@ module Sunshine
     end
 
     def stop_cmd
-      cmd = "(test -f #{@pid_file} && kill -QUIT `cat #{@pid_file}`) || true"
-      cmd << "sleep 2 ; rm -f #{@pid_file}"
-      cmd << "pkill -9 -f '#{app.current_path}/.*/#{@pid_file}'"
+      cmd = "(test -f #{@pid} && kill -QUIT `cat #{@pid}`) || true; "
+      cmd << "sleep 2 ; rm -f #{@pid}; "
+      cmd << "pkill -9 -f '#{app.current_path}/.*/#{File.basename(@pid)}'"
     end
 
     def setup_deploy_servers(&block)
