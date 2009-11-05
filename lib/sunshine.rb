@@ -4,6 +4,7 @@ require 'open3'
 require 'net/ssh'
 require 'net/scp'
 require 'erb'
+require 'logger'
 
 
 module Sunshine
@@ -28,6 +29,17 @@ module Sunshine
   class << self
 
     include Open3
+
+    def logger
+      return @logger if @logger
+      @logger = Logger.new(STDOUT)
+      @logger.level = Logger::INFO
+      @logger
+    end
+
+    def info(from, message)
+      logger << "[#{from}] #{message}\n"
+    end
 
     def deploy_env
       :qa
