@@ -112,12 +112,7 @@ module Sunshine
       @health = Healthcheck.new(self)
 
       server_list = config_hash[:deploy_servers] || ["#{Sunshine.deploy_env}-#{@name}.atti.com"]
-
-      # TODO: make sure we never instantiate 2 same deploy servers... would be bad!
-      deploy_server_arr = server_list.map do |ds|
-        Sunshine::DeployServer.new(ds, self)
-      end
-      @deploy_servers = DeployServerDispatcher.new(*deploy_server_arr)
+      @deploy_servers = DeployServerDispatcher.new(self, *server_list)
     end
 
   end
