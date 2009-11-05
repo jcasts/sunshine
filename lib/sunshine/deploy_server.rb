@@ -41,18 +41,26 @@ module Sunshine
 
     def upload(from_path, to_path, options={}, &block)
       raise Errno::ENOENT, "No such file or directory - #{from_path}" unless File.exists?(from_path)
+      Sunshine.info @host, "Uploading #{from_path} -> #{to_path}"
       @ssh_session.scp.upload!(from_path, to_path, options, &block)
     end
 
     def download(from_path, to_path, options={}, &block)
+      Sunshine.info @host, "Downloading #{from_path} -> #{to_path}"
       @ssh_session.scp.download!(from_path, to_path, options, &block)
     end
 
     def make_file!(filepath, content)
-      run "test -f #{filepath} && rm #{filepath}; echo '#{content}' >> #{filepath}"
+      FileUtils.mkdir_p "tmp"
+      temp_filepath = "tmp/#{Time.now.to_i}_#{File.basename(filepath)}"
+      File.open(temp_filepath, "w+"){|f| f.write(content)}
+      upload(temp_filepath, filepath)
+      File.delete(temp_filepath)
+      Dir.delete("tmp") if Dir.glob("tmp/*").empty?
     end
 
     def run(string_cmd, &block)
+      Sunshine.info @host, "Running: #{string_cmd}"
       stdout = ""
       @ssh_session.exec!(string_cmd) do |channel, stream, data|
         stdout << data if stream == :stdout
