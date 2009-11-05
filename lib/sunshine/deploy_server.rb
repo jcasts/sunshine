@@ -25,6 +25,7 @@ module Sunshine
 
     def connect
       return if connected?
+      sunshine_info "Connecting..."
       args = [@host, @user, @password].compact
       @ssh_session = Net::SSH.start(*args)
     end
@@ -35,18 +36,19 @@ module Sunshine
 
     def disconnect
       return unless connected?
+      sunshine_info "Disconnecting..."
       @ssh_session.close
       @ssh_session = nil
     end
 
     def upload(from_path, to_path, options={}, &block)
       raise Errno::ENOENT, "No such file or directory - #{from_path}" unless File.exists?(from_path)
-      Sunshine.info @host, "Uploading #{from_path} -> #{to_path}"
+      sunshine_info "Uploading #{from_path} -> #{to_path}"
       @ssh_session.scp.upload!(from_path, to_path, options, &block)
     end
 
     def download(from_path, to_path, options={}, &block)
-      Sunshine.info @host, "Downloading #{from_path} -> #{to_path}"
+      sunshine_info "Downloading #{from_path} -> #{to_path}"
       @ssh_session.scp.download!(from_path, to_path, options, &block)
     end
 
@@ -60,7 +62,7 @@ module Sunshine
     end
 
     def run(string_cmd, &block)
-      Sunshine.info @host, "Running: #{string_cmd}"
+      sunshine_info "Running: #{string_cmd}"
       stdout = ""
       @ssh_session.exec!(string_cmd) do |channel, stream, data|
         stdout << data if stream == :stdout
@@ -72,6 +74,13 @@ module Sunshine
 
     def os_name
       @os_name ||= run("uname -s").strip.downcase
+    end
+
+
+    private
+
+    def sunshine_info(message)
+      Sunshine.info @host, message, :indent => 1, :nl => 0
     end
 
   end

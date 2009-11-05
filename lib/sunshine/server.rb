@@ -5,13 +5,14 @@ module Sunshine
     CONFIG_DIR = "server_configs"
 
     attr_reader :app, :name, :pid, :log_files, :config_template, :config_path, :config_file_path
-    attr_reader :restart_cmd, :start_cmd, :stop_cmd
-    attr_reader :public_domain, :port, :processes, :target
+    attr_reader :restart_cmd, :start_cmd, :stop_cmd, :bin
+    attr_reader :server_name, :port, :processes, :target
 
     def initialize(app, options={})
       @app = app
       @name ||= self.class.to_s.split("::").last.downcase
       @pid = options[:pid] || "#{@app.shared_path}/pids/#{@name}.pid"
+      @bin = options[:bin] || @name
 
       @log_path = options[:log_path] || "#{@app.shared_path}/log"
       @log_files = {
@@ -25,6 +26,7 @@ module Sunshine
 
       @restart_cmd = nil
 
+      @server_name = options[:server_name]
       @port = options[:port] || 80
       @processes = options[:processes] || 1
       @target = options[:point_to] || @app
@@ -34,6 +36,7 @@ module Sunshine
       Sunshine.info @name, "Setting up #{@name} server"
       @app.deploy_servers.each do |deploy_server|
         deploy_server.run "mkdir -p #{@config_path}"
+        server_name = @server_name || deploy_server.host
         deploy_server.make_file!(@config_file_path, build_server_config(binding))
         yield(deploy_server) if block_given?
       end

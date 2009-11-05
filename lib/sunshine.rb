@@ -37,8 +37,10 @@ module Sunshine
       @logger
     end
 
-    def info(from, message)
-      logger << "[#{from}] #{message}\n"
+    def info(from, message, options={})
+      new_lines = "\n" * (options[:nl] || 1)
+      indent = " " * (options[:indent].to_i * 2)
+      logger << "#{new_lines}#{indent}[#{from}] #{message}\n"
     end
 
     def deploy_env

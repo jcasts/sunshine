@@ -3,7 +3,7 @@ module Sunshine
   class Unicorn < Server
 
     def start_cmd
-      "cd #{app.current_path} && unicorn -D -E #{Sunshine.deploy_env} -p #{@port} -c #{@config_file_path}"
+      "cd #{app.current_path} && #{@bin} -D -E #{Sunshine.deploy_env} -p #{@port} -c #{@config_file_path}"
     end
 
     def stop_cmd
@@ -14,7 +14,7 @@ module Sunshine
 
     def setup_deploy_servers(&block)
       super do |deploy_server|
-        deploy_server.run "gem install #{self.name}"
+        deploy_server.run "gem install #{@name}"
         yield(deploy_server) if block_given?
       end
     end

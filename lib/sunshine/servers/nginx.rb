@@ -4,19 +4,21 @@ module Sunshine
 
     def initialize(app, options={})
       super
+      @bin = "/home/t/sbin/nginx"
       @log_files = {:impressions => "#{@log_path}/impressions.log",
                     :stderr => "#{@log_path}/error.log",
                     :stdout => "#{@log_path}/access.log"}
     end
 
     def start_cmd
-      "/home/ypc/sbin/nginx -c #{@config_file_path}"
+      "#{@bin} -c #{@config_file_path}"
     end
 
     def stop_cmd
       cmd = "test -f #{@pid} && kill -QUIT `cat #{@pid}`;"
       cmd << "sleep 2 ; rm -f #{@pid};"
-      cmd << "pkill -9 -f '/#{app.current_path}/.*/nginx'"
+      cmd << "pkill -QUIT -f '#{app.current_path}/.*nginx';"
+      cmd << "pkill -9 -f '#{app.current_path}/.*nginx'"
     end
 
 

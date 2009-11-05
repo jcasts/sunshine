@@ -25,7 +25,8 @@ http {
   access_log <%= log_files[:stdout] %> atti_main;
 
   
-  include  <%= config_file_path %>;
+  # This should be some other include file
+  include  <%= config_path %>/nginx_optimize.conf;
   
   
   ##
@@ -39,23 +40,25 @@ http {
   gzip_proxied      any;
   gzip_types        text/plain text/html text/css application/x-javascript application/xml application/xml+rss text/javascript;
 
+  <% if target.is_a?(Sunshine::Server) %>
   upstream app_server {
-    server 0:<%= port %> fail_timeout=0;
+    server 0:<%= target.port rescue 80 %> fail_timeout=0;
   }
+  <% end %>
 
   ##
   # 301 redirect www to non-www host.
   server {
     listen <%= port %>;
-    server_name www.<%= public_domain %>;
-    rewrite ^/(.*) http://<%= public_domain %>/$1 permanent;
+    server_name www.<%= server_name %>;
+    rewrite ^/(.*) http://<%= server_name %>/$1 permanent;
   }
 
   ##
   # Main server definition.
   server {
     listen <%= port %> default;
-    server_name <%= public_domain %>;
+    server_name <%= server_name %>;
     port_in_redirect off; # needed for the F5, unfortunately
     server_name_in_redirect off;
     root <%= app.current_path %>/public;
