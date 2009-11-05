@@ -4,8 +4,10 @@ module Sunshine
 
     def self.deploy(*args, &block)
       app = new *args
+      app.deploy_servers.connect
       app.deploy!
       yield(app) if block_given?
+      app.deploy_servers.disconnect
       app
     end
 
@@ -47,11 +49,13 @@ module Sunshine
     end
 
     def checkout_codebase(deploy_server=nil)
+      Sunshine.info :app, "Checking out codebase"
       deploy_server ||= @deploy_servers
       @repo.checkout_to(deploy_server, @checkout_path)
     end
 
     def make_deploy_info_file(deploy_server=nil)
+      Sunshine.info :app, "Creating VERSION file"
       deploy_server ||= @deploy_servers
       info = []
       info << "deployed_at: #{Time.now.to_i}"
@@ -68,8 +72,9 @@ module Sunshine
     end
 
     def set_current_app_dir(new_dir, deploy_server=nil)
+      Sunshine.info :app, "Symlinking #{new_dir} to #{@current_path}"
       deploy_server ||= @deploy_servers
-      deploy_server.run "ln -f #{new_dir} #{@current_path}"
+      deploy_server.run "ln -sfT #{new_dir} #{@current_path}"
     end
 
     def install_libs(deploy_server=nil)
