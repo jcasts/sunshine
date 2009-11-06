@@ -81,7 +81,7 @@ module Sunshine
 
     def install_libs(deploy_server=nil)
       deploy_server ||= @deploy_servers
-      # TODO: probably will implement tpkg
+      # TODO: probably will implement yum, apt, or tpkg
     end
 
     def install_gems(deploy_server=nil)
