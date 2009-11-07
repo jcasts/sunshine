@@ -28,8 +28,9 @@ class Settler
       @uninstall = cmd || block
     end
 
-    def check(cmd=nil, &block)
-      @check = cmd || block
+    def check(cmd_str=nil, &block)
+      @check = cmd_str || block
+      @check = proc{|cmd| cmd.call(cmd_str).strip != "false" } if String === @check
     end
 
     def requires(*deps)
@@ -91,6 +92,8 @@ Missing dependencies #{missing.join(", ")}")
 
     def installed?(options={})
       run_command(@check, options)
+    rescue CmdError
+      false
     end
 
     def missing_parents?(options={})
