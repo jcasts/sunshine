@@ -17,7 +17,7 @@ class Settler
       @parents = []
       @children = []
       @cmd = method(:run_local).to_proc
-      yield if block_given?
+      instance_eval(&block) if block_given?
     end
 
     def install(cmd=nil, &block)
@@ -52,6 +52,8 @@ class Settler
     end
 
     def install!(options={})
+      return if installed?(options)
+
       if options[:skip_parents]
         missing = missing_parent?
         if missing
