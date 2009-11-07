@@ -3,17 +3,34 @@ require "settler"
 class Sunshine::Dependencies < Settler
 
   dependency :nginx do
-    requires :yum
     install   "yum install nginx"
     uninstall "yum remove nginx"
-    check     { cmd("yum list nginx") rescue(Sunshine::CmdError) false }
+    check do |cmd|
+      begin
+        cmd.call("yum list nginx") && true
+      rescue Sunshine::CmdError
+        false
+      end
+    end
+  end
+
+  dependency :ruby do
+    install   "yum install ruby"
+    uninstall "yum remove ruby"
+    check do |cmd|
+      begin
+        cmd.call("ruby -v") && true
+      rescue(Sunshine::CmdError)
+        false
+      end
+    end
   end
 
   dependency :rainbows do
-    requires :rubygems
+    requires  :ruby
     install   "gem install rainbows"
     uninstall "gem uninstall rainbows"
-    check     { cmd("gem list rainbows -i") == "true\n" }
+    check     "gem list rainbows -i"
   end
 
 end

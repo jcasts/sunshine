@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'settler'
 require 'yaml'
 require 'open3'
 require 'net/ssh'
@@ -10,6 +11,8 @@ require 'logger'
 module Sunshine
 
   class CmdError < Exception; end
+
+  require 'sunshine/dependencies'
 
   require 'sunshine/repo'
   require 'sunshine/repos/svn_repo'

@@ -35,6 +35,7 @@ module Sunshine
     def setup_deploy_servers(&block)
       Sunshine.info @name, "Setting up #{@name} server"
       @app.deploy_servers.each do |deploy_server|
+        Sunshine::Dependencies.install @name.to_sym, :console => proc{|str| deploy_server.run(str)}
         deploy_server.run "mkdir -p #{@config_path}"
         server_name = @server_name || deploy_server.host
         deploy_server.make_file!(@config_file_path, build_server_config(binding))
