@@ -28,10 +28,6 @@ module Sunshine
       yield(self) if block_given?
     end
 
-    def [](key)
-      @deploy_options[key]
-    end
-
     def load_config(config_file)
       config_hash = YAML.load_file(config_file)
       config_hash = (config_hash[:defaults] || {}).merge(config_hash[Sunshine.deploy_env] || {})
@@ -79,7 +75,7 @@ module Sunshine
       deploy_server.run "ln -sfT #{new_dir} #{@current_path}"
     end
 
-    def install_libs(deploy_server=nil)
+    def install_dependency(dep_name, deploy_server=nil)
       deploy_server ||= @deploy_servers
       # TODO: probably will implement yum, apt, or tpkg
     end
