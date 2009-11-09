@@ -3,7 +3,9 @@ require 'open3'
 class Settler
 
   require 'settler/dependency'
+  require 'settler/yum'
   require 'settler/gem'
+  require 'settler/atti_tpkg'
 
   class << self
 

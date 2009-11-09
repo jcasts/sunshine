@@ -126,18 +126,14 @@ Missing dependencies #{missing.join(", ")}")
       stdout.read.strip
     end
 
-    def self.register_with_settler
+    def self.register_with_settler(method_name=nil)
       class_name = self.to_s.split(":").last
-      method_name = class_name.downcase
+      method_name ||= class_name.downcase
       Settler.class_eval <<-STR
-      def self.#{method_name}(sym, options={}, &block)
-        dependencies[sym] = #{class_name}.new(self, sym, options, &block)
+      def self.#{method_name}(name, options={}, &block)
+        dependencies[name] = #{class_name}.new(self, name, options, &block)
       end
       STR
-    end
-
-    def self.inherited(subclass)
-      subclass.send(:register_with_settler)
     end
 
     register_with_settler

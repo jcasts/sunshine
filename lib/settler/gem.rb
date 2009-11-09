@@ -2,6 +2,8 @@ class Settler
 
   class Gem < Dependency
 
+    register_with_settler
+
     def initialize(dependency_lib, name, options={}, &block)
       @dependency_lib = dependency_lib
       @name = name.to_s
