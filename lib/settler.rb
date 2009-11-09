@@ -3,6 +3,7 @@ require 'open3'
 class Settler
 
   require 'settler/dependency'
+  require 'settler/gem'
 
   class << self
 
@@ -10,8 +11,8 @@ class Settler
       @dependencies ||= {}
     end
 
-    def dependency(sym, &block)
-      dependencies[sym] = Dependency.new(self, sym, &block)
+    def [](key)
+      (@dependencies ||= {})[key]
     end
 
     def install(*deps)

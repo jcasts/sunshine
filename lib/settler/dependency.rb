@@ -6,9 +6,10 @@ class Settler
 
   class Dependency
 
+
     attr_reader :name
 
-    def initialize(dependency_lib, name, &block)
+    def initialize(dependency_lib, name, options={}, &block)
       @dependency_lib = dependency_lib
       @name = name.to_s
       @install = nil
@@ -30,7 +31,7 @@ class Settler
 
     def check(cmd_str=nil, &block)
       @check = cmd_str || block
-      @check = proc{|cmd| cmd.call(cmd_str).strip != "false" } if String === @check
+      @check = proc{|cmd| cmd.call(cmd_str).strip == "true" } if String === @check
     end
 
     def requires(*deps)
@@ -124,6 +125,22 @@ Missing dependencies #{missing.join(", ")}")
       raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless stderr.empty?
       stdout.read.strip
     end
+
+    def self.register_with_settler
+      class_name = self.to_s.split(":").last
+      method_name = class_name.downcase
+      Settler.class_eval <<-STR
+      def self.#{method_name}(sym, options={}, &block)
+        dependencies[sym] = #{class_name}.new(self, sym, options, &block)
+      end
+      STR
+    end
+
+    def self.inherited(subclass)
+      subclass.send(:register_with_settler)
+    end
+
+    register_with_settler
 
   end
 
