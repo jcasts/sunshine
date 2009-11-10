@@ -34,6 +34,10 @@ class Settler
       @check = proc{|cmd| cmd.call(cmd_str).strip == "true" } if String === @check
     end
 
+    def check_test(cmd_str)
+      check "test #{cmd_str} && echo true || echo false"
+    end
+
     def requires(*deps)
       @parents.concat(deps).uniq!
       deps.each do |dep|
