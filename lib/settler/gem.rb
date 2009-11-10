@@ -5,20 +5,14 @@ class Settler
     register_with_settler
 
     def initialize(dependency_lib, name, options={}, &block)
-      @dependency_lib = dependency_lib
-      @name = name.to_s
-      @install = "gem install #{@name}"
-      @uninstall = "gem uninstall #{@name}"
-      @check = "gem list #{@name} -i"
-      if options[:version]
-        @install = "#{@install} --version '#{options[:version]}'"
-        @uninstall = "#{@uninstall} --version '#{options[:version]}'"
-        @check = "#{@check} --version '#{options[:version]}'"
+      super(dependency_lib, name, options) do
+        version = options[:version] ? " --version '#{options[:version]}'" : ""
+        install "gem install #{@name}#{version}"
+        uninstall "gem uninstall #{@name}#{version}"
+        check "gem list #{@name} -i#{version}"
+        requires *(options[:require].to_a) if options[:require]
+        instance_eval(&block) if block_given?
       end
-      @parents = []
-      @children = []
-      @cmd = method(:run_local).to_proc
-      instance_eval(&block) if block_given?
     end
 
   end
