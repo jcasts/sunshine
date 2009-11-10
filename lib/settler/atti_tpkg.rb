@@ -14,7 +14,7 @@ class Settler
 
       @install = "tpkg -n -i http://tpkg/tpkg/#{pkg_name}.tpkg"
       @uninstall = "tpkg -n -r #{pkg_name}"
-      @check = "test \"$(tpkg -q #{@name} | grep #{@name} | wc -l)\" -ge \"1\" && echo true || echo false"
+      check_test("\"$(tpkg -q #{@name} | grep #{@name} | wc -l)\" -ge \"1\""
       @parents = []
       @children = []
       @cmd = method(:run_local).to_proc

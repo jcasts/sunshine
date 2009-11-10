@@ -16,7 +16,7 @@ class Settler
 
       @install = "yum install #{pkg_name}"
       @uninstall = "yum remove #{pkg_name}"
-      @check = "test \"$(yum list #{pkg_name} | grep #{pkg_name} | wc -l)\" -ge \"1\" && echo true || echo false"
+      check_test("\"$(yum list #{pkg_name} | grep #{pkg_name} | wc -l)\" -ge \"1\"")
       @parents = []
       @children = []
       @cmd = method(:run_local).to_proc
