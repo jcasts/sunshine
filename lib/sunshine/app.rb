@@ -39,11 +39,15 @@ module Sunshine
       deploy_servers.each do |server|
         checkout_codebase server
         make_deploy_info_file server
-        update_current_dir server
+        symlink_current_dir server
         # if we implement yield in 'deploy!', put it here
         # app servers must start here
         # run_healthcheck server
       end
+    end
+
+    def revert!(&block)
+      # TODO
     end
 
     def checkout_codebase(deploy_server=nil)
@@ -64,15 +68,10 @@ module Sunshine
       deploy_server.make_file! "#{@checkout_path}/VERSION", contents
     end
 
-    def update_current_dir(deploy_server=nil)
+    def symlink_current_dir(deploy_server=nil)
+      Sunshine.info :app, "Symlinking #{@checkout_path} -> #{@current_path}"
       deploy_server ||= @deploy_servers
-      set_current_app_dir(@checkout_path, deploy_server)
-    end
-
-    def set_current_app_dir(new_dir, deploy_server=nil)
-      Sunshine.info :app, "Symlinking #{new_dir} -> #{@current_path}"
-      deploy_server ||= @deploy_servers
-      deploy_server.run "ln -sfT #{new_dir} #{@current_path}"
+      deploy_server.symlink(@checkout_path, @current_path)
     end
 
     def install_dependency(dep_name, deploy_server=nil)

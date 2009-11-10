@@ -61,6 +61,10 @@ module Sunshine
       Dir.delete("tmp") if Dir.glob("tmp/*").empty?
     end
 
+    def symlink(target, symlink_name)
+      run "ln -sfT #{target} #{symlink_name}"
+    end
+
     def run(string_cmd, &block)
       sunshine_info "Running: #{string_cmd}"
       stdout = ""
