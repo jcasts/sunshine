@@ -4,12 +4,7 @@ module Sunshine
 
     def self.deploy(*args, &block)
       app = new *args
-      Sunshine.info :app, "Beginning deploy of #{app.name}"
-      app.deploy_servers.connect
-      app.deploy!
-      yield(app) if block_given?
-      Sunshine.info :app, "Finishing deploy of #{app.name}"
-      app.deploy_servers.disconnect
+      app.deploy! &block
       app
     end
 
@@ -35,31 +30,34 @@ module Sunshine
       update_attributes
     end
 
-    def deploy!
+    def deploy!(&block)
+      Sunshine.info :app, "Beginning deploy of #{@name}"
+      deploy_servers.connect
       deploy_servers.each do |deploy_server|
         checkout_codebase deploy_server
         make_deploy_info_file deploy_server
         symlink_current_dir deploy_server
-        # if we implement yield in 'deploy!', put it here
-        # app servers must start here
-        # run_healthcheck server
       end
+    rescue CriticalDeployError => e
+      Sunshine.info :app, "CriticalDeployError: #{e.message}"
+      revert!
+    ensure
+      yield(self) if block_given?
+      Sunshine.info :app, "Finishing deploy of #{@name}"
+      deploy_servers.disconnect
     end
 
-    def revert!(&block)
+    def revert!
       Sunshine.info :app, "Reverting to previous deploy..."
       deploy_servers.each do |deploy_server|
         deploy_server.run "rm -rf #{@checkout_path}"
         last_deploy = deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
         deploy_server.symlink("#{@deploys_path}/#{last_deploy}", @current_path) if last_deploy
 
-        yield(deploy_server) if block_given?
-
         if last_deploy
-          # TODO: reboot servers here.
-          Sunshine.info :app, "Reverted to #{last_deploy}"
+          Sunshine.info :app, "#{deploy_server.host}: Reverted to #{last_deploy}"
         else
-          Sunshine.info :app, "No previous deploy to revert to."
+          Sunshine.info :app, "#{deploy_server.host}: No previous deploy to revert to."
         end
       end
     end
@@ -68,6 +66,8 @@ module Sunshine
       Sunshine.info :app, "Checking out codebase"
       deploy_server ||= @deploy_servers
       @repo.checkout_to(deploy_server, @checkout_path)
+    rescue e
+      raise CriticalDeployError, e.message
     end
 
     def make_deploy_info_file(deploy_server=nil)
@@ -86,6 +86,8 @@ module Sunshine
       Sunshine.info :app, "Symlinking #{@checkout_path} -> #{@current_path}"
       deploy_server ||= @deploy_servers
       deploy_server.symlink(@checkout_path, @current_path)
+    rescue e
+      raise CriticalDeployError, e.message
     end
 
     def install_dependency(dep_name, deploy_server=nil)

@@ -12,6 +12,16 @@ module Sunshine
 
   class CmdError < Exception; end
 
+  class SSHCmdError < CmdError
+    attr_reader :deploy_server
+    def initialize(message=nil, deploy_server=nil)
+      @deploy_server = deploy_server
+      super(message)
+    end
+  end
+
+  class CriticalDeployError < Exception; end
+
   require 'sunshine/dependencies'
 
   require 'sunshine/repo'
