@@ -1,5 +1,6 @@
 <% darwin = deploy_server.os_name =~ /^darwin$/i %>
 
+user nobody nobody;
 worker_processes  <%= processes %>;
 pid               <%= pid %>;
 error_log         <%= log_files[:stderr] %> info;

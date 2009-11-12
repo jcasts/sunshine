@@ -11,14 +11,14 @@ module Sunshine
     end
 
     def start_cmd
-      "#{@bin} -c #{@config_file_path}"
+      "sudo #{@bin} -c #{@config_file_path}"
     end
 
     def stop_cmd
-      cmd = "test -f #{@pid} && kill -QUIT `cat #{@pid}`;"
+      cmd = "test -f #{@pid} && sudo kill -QUIT `cat #{@pid}`;"
       cmd << "sleep 2 ; rm -f #{@pid};"
-      cmd << "pkill -QUIT -f '#{app.current_path}/.*nginx';"
-      cmd << "pkill -9 -f '#{app.current_path}/.*nginx'"
+      cmd << "sudo pkill -QUIT -f '#{app.current_path}/.*nginx';"
+      cmd << "sudo pkill -9 -f '#{app.current_path}/.*nginx'"
     end
 
 
