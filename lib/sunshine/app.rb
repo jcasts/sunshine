@@ -36,10 +36,10 @@ module Sunshine
     end
 
     def deploy!
-      deploy_servers.each do |server|
-        checkout_codebase server
-        make_deploy_info_file server
-        symlink_current_dir server
+      deploy_servers.each do |deploy_server|
+        checkout_codebase deploy_server
+        make_deploy_info_file deploy_server
+        symlink_current_dir deploy_server
         # if we implement yield in 'deploy!', put it here
         # app servers must start here
         # run_healthcheck server
@@ -47,7 +47,21 @@ module Sunshine
     end
 
     def revert!(&block)
-      # TODO
+      Sunshine.info :app, "Reverting to previous deploy..."
+      deploy_servers.each do |deploy_server|
+        deploy_server.run "rm -rf #{@checkout_path}"
+        last_deploy = deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
+        deploy_server.symlink("#{@deploys_path}/#{last_deploy}", @current_path) if last_deploy
+
+        yield(deploy_server) if block_given?
+
+        if last_deploy
+          # TODO: reboot servers here.
+          Sunshine.info :app, "Reverted to #{last_deploy}"
+        else
+          Sunshine.info :app, "No previous deploy to revert to."
+        end
+      end
     end
 
     def checkout_codebase(deploy_server=nil)
@@ -102,7 +116,8 @@ module Sunshine
       @public_domain_name = config_hash[:public_domain_name] || "#{@name}.atti.com"
       @deploy_path = config_hash[:deploy_path]
       @current_path = "#{@deploy_path}/current"
-      @checkout_path = "#{@deploy_path}/revisions/#{@repo.revision}"
+      @deploys_path = "#{@deploy_path}/deploys"
+      @checkout_path = "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
       @shared_path = "#{@deploy_path}/shared"
       @health = Healthcheck.new(self)
 
