@@ -15,12 +15,9 @@ module Sunshine
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
       @deploy_options = Hash === args.first ? args.shift : {}
-      @deploy_block = block
 
       load_config(config_file) if config_file
       update_attributes
-
-      yield(self) if block_given?
     end
 
     def load_config(config_file)
@@ -38,12 +35,15 @@ module Sunshine
         make_deploy_info_file deploy_server
         symlink_current_dir deploy_server
       end
-    rescue CriticalDeployError => e
-      Sunshine.info :app, "CriticalDeployError: #{e.message}"
-      revert!
-    ensure
       yield(self) if block_given?
-      Sunshine.info :app, "Finishing deploy of #{@name}"
+    rescue DeployServer::ConnectionError => e
+      Sunshine.info :app, "ConnectionError: #{e.message}"
+    rescue CriticalDeployError => e
+      Sunshine.info :app, "CriticalDeployError: #{e.message} - cannot deploy"
+      revert!
+      yield(self) if block_given?
+    ensure
+      Sunshine.info :app, "Ending deploy of #{@name}"
       deploy_servers.disconnect
     end
 

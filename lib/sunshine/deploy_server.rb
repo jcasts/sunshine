@@ -2,12 +2,16 @@ module Sunshine
 
   class DeployServer
 
+    class ConnectionError < Exception; end
+
     attr_reader :host, :user, :app
+
+    MAX_TRIES = 3
 
     def initialize(user_at_host, app, options={})
       @user, @host = user_at_host.split("@")
-      @user ||= options[:user]
-      @password = options[:password]
+      @user ||= options.delete(:user)
+      @options = options
       @app = app
       @ssh_session = nil
     end
@@ -15,8 +19,17 @@ module Sunshine
     def connect
       return if connected?
       sunshine_info "Connecting..."
-      args = [@host, @user, @password].compact
-      @ssh_session = Net::SSH.start(*args)
+      tries = 0
+        begin
+          @ssh_session = Net::SSH.start(@host, @user, @options)
+        rescue Net::SSH::AuthenticationFailed => e
+          raise ConnectionError, "Failed to connect to #{@host}" unless tries < MAX_TRIES
+          tries = tries.next
+          sunshine_info "#{e.class}: #{e.message}"
+          sunshine_info "User '#{@user}' can't log into #{@host}. Try entering a password:"
+          @options[:password] = gets.chomp
+          retry
+        end
     end
 
     def connected?
