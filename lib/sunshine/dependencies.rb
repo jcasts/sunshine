@@ -2,9 +2,9 @@ require "settler"
 
 class Sunshine::Dependencies < Settler
 
-  atti_tpkg 'nginx'
+  yum 'nginx'
 
-  # yum 'ruby'
+  yum 'ruby'
 
   gem 'unicorn', :version => "~>0.93"
 

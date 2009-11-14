@@ -29,4 +29,19 @@ class Settler
 
   end
 
+
+  ##
+  # Define internal Settler dependencies
+
+  dependency 'yum' do
+    install do |cmd|
+      cmd.call "cd ~; mkdir setups; cd setups"
+      cmd.call "wget http://yum.baseurl.org/download/3.2/yum-3.2.25.tar.gz"
+      cmd.call "tar -xvzf yum-3.2.25.tar.gz"
+      cmd.call "cd yum-3.2.25; ./configure; make; make install"
+    end
+
+    check_test "yum --version", "==\"3.2.25\""
+  end
+
 end

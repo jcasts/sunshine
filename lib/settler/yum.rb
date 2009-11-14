@@ -20,6 +20,13 @@ class Settler
       end
     end
 
+    private
+
+    def run_command(command, options={})
+      Settler.install 'yum', options
+      super
+    end
+
   end
 
 end
