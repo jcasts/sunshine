@@ -2,7 +2,7 @@ module Sunshine
 
   class DeployServer
 
-    class ConnectionError < Exception; end
+    class ConnectionError < FatalDeployError; end
 
     attr_reader :host, :user, :app
 

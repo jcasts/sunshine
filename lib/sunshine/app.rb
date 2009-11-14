@@ -36,7 +36,7 @@ module Sunshine
         symlink_current_dir deploy_server
       end
       yield(self) if block_given?
-    rescue DeployServer::ConnectionError => e
+    rescue FatalDeployError => e
       Sunshine.info :app, "ConnectionError: #{e.message}"
     rescue CriticalDeployError => e
       Sunshine.info :app, "CriticalDeployError: #{e.message} - cannot deploy"

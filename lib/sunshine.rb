@@ -21,6 +21,7 @@ module Sunshine
   end
 
   class CriticalDeployError < Exception; end
+  class FatalDeployError < Exception; end
 
   require 'sunshine/dependencies'
 
