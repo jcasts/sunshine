@@ -26,8 +26,13 @@ module Sunshine
           raise ConnectionError, "Failed to connect to #{@host}" unless tries < MAX_TRIES
           tries = tries.next
           sunshine_info "#{e.class}: #{e.message}"
-          sunshine_info "User '#{@user}' can't log into #{@host}. Try entering a password:"
-          @options[:password] = gets.chomp
+          Sunshine.info :ssh, "User '#{@user}' can't log into #{@host}. Try entering a password (#{tries}/#{MAX_TRIES}):"
+          begin
+            system "stty -echo"
+            @options[:password] = gets.chomp
+          ensure
+            system "stty echo"
+          end
           retry
         end
     end
