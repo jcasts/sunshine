@@ -79,7 +79,7 @@ module Sunshine
       info << "scm_url: #{@repo.url}"
       info << "scm_rev: #{@repo.revision}"
       contents = info.join("\n")
-      deploy_server.make_file! "#{@checkout_path}/VERSION", contents
+      deploy_server.make_file "#{@checkout_path}/VERSION", contents
     end
 
     def symlink_current_dir(deploy_server=nil)

@@ -18,7 +18,7 @@ module Sunshine
       self.push(deploy_server) if self.select{|ds| ds.host == deploy_server.host}.empty?
     end
 
-    %w{connect connected? disconnect upload make_file! run os_name symlink}.each do |mname|
+    %w{connect connected? disconnect upload make_file run os_name symlink}.each do |mname|
       self.class_eval <<-STR
         def #{mname}(*args, &block)
           warn_if_empty

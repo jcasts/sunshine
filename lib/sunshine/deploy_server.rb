@@ -54,11 +54,11 @@ module Sunshine
       @ssh_session.scp.download!(from_path, to_path, options, &block)
     end
 
-    def make_file!(filepath, content)
+    def make_file(filepath, content, options={})
       FileUtils.mkdir_p "tmp"
       temp_filepath = "tmp/#{Time.now.to_i}_#{File.basename(filepath)}"
       File.open(temp_filepath, "w+"){|f| f.write(content)}
-      upload(temp_filepath, filepath)
+      upload(temp_filepath, filepath, options)
       File.delete(temp_filepath)
       Dir.delete("tmp") if Dir.glob("tmp/*").empty?
     end
@@ -70,11 +70,14 @@ module Sunshine
     def run(string_cmd, &block)
       sunshine_info "Running: #{string_cmd}"
       stdout = ""
+      last_stream = nil
       @ssh_session.exec!(string_cmd) do |channel, stream, data|
         stdout << data if stream == :stdout
+        last_stream = stream
+        # TODO: add logger out (optionally?)
         yield(stream, data) if block_given?
-        raise SSHCmdError.new(data, self) if stream == :stderr
       end
+      raise SSHCmdError.new(data, self) if last_stream == :stderr
       stdout
     end
 

@@ -38,7 +38,7 @@ module Sunshine
         Sunshine::Dependencies.install @name, :console => proc{|str| deploy_server.run(str)} if Sunshine::Dependencies[@name]
         deploy_server.run "mkdir -p #{@config_path}"
         server_name = @server_name || deploy_server.host
-        deploy_server.make_file!(@config_file_path, build_server_config(binding))
+        deploy_server.make_file(@config_file_path, build_server_config(binding))
         yield(deploy_server) if block_given?
       end
     end

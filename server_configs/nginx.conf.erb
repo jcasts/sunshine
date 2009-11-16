@@ -1,6 +1,8 @@
 <% darwin = deploy_server.os_name =~ /^darwin$/i %>
 
+<% if port < 1024 %>
 user nobody nobody;
+<% end %>
 worker_processes  <%= processes %>;
 pid               <%= pid %>;
 error_log         <%= log_files[:stderr] %> info;
