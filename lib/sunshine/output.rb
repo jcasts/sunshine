@@ -5,7 +5,7 @@ module Sunshine
     def initialize(options={})
       @logger = Logger.new(STDOUT)
       @logger.formatter = lambda{|sev, time, progname, msg| msg}
-      @logger.level = options[:level] || Logger::DEBUG
+      @logger.level = options[:level] ? Logger.const_get(options[:level].to_s.upcase) : Logger::DEBUG
       @indent = 0
       @colors = {
         Logger::UNKNOWN => :red,
@@ -23,10 +23,10 @@ module Sunshine
       new_lines = "\n" * (options[:break] || 0)
       indent = " " * (options[:indent].to_i * 2)
 
-      print_string = message.split("\n").map{|m| "#{new_lines}#{indent}[#{title}] #{m.chomp}"}
-      print_string = "#{new_lines}#{print_string.join("\n")}\n"
+      print_string = message.split("\n").map{|m| "#{indent}[#{title}] #{m.chomp}"}
+      print_string = "#{new_lines}#{print_string.join("\n")} \n"
       print_string = print_string.foreground(color)
-      print_string = print_string.inverse if indent.empty?
+      print_string = print_string.bright if indent.empty?
 
       @logger.add(severity, print_string)
     end
