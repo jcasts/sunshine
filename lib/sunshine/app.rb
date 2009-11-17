@@ -30,13 +30,13 @@ module Sunshine
     def deploy!(&block)
       Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
         deploy_servers.connect
-        deploy_servers.each do |deploy_server|
-          checkout_codebase deploy_server
-          make_deploy_info_file deploy_server
-          symlink_current_dir deploy_server
-        end
-        yield(self) if block_given?
       end
+      deploy_servers.each do |deploy_server|
+        checkout_codebase deploy_server
+        make_deploy_info_file deploy_server
+        symlink_current_dir deploy_server
+      end
+      yield(self) if block_given?
     rescue CriticalDeployError => e
       Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy" do
         revert!

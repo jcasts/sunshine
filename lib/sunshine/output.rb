@@ -12,26 +12,28 @@ module Sunshine
         Logger::FATAL   => :red,
         Logger::ERROR   => :red,
         Logger::WARN    => :yellow,
-        Logger::INFO    => :green,
-        Logger::DEBUG   => :default,
+        Logger::INFO    => :default,
+        Logger::DEBUG   => :cyan,
       }
     end
 
     def print(title, message, options={})
       severity = options[:type] ? Logger.const_get(options[:type].to_s.upcase) : Logger::DEBUG
-      new_lines = "\n" * (options[:break] || 1)
+      color = @colors[severity]
+      new_lines = "\n" * (options[:break] || 0)
       indent = " " * (options[:indent].to_i * 2)
+
       print_string = message.split("\n").map{|m| "#{new_lines}#{indent}[#{title}] #{m.chomp}"}
       print_string = "#{new_lines}#{print_string.join("\n")}\n"
-      @logger.add(severity, print_string.color(@colors[severity]))
+      print_string = print_string.foreground(color)
+      print_string = print_string.inverse if indent.empty?
+
+      @logger.add(severity, print_string)
     end
 
     def log(title, message, options={}, &block)
-      block_options = {
-        :indent => @indent,
-        :break  => (@indent == 0 ? 1 : 0)
-      }
-      self.print(title, message, block_options.merge(options))
+      options = {:indent => @indent}.merge(options)
+      self.print(title, message, options)
       if block_given?
         @indent = @indent + 1
         begin
