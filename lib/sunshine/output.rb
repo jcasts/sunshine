@@ -21,25 +21,25 @@ module Sunshine
       severity = options[:type] ? Logger.const_get(options[:type].to_s.upcase) : Logger::DEBUG
       new_lines = "\n" * (options[:break] || 1)
       indent = " " * (options[:indent].to_i * 2)
-      print_string = "#{new_lines}#{indent}[#{title}] #{message}\n"
+      print_string = message.split("\n").map{|m| "#{new_lines}#{indent}[#{title}] #{m.chomp}"}
+      print_string = "#{new_lines}#{print_string.join("\n")}\n"
       @logger.add(severity, print_string.color(@colors[severity]))
     end
 
     def log(title, message, options={}, &block)
+      block_options = {
+        :indent => @indent,
+        :break  => (@indent == 0 ? 1 : 0)
+      }
+      self.print(title, message, block_options.merge(options))
       if block_given?
         @indent = @indent + 1
-        block_options = {
-          :indent => @indent,
-          :break  => (@indent == 0 ? 1 : 0)
-        }
-        self.print(title, message, block_options.merge(options))
         begin
           block.call
         ensure
           @indent = @indent - 1
+          @logger << "\n"
         end
-      else
-        self.print(title, message, options)
       end
     end
 

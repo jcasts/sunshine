@@ -73,19 +73,18 @@ module Sunshine
     end
 
     def run(string_cmd, &block)
-      sunshine_info "Running: #{string_cmd}"
       stdout = ""
       stderr = ""
-      output = ""
       last_stream = nil
-      @ssh_session.exec!(string_cmd) do |channel, stream, data|
-        stdout << data if stream == :stdout
-        stderr << data if stream == :stderr
-        output << data
-        last_stream = stream
-        yield(stream, data) if block_given?
+      sunshine_info "Running: #{string_cmd}" do
+        @ssh_session.exec!(string_cmd) do |channel, stream, data|
+          stdout << data if stream == :stdout
+          stderr << data if stream == :stderr
+          last_stream = stream unless data.chomp.empty?
+          Sunshine.logger.log(">>", data, :type => (last_stream == :stdout ? :debug : :error))
+          yield(stream, data) if block_given?
+        end
       end
-      Sunshine.logger.log(@host, output, :type => (last_stream == :stdout ? :debug : :error))
       raise SSHCmdError.new(stderr, self) if last_stream == :stderr && !stderr.empty?
       stdout
     end
@@ -97,8 +96,8 @@ module Sunshine
 
     private
 
-    def sunshine_info(message)
-      Sunshine.logger.info @host, message, :indent => 1, :nl => 0
+    def sunshine_info(message, options={}, &block)
+      Sunshine.logger.info @host, message, options, &block
     end
 
   end

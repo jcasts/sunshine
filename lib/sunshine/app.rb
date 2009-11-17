@@ -38,9 +38,10 @@ module Sunshine
         yield(self) if block_given?
       end
     rescue CriticalDeployError => e
-      Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy"
-      revert!
-      yield(self) if block_given?
+      Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy" do
+        revert!
+        yield(self) if block_given?
+      end
     rescue FatalDeployError => e
       Sunshine.logger.fatal :app, "#{e.class}: #{e.message}"
     ensure
@@ -98,7 +99,7 @@ module Sunshine
       raise CriticalDeployError, e.message
     end
 
-    def install_dependency(dep_name, deploy_server=nil)
+    def install_dependencies(deploy_server=nil)
       deploy_server ||= @deploy_servers
       # TODO: probably will implement yum, apt, or tpkg
     end
