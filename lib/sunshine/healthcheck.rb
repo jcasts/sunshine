@@ -21,16 +21,23 @@ module Sunshine
     end
 
     def enable!
-      @app.deploy_servers.run "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file}; touch #{@hc_file}"
+      Sunshine.logger.info :healthcheck, "Enabling healthcheck" do
+        @app.deploy_servers.run "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file}"
+        @app.deploy_servers.run "touch #{@hc_file}"
+      end
     end
 
     def disable!
-      @app.deploy_servers.run "touch #{@hc_disabled_file} && rm -f#{@hc_file}"
+      Sunshine.logger.info :healthcheck, "Disabling healthcheck" do
+        @app.deploy_servers.run "touch #{@hc_disabled_file} && rm -f#{@hc_file}"
+      end
     end
 
     def remove!
-      @app.deploy_servers.run "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file};\
-      test -f #{@hc_file} && rm -f #{@hc_file}"
+      Sunshine.logger.info :healthcheck, "Removing healthcheck" do
+        @app.deploy_servers.run "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file};\
+          test -f #{@hc_file} && rm -f #{@hc_file}"
+      end
     end
 
     private
