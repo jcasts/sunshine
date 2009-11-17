@@ -10,9 +10,10 @@ module Sunshine
     end
 
     def checkout_to(server, path)
-      Sunshine.info :svn, "Checking out to #{server.host} #{path}"
-      server.run "test -d #{path} && rm -rf #{path}"
-      server.run "mkdir -p #{path} && svn checkout -r #{@revision} #{@url} #{path}"
+      Sunshine.logger.info :svn, "Checking out to #{server.host} #{path}" do
+        server.run "test -d #{path} && rm -rf #{path}"
+        server.run "mkdir -p #{path} && svn checkout -r #{@revision} #{@url} #{path}"
+      end
     end
 
   end

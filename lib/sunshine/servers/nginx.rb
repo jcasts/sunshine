@@ -11,14 +11,16 @@ module Sunshine
     end
 
     def start_cmd
-      "sudo #{@bin} -c #{@config_file_path}"
+      sudo = run_sudo? ? "sudo " : ""
+      "#{sudo}#{@bin} -c #{@config_file_path}"
     end
 
     def stop_cmd
-      cmd = "test -f #{@pid} && sudo kill -QUIT `cat #{@pid}`;"
+      sudo = run_sudo? ? "sudo " : ""
+      cmd = "test -f #{@pid} && #{sudo}kill -QUIT `cat #{@pid}`;"
       cmd << "sleep 2 ; rm -f #{@pid};"
-      cmd << "sudo pkill -QUIT -f '#{app.current_path}/.*nginx';"
-      cmd << "sudo pkill -9 -f '#{app.current_path}/.*nginx'"
+      cmd << "#{sudo}pkill -QUIT -f '#{app.current_path}/.*nginx';"
+      cmd << "#{sudo}pkill -9 -f '#{app.current_path}/.*nginx'"
     end
 
 
@@ -28,6 +30,13 @@ module Sunshine
         deploy_server.upload("#{CONFIG_DIR}/nginx_optimize.conf", "#{@config_path}/nginx_optimize.conf")
         yield(deploy_server) if block_given?
       end
+    end
+
+
+    private
+
+    def run_sudo?
+      @port < 1024
     end
 
   end

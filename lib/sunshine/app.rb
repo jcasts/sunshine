@@ -28,65 +28,73 @@ module Sunshine
     end
 
     def deploy!(&block)
-      Sunshine.info :app, "Beginning deploy of #{@name}"
-      deploy_servers.connect
-      deploy_servers.each do |deploy_server|
-        checkout_codebase deploy_server
-        make_deploy_info_file deploy_server
-        symlink_current_dir deploy_server
+      Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
+        deploy_servers.connect
+        deploy_servers.each do |deploy_server|
+          checkout_codebase deploy_server
+          make_deploy_info_file deploy_server
+          symlink_current_dir deploy_server
+        end
+        yield(self) if block_given?
       end
-      yield(self) if block_given?
-    rescue FatalDeployError => e
-      Sunshine.info :app, "ConnectionError: #{e.message}"
     rescue CriticalDeployError => e
-      Sunshine.info :app, "CriticalDeployError: #{e.message} - cannot deploy"
+      Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy"
       revert!
       yield(self) if block_given?
+    rescue FatalDeployError => e
+      Sunshine.logger.fatal :app, "#{e.class}: #{e.message}"
     ensure
-      Sunshine.info :app, "Ending deploy of #{@name}"
-      deploy_servers.disconnect
+      Sunshine.logger.info :app, "Ending deploy of #{@name}" do
+        deploy_servers.disconnect
+      end
     end
 
     def revert!
-      Sunshine.info :app, "Reverting to previous deploy..."
-      deploy_servers.each do |deploy_server|
-        deploy_server.run "rm -rf #{@checkout_path}"
-        last_deploy = deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
-        deploy_server.symlink("#{@deploys_path}/#{last_deploy}", @current_path) if last_deploy
+      Sunshine.logger.info :app, "Reverting to previous deploy..." do
+        deploy_servers.each do |deploy_server|
+          deploy_server.run "rm -rf #{@checkout_path}"
+          last_deploy = deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
+          deploy_server.symlink("#{@deploys_path}/#{last_deploy}", @current_path) if last_deploy
 
-        if last_deploy
-          Sunshine.info :app, "#{deploy_server.host}: Reverted to #{last_deploy}"
-        else
-          Sunshine.info :app, "#{deploy_server.host}: No previous deploy to revert to."
+          if last_deploy
+            Sunshine.logger.info :app, "#{deploy_server.host}: Reverted to #{last_deploy}"
+          else
+            Sunshine.logger.info :app, "#{deploy_server.host}: No previous deploy to revert to."
+          end
         end
       end
     end
 
     def checkout_codebase(deploy_server=nil)
-      Sunshine.info :app, "Checking out codebase"
-      deploy_server ||= @deploy_servers
-      @repo.checkout_to(deploy_server, @checkout_path)
-    rescue e
+      Sunshine.logger.info :app, "Checking out codebase" do
+        deploy_server ||= @deploy_servers
+        @repo.checkout_to(deploy_server, @checkout_path)
+      end
+    rescue => e
       raise CriticalDeployError, e.message
     end
 
     def make_deploy_info_file(deploy_server=nil)
-      Sunshine.info :app, "Creating VERSION file"
-      deploy_server ||= @deploy_servers
-      info = []
-      info << "deployed_at: #{Time.now.to_i}"
-      info << "deployed_by: #{Sunshine.run_local("whoami")}"
-      info << "scm_url: #{@repo.url}"
-      info << "scm_rev: #{@repo.revision}"
-      contents = info.join("\n")
-      deploy_server.make_file "#{@checkout_path}/VERSION", contents
+      Sunshine.logger.info :app, "Creating VERSION file" do
+        deploy_server ||= @deploy_servers
+        info = []
+        info << "deployed_at: #{Time.now.to_i}"
+        info << "deployed_by: #{Sunshine.run_local("whoami")}"
+        info << "scm_url: #{@repo.url}"
+        info << "scm_rev: #{@repo.revision}"
+        contents = info.join("\n")
+        deploy_server.make_file "#{@checkout_path}/VERSION", contents
+      end
+    rescue => e
+      Sunshine.logger.warn :app, "#{e.class} (non-critical):#{e.message}. Failed creating VERSION file"
     end
 
     def symlink_current_dir(deploy_server=nil)
-      Sunshine.info :app, "Symlinking #{@checkout_path} -> #{@current_path}"
-      deploy_server ||= @deploy_servers
-      deploy_server.symlink(@checkout_path, @current_path)
-    rescue e
+      Sunshine.logger.info :app, "Symlinking #{@checkout_path} -> #{@current_path}" do
+        deploy_server ||= @deploy_servers
+        deploy_server.symlink(@checkout_path, @current_path)
+      end
+    rescue => e
       raise CriticalDeployError, e.message
     end
 
@@ -96,8 +104,10 @@ module Sunshine
     end
 
     def install_gems(deploy_server=nil)
-      deploy_server ||= @deploy_servers
-      deploy_server.run "gem install geminstaller; cd #{@checkout_path} && geminstaller"
+      Sunshine.logger.info :app, "Installing gems" do
+        deploy_server ||= @deploy_servers
+        deploy_server.run "gem install geminstaller; cd #{@checkout_path} && geminstaller"
+      end
     end
 
     private

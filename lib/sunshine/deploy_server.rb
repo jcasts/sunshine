@@ -26,7 +26,7 @@ module Sunshine
           raise ConnectionError, "Failed to connect to #{@host}" unless tries < MAX_TRIES
           tries = tries.next
           sunshine_info "#{e.class}: #{e.message}"
-          Sunshine.info :ssh, "User '#{@user}' can't log into #{@host}. Try entering a password (#{tries}/#{MAX_TRIES}):"
+          Sunshine.logger.info :ssh, "User '#{@user}' can't log into #{@host}. Try entering a password (#{tries}/#{MAX_TRIES}):"
           begin
             system "stty -echo"
             @options[:password] = gets.chomp
@@ -75,14 +75,18 @@ module Sunshine
     def run(string_cmd, &block)
       sunshine_info "Running: #{string_cmd}"
       stdout = ""
+      stderr = ""
+      output = ""
       last_stream = nil
       @ssh_session.exec!(string_cmd) do |channel, stream, data|
         stdout << data if stream == :stdout
+        stderr << data if stream == :stderr
+        output << data
         last_stream = stream
-        # TODO: add logger out (optionally?)
         yield(stream, data) if block_given?
       end
-      raise SSHCmdError.new(data, self) if last_stream == :stderr
+      Sunshine.logger.log(@host, output, :type => (last_stream == :stdout ? :debug : :error))
+      raise SSHCmdError.new(stderr, self) if last_stream == :stderr && !stderr.empty?
       stdout
     end
 
@@ -94,7 +98,7 @@ module Sunshine
     private
 
     def sunshine_info(message)
-      Sunshine.info @host, message, :indent => 1, :nl => 0
+      Sunshine.logger.info @host, message, :indent => 1, :nl => 0
     end
 
   end

@@ -6,6 +6,7 @@ require 'net/ssh'
 require 'net/scp'
 require 'erb'
 require 'logger'
+require 'rainbow'
 
 
 module Sunshine
@@ -22,6 +23,9 @@ module Sunshine
 
   class CriticalDeployError < Exception; end
   class FatalDeployError < Exception; end
+  class DependencyError < FatalDeployError; end
+
+  require 'sunshine/output'
 
   require 'sunshine/dependencies'
 
@@ -45,16 +49,7 @@ module Sunshine
     include Open3
 
     def logger
-      return @logger if @logger
-      @logger = Logger.new(STDOUT)
-      @logger.level = Logger::INFO
-      @logger
-    end
-
-    def info(from, message, options={})
-      new_lines = "\n" * (options[:nl] || 1)
-      indent = " " * (options[:indent].to_i * 2)
-      logger << "#{new_lines}#{indent}[#{from}] #{message}\n"
+      @logger ||= Sunshine::Output.new
     end
 
     def deploy_env

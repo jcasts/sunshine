@@ -33,30 +33,37 @@ module Sunshine
     end
 
     def setup_deploy_servers(&block)
-      Sunshine.info @name, "Setting up #{@name} server"
-      @app.deploy_servers.each do |deploy_server|
-        Sunshine::Dependencies.install @name, :console => proc{|str| deploy_server.run(str)} if Sunshine::Dependencies[@name]
-        deploy_server.run "mkdir -p #{@config_path}"
-        server_name = @server_name || deploy_server.host
-        deploy_server.make_file(@config_file_path, build_server_config(binding))
-        yield(deploy_server) if block_given?
+      Sunshine.logger.info @name, "Setting up #{@name} server" do
+        @app.deploy_servers.each do |deploy_server|
+          begin
+            Sunshine::Dependencies.install @name, :console => proc{|str| deploy_server.run(str)} if Sunshine::Dependencies[@name]
+          rescue => e
+            raise DependencyError, "Could not install dependency #{@name} => #{e.class}: #{e.message}"
+          end
+          deploy_server.run "mkdir -p #{@config_path}"
+          server_name = @server_name || deploy_server.host
+          deploy_server.make_file(@config_file_path, build_server_config(binding))
+          yield(deploy_server) if block_given?
+        end
       end
     end
 
     def start(&block)
       setup_deploy_servers
-      Sunshine.info @name, "Starting #{@name} server"
-      @app.deploy_servers.each do |deploy_server|
-        deploy_server.run(start_cmd)
-        yield(deploy_server) if block_given?
+      Sunshine.logger.info @name, "Starting #{@name} server" do
+        @app.deploy_servers.each do |deploy_server|
+          deploy_server.run(start_cmd)
+          yield(deploy_server) if block_given?
+        end
       end
     end
 
     def stop(&block)
-      Sunshine.info @name, "Stopping #{@name} server"
-      @app.deploy_servers.each do |deploy_server|
-        deploy_server.run(stop_cmd)
-        yield(deploy_server) if block_given?
+      Sunshine.logger.info @name, "Stopping #{@name} server" do
+        @app.deploy_servers.each do |deploy_server|
+          deploy_server.run(stop_cmd)
+          yield(deploy_server) if block_given?
+        end
       end
     end
 

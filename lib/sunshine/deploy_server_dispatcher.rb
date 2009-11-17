@@ -43,7 +43,7 @@ module Sunshine
     private
 
     def warn_if_empty
-      Sunshine.info :deploy_servers, "No deploy servers are configured. The action will not be executed.", :indent => 1, :nl => 0 if self.empty?
+      Sunshine.logger.warn :deploy_servers, "No deploy servers are configured. The action will not be executed." if self.empty?
     end
 
   end
