@@ -9,13 +9,15 @@ module Sunshine
     end
 
     attr_reader :name, :repo, :public_domain_name, :deploy_servers, :deploy_options
-    attr_reader :deploy_path, :current_path, :checkout_path, :shared_path
     attr_reader :health
+
+    attr_accessor :deploy_path, :current_path, :checkout_path, :shared_path
 
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
       @deploy_options = Hash === args.first ? args.shift : {}
       load_config(config_file) if config_file
+      yield(self) if block_given?
     end
 
     def load_config(config_file)
@@ -110,22 +112,15 @@ module Sunshine
 
     def install_gems(deploy_server=nil)
       Sunshine.logger.info :app, "Installing gems" do
-        deploy_server ||= @deploy_servers
-        deploy_server.run "gem install geminstaller; cd #{@checkout_path} && geminstaller"
+        @deploy_servers.each do |deploy_server|
+          Sunshine::Dependencies.install 'geminstaller',
+            :console => lambda{|cmd_str| deploy_server.run(cmd_str)}
+          deploy_server.run "cd #{@checkout_path} && geminstaller"
+        end
       end
     end
 
     private
-
-    def deploy_server_list(server=nil, &block)
-      server_list = server.nil? ? deploy_servers : [server]
-      if block_given?
-        server_list.each do |deploy_server|
-          yield deploy_server
-        end
-      end
-      server_list
-    end
 
     def update_attributes(config_hash=@deploy_options)
       @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])

@@ -5,10 +5,10 @@ module Sunshine
     def initialize(app, *deploy_servers)
       @app = app
       @deploy_servers = []
-      self.concat(deploy_servers)
+      self.add(*deploy_servers)
     end
 
-    def concat(arr)
+    def add(*arr)
       arr.each do |ds|
         self << ds
       end
@@ -37,24 +37,56 @@ module Sunshine
       @deploy_servers.length
     end
 
-    %w{connect connected? disconnect upload make_file run os_name symlink}.each do |mname|
-      self.class_eval <<-STR
-        def #{mname}(*args, &block)
-          warn_if_empty
-          stat = {}
-          self.each do |ds|
-            stat[ds.host] = ds.#{mname}(*args, &block)
-          end
-          stat
-        end
-      STR
+    ##
+    # Forward to deploy servers
+
+    def connect(*args, &block)
+      call_each_method :connect, *args, &block
+    end
+
+    def connected?(*args, &block)
+      call_each_method :connected?, *args, &block
+    end
+
+    def disconnect(*args, &block)
+      call_each_method :disconnect, *args, &block
+    end
+
+    def symlink(*args, &block)
+      call_each_method :symlink, *args, &block
+    end
+
+    def upload(*args, &block)
+      call_each_method :upload, *args, &block
+    end
+
+    def make_file(*args, &block)
+      call_each_method :make_file, *args, &block
+    end
+
+    def os_name(*args, &block)
+      call_each_method :os_name, *args, &block
+    end
+
+    def run(*args, &block)
+      call_each_method :run, *args, &block
     end
 
 
     private
 
+    def call_each_method(method_name, *args, &block)
+      results = {}
+      self.each do |deploy_server|
+        results[deploy_server.host] = deploy_server.method(method_name).call(*args, &block)
+      end
+      results
+    end
+
     def warn_if_empty
-      Sunshine.logger.warn :deploy_servers, "No deploy servers are configured. The action will not be executed." if self.empty?
+      return unless self.empty?
+      Sunshine.logger.warn :deploy_servers,
+        "No deploy servers are configured. The action will not be executed."
     end
 
   end
