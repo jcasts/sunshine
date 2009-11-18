@@ -32,9 +32,9 @@ module Sunshine
         deploy_servers.connect
       end
       deploy_servers.each do |deploy_server|
-        checkout_codebase deploy_server
-        make_deploy_info_file deploy_server
-        symlink_current_dir deploy_server
+        self.checkout_codebase      deploy_server
+        self.make_deploy_info_file  deploy_server
+        self.symlink_current_dir    deploy_server
       end
       yield(self) if block_given?
 
