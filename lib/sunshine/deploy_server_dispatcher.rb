@@ -21,11 +21,7 @@ module Sunshine
 
     def each(&block)
       warn_if_empty
-      threads = []
-      @deploy_servers.each do |deploy_server|
-        threads << Thread.new{ block.call(deploy_server) }
-      end
-      threads.each{|thr| thr.join}
+      @deploy_servers.each &block
     end
 
     def exist?(deploy_server)
