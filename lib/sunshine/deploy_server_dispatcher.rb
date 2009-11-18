@@ -1,9 +1,10 @@
 module Sunshine
 
-  class DeployServerDispatcher < Array
+  class DeployServerDispatcher
 
     def initialize(app, *deploy_servers)
       @app = app
+      @deploy_servers = []
       self.concat(deploy_servers)
     end
 
@@ -15,7 +16,25 @@ module Sunshine
 
     def <<(deploy_server)
       deploy_server = DeployServer.new(deploy_server, @app) unless DeployServer === deploy_server
-      self.push(deploy_server) if self.select{|ds| ds.host == deploy_server.host}.empty?
+      @deploy_servers.push(deploy_server) unless self.exist?(deploy_server)
+    end
+
+    def each(&block)
+      warn_if_empty
+      @deploy_servers.each &block
+    end
+
+    def exist?(deploy_server)
+      deploy_server_host = deploy_server.host rescue deploy_server.split("@").last
+      !@deploy_servers.select{|ds| ds.host == deploy_server_host}.empty?
+    end
+
+    def empty?
+      @deploy_servers.empty?
+    end
+
+    def length
+      @deploy_servers.length
     end
 
     %w{connect connected? disconnect upload make_file run os_name symlink}.each do |mname|
@@ -31,14 +50,6 @@ module Sunshine
       STR
     end
 
-    %w{each each_with_index}.each do |mname|
-      self.class_eval <<-STR
-        def #{mname}(*args, &block)
-          warn_if_empty
-          super
-        end
-      STR
-    end
 
     private
 

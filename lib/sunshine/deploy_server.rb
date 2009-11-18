@@ -11,30 +11,38 @@ module Sunshine
     def initialize(user_at_host, app, options={})
       @user, @host = user_at_host.split("@")
       @user ||= options.delete(:user)
-      @options = options
       @app = app
+      @options = options
       @ssh_session = nil
     end
 
     def connect
       return if connected?
-      sunshine_info "Connecting..."
+      Sunshine.logger.info @host, "Connecting..."
+
       tries = 0
+      begin
+
+        @ssh_session = Net::SSH.start(@host, @user, @options)
+
+      rescue Net::SSH::AuthenticationFailed => e
+
+        raise ConnectionError, "Failed to connect to #{@host}" unless tries < MAX_TRIES
+        tries = tries.next
+
+        Sunshine.logger.info @host, "#{e.class}: #{e.message}"
+
+        Sunshine.logger.info :ssh, "User '#{@user}' can't log into #{@host}. Try entering a password (#{tries}/#{MAX_TRIES}):"
+
         begin
-          @ssh_session = Net::SSH.start(@host, @user, @options)
-        rescue Net::SSH::AuthenticationFailed => e
-          raise ConnectionError, "Failed to connect to #{@host}" unless tries < MAX_TRIES
-          tries = tries.next
-          sunshine_info "#{e.class}: #{e.message}"
-          Sunshine.logger.info :ssh, "User '#{@user}' can't log into #{@host}. Try entering a password (#{tries}/#{MAX_TRIES}):"
-          begin
-            system "stty -echo"
-            @options[:password] = gets.chomp
-          ensure
-            system "stty echo"
-          end
-          retry
+          system "stty -echo"
+          @options[:password] = gets.chomp
+        ensure
+          system "stty echo"
         end
+        retry
+
+      end
     end
 
     def connected?
@@ -43,19 +51,19 @@ module Sunshine
 
     def disconnect
       return unless connected?
-      sunshine_info "Disconnecting..."
+      Sunshine.logger.info @host, "Disconnecting..."
       @ssh_session.close
       @ssh_session = nil
     end
 
     def upload(from_path, to_path, options={}, &block)
       raise Errno::ENOENT, "No such file or directory - #{from_path}" unless File.exists?(from_path)
-      sunshine_info "Uploading #{from_path} -> #{to_path}"
+      Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}"
       @ssh_session.scp.upload!(from_path, to_path, options, &block)
     end
 
     def download(from_path, to_path, options={}, &block)
-      sunshine_info "Downloading #{from_path} -> #{to_path}"
+      Sunshine.logger.info @host, "Downloading #{from_path} -> #{to_path}"
       @ssh_session.scp.download!(from_path, to_path, options, &block)
     end
 
@@ -63,7 +71,9 @@ module Sunshine
       FileUtils.mkdir_p "tmp"
       temp_filepath = "tmp/#{Time.now.to_i}_#{File.basename(filepath)}"
       File.open(temp_filepath, "w+"){|f| f.write(content)}
-      upload(temp_filepath, filepath, options)
+
+      self.upload(temp_filepath, filepath, options)
+
       File.delete(temp_filepath)
       Dir.delete("tmp") if Dir.glob("tmp/*").empty?
     end
@@ -76,7 +86,7 @@ module Sunshine
       stdout = ""
       stderr = ""
       last_stream = nil
-      sunshine_info "Running: #{string_cmd}" do
+      Sunshine.logger.info @host, "Running: #{string_cmd}" do
         @ssh_session.exec!(string_cmd) do |channel, stream, data|
           stdout << data if stream == :stdout
           stderr << data if stream == :stderr
@@ -91,13 +101,6 @@ module Sunshine
 
     def os_name
       @os_name ||= run("uname -s").strip.downcase
-    end
-
-
-    private
-
-    def sunshine_info(message, options={}, &block)
-      Sunshine.logger.info @host, message, options, &block
     end
 
   end
