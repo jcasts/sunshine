@@ -15,9 +15,7 @@ module Sunshine
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
       @deploy_options = Hash === args.first ? args.shift : {}
-
       load_config(config_file) if config_file
-      update_attributes
     end
 
     def load_config(config_file)
@@ -37,13 +35,16 @@ module Sunshine
         symlink_current_dir deploy_server
       end
       yield(self) if block_given?
+
     rescue CriticalDeployError => e
       Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy" do
         revert!
         yield(self) if block_given?
       end
+
     rescue FatalDeployError => e
       Sunshine.logger.fatal :app, "#{e.class}: #{e.message}"
+
     ensure
       Sunshine.logger.info :app, "Ending deploy of #{@name}" do
         deploy_servers.disconnect
@@ -55,9 +56,9 @@ module Sunshine
         deploy_servers.each do |deploy_server|
           deploy_server.run "rm -rf #{@checkout_path}"
           last_deploy = deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
-          deploy_server.symlink("#{@deploys_path}/#{last_deploy}", @current_path) if last_deploy
 
           if last_deploy
+            deploy_server.symlink("#{@deploys_path}/#{last_deploy}", @current_path)
             Sunshine.logger.info :app, "#{deploy_server.host}: Reverted to #{last_deploy}"
           else
             Sunshine.logger.info :app, "#{deploy_server.host}: No previous deploy to revert to."
@@ -71,6 +72,7 @@ module Sunshine
         deploy_server ||= @deploy_servers
         @repo.checkout_to(deploy_server, @checkout_path)
       end
+
     rescue => e
       raise CriticalDeployError, e.message
     end
@@ -86,6 +88,7 @@ module Sunshine
         contents = info.join("\n")
         deploy_server.make_file "#{@checkout_path}/VERSION", contents
       end
+
     rescue => e
       Sunshine.logger.warn :app, "#{e.class} (non-critical):#{e.message}. Failed creating VERSION file"
     end
@@ -95,6 +98,7 @@ module Sunshine
         deploy_server ||= @deploy_servers
         deploy_server.symlink(@checkout_path, @current_path)
       end
+
     rescue => e
       raise CriticalDeployError, e.message
     end

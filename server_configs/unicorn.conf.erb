@@ -2,5 +2,5 @@ timeout 30 ### Solr slow at this time.
 worker_processes <%= processes %>
 listen "0.0.0.0:<%= port %>"
 pid "<%= pid %>"
-stderr_path "<%= log_files[:stderr] %>"
-stdout_path "<%= log_files[:stdout] %>"
+stderr_path "<%= log_file :stderr %>"
+stdout_path "<%= log_file :stdout %>"

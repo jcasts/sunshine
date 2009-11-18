@@ -2,93 +2,141 @@ module Sunshine
 
   class Server
 
-    CONFIG_DIR = "server_configs"
+    TEMPLATES_DIR = "server_configs"
 
-    attr_reader :app, :name, :pid, :log_files, :config_template, :config_path, :config_file_path
-    attr_reader :restart_cmd, :start_cmd, :stop_cmd, :bin
-    attr_reader :server_name, :port, :processes, :target
+    attr_reader :app, :name, :target
+
+    attr_accessor :restart_cmd, :start_cmd, :stop_cmd
+    attr_accessor :bin, :pid, :server_name, :port, :processes
+    attr_accessor :config_template, :config_path, :config_file
 
     def initialize(app, options={})
-      @app = app
-      @name = self.class.to_s.split("::").last.downcase
-      @pid = options[:pid] || "#{@app.shared_path}/pids/#{@name}.pid"
-      @bin = options[:bin] || @name
-
-      @log_path = options[:log_path] || "#{@app.shared_path}/log"
-      @log_files = {
-        :stderr => (options[:stderr_log] || "#{@log_path}/#{@name}_stderr.log"),
-        :stdout => (options[:stdout_log] || "#{@log_path}/#{@name}_stdout.log")
-      }
-
-      @config_template = options[:config_template] || "server_configs/#{@name}.conf.erb"
-      @config_path = options[:config_path] || "#{@app.current_path}/server_config"
-      @config_file_path = "#{@config_path}/#{@name}.conf"
-
-      @restart_cmd = nil
-
-      @server_name = options[:server_name]
-      @port = options[:port] || 80
-      @processes = options[:processes] || 1
+      @app    = app
       @target = options[:point_to] || @app
+      @name   = self.class.to_s.split("::").last.downcase
+
+      @pid         = options[:pid] || "#{@app.shared_path}/pids/#{@name}.pid"
+      @bin         = options[:bin] || @name
+      @port        = options[:port] || 80
+      @processes   = options[:processes] || 1
+      @server_name = options[:server_name]
+
+      @config_template = options[:config_template] || "#{TEMPLATES_DIR}/#{@name}.conf.erb"
+      @config_path     = options[:config_path] || "#{@app.current_path}/server_config"
+      @config_file     = options[:config_file] || "#{@name}.conf"
+
+      log_path  = options[:log_path] || "#{@app.shared_path}/log"
+      @log_files = {
+        :stderr => (options[:stderr_log] || "#{log_path}/#{@name}_stderr.log"),
+        :stdout => (options[:stdout_log] || "#{log_path}/#{@name}_stdout.log")
+      }
     end
 
-    def setup_deploy_servers(&block)
+    def setup(&block)
       Sunshine.logger.info @name, "Setting up #{@name} server" do
+
         @app.deploy_servers.each do |deploy_server|
+
           begin
-            Sunshine::Dependencies.install @name, :console => proc{|str| deploy_server.run(str)} if Sunshine::Dependencies[@name]
+            Sunshine::Dependencies.install @name,
+              :console => proc{|cmd_str| deploy_server.run(cmd_str)}
           rescue => e
-            raise DependencyError, "Could not install dependency #{@name} => #{e.class}: #{e.message}"
-          end
-          deploy_server.run "mkdir -p #{@config_path}"
-          server_name = @server_name || deploy_server.host
-          deploy_server.make_file(@config_file_path, build_server_config(binding))
+            raise DependencyError,
+                  "Could not install dependency #{@name} => #{e.class}: #{e.message}"
+          end if Sunshine::Dependencies.exist?(@name)
+
+          server_name = @server_name || deploy_server.host # Pass server_name to binding
+
+          deploy_server.run "mkdir -p #{remote_dirs.join(" ")}"
+          deploy_server.make_file self.config_file_path, build_server_config(binding)
+
           yield(deploy_server) if block_given?
+
         end
+
       end
+
+    rescue => e
+      raise FatalDeployError, "Could not setup server #{@name}:\n#{e.message}"
     end
 
     def start(&block)
-      setup_deploy_servers
+      self.setup
       Sunshine.logger.info @name, "Starting #{@name} server" do
+
         @app.deploy_servers.each do |deploy_server|
-          deploy_server.run(start_cmd)
-          yield(deploy_server) if block_given?
+          begin
+            deploy_server.run(start_cmd)
+            yield(deploy_server) if block_given?
+          rescue => e
+            raise FatalDeployError, "Could not start server #{@name}:\n#{e.message}"
+          end
         end
+
       end
     end
 
     def stop(&block)
       Sunshine.logger.info @name, "Stopping #{@name} server" do
+
         @app.deploy_servers.each do |deploy_server|
-          deploy_server.run(stop_cmd)
-          yield(deploy_server) if block_given?
+          begin
+            deploy_server.run(stop_cmd)
+            yield(deploy_server) if block_given?
+          rescue => e
+            raise FatalDeployError, "Could not stop server #{@name}:\n#{e.message}"
+          end
         end
+
       end
     end
 
     def restart
-      if restart_cmd
-        @app.deploy_servers.run(restart_cmd)
+      if @restart_cmd
+        self.setup
+        begin
+          @app.deploy_servers.run(@restart_cmd)
+        rescue => e
+          raise FatalDeployError, "Could not stop server #{@name}:\n#{e.message}"
+        end
       else
-        stop
-        start
+        self.stop
+        self.start
       end
+    end
+
+    def start_cmd
+      return @start_cmd || raise(FatalDeployError, "'start_cmd' is undefined. Cannot start #{@name}")
+    end
+
+    def stop_cmd
+      return @stop_cmd || raise(FatalDeployError, "'stop_cmd' is undefined. Cannot stop #{@name}")
+    end
+
+    def log_files(hash)
+      @log_files.merge!(hash)
+    end
+
+    def log_file(key)
+      @log_files[key]
+    end
+
+    def config_file_path
+      "#{@config_path}/#{@config_file}"
     end
 
     private
 
+    def remote_dirs
+      dirs = @log_files.values.map{|f| File.dirname(f)}
+      dirs.concat [@config_path, File.dirname(@pid)]
+      dirs.delete_if{|d| d == "."}
+      dirs
+    end
+
     def build_server_config(custom_binding=nil)
       str = File.read(@config_template)
       ERB.new(str, nil, '-').result(custom_binding || binding)
-    end
-
-    def start_cmd
-      raise "'start_cmd' must be implemented by child class"
-    end
-
-    def stop_cmd
-      raise "'stop_cmd' must be implemented by child class"
     end
 
   end

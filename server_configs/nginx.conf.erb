@@ -5,7 +5,7 @@ user nobody nobody;
 <% end %>
 worker_processes  <%= processes %>;
 pid               <%= pid %>;
-error_log         <%= log_files[:stderr] %> info;
+error_log         <%= log_file :stderr %> info;
 
 events {
   worker_connections  1024;
@@ -25,7 +25,7 @@ http {
                       '"$request" $status $body_bytes_sent "$http_referer" '
                       '"$http_user_agent" "$http_cookie" $request_time '
                       '$upstream_http_x_urid';
-  access_log <%= log_files[:stdout] %> atti_main;
+  access_log <%= log_file :stdout %> atti_main;
 
   
   # This should be some other include file
@@ -45,7 +45,7 @@ http {
 
   <% if target.is_a?(Sunshine::Server) %>
   upstream app_server {
-    server 0:<%= target.port rescue 80 %> fail_timeout=0;
+    server 0:<%= target.port %> fail_timeout=0;
   }
   <% end %>
 
@@ -73,7 +73,7 @@ http {
 
     location = /images/li.gif {
       empty_gif;
-      access_log <%= log_files[:impressions] %> atti_main;
+      access_log <%= log_file :impressions %> atti_main;
       break;
     }
 

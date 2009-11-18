@@ -3,13 +3,13 @@ module Sunshine
   class Unicorn < Server
 
     def start_cmd
-      "cd #{app.current_path} && #{@bin} -D -E #{Sunshine.deploy_env} -p #{@port} -c #{@config_file_path}"
+      "cd #{@app.current_path} && #{@bin} -D -E #{Sunshine.deploy_env} -p #{@port} -c #{self.config_file_path}"
     end
 
     def stop_cmd
       cmd = "(test -f #{@pid} && kill -QUIT `cat #{@pid}`) || true; "
       cmd << "sleep 2 ; rm -f #{@pid}; "
-      cmd << "pkill -9 -f '#{app.current_path}/.*/#{File.basename(@pid)}'"
+      cmd << "pkill -9 -f '#{@app.current_path}/.*/#{File.basename(@pid)}'"
     end
 
   end

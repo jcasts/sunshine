@@ -17,14 +17,18 @@ class Settler
       (@dependencies ||= {})[key]
     end
 
+    def exist?(key)
+      self.dependencies.has_key?(key)
+    end
+
     def install(*deps)
       options = Hash === deps.last ? deps.delete_at(deps.length - 1) : {}
-      deps.each{|dep| dependencies[dep].install! options }
+      deps.each{|dep| self.dependencies[dep].install! options }
     end
 
     def uninstall(*deps)
       options = Hash === deps.last ? deps.delete_at(deps.length - 1) : {}
-      deps.each{|dep| dependencies[dep].uninstall! options }
+      deps.each{|dep| self.dependencies[dep].uninstall! options }
     end
 
   end
