@@ -8,15 +8,13 @@ module Sunshine
       app
     end
 
-    attr_reader :name, :repo, :public_domain_name, :deploy_servers, :deploy_options
-    attr_reader :health
-
+    attr_reader :name, :repo, :deploy_servers, :health
     attr_accessor :deploy_path, :current_path, :checkout_path, :shared_path
 
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
       @deploy_options = Hash === args.first ? args.shift : {}
-      load_config(config_file) if config_file
+      config_file ? load_config(config_file) : update_attributes
       yield(self) if block_given?
     end
 
@@ -29,9 +27,9 @@ module Sunshine
 
     def deploy!(&block)
       Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
-        deploy_servers.connect
+        @deploy_servers.connect
       end
-      deploy_servers.each do |deploy_server|
+      @deploy_servers.each do |deploy_server|
         self.checkout_codebase      deploy_server
         self.make_deploy_info_file  deploy_server
         self.symlink_current_dir    deploy_server
@@ -120,20 +118,23 @@ module Sunshine
       end
     end
 
+
     private
 
     def update_attributes(config_hash=@deploy_options)
-      @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])
       @name = config_hash[:name]
-      @public_domain_name = config_hash[:public_domain_name] || "#{@name}.atti.com"
+
+      @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])
+
       @deploy_path = config_hash[:deploy_path]
       @current_path = "#{@deploy_path}/current"
       @deploys_path = "#{@deploy_path}/deploys"
       @checkout_path = "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
       @shared_path = "#{@deploy_path}/shared"
+
       @health = Healthcheck.new(self)
 
-      server_list = config_hash[:deploy_servers] || ["#{Sunshine.deploy_env}-#{@name}.atti.com"]
+      server_list = config_hash[:deploy_servers].to_a
       @deploy_servers = DeployServerDispatcher.new(self, *server_list)
     end
 

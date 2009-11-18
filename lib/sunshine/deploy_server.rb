@@ -69,7 +69,7 @@ module Sunshine
 
     def make_file(filepath, content, options={})
       FileUtils.mkdir_p "tmp"
-      temp_filepath = "tmp/#{Time.now.to_i}_#{File.basename(filepath)}"
+      temp_filepath = "tmp/#{File.basename(filepath)}_#{Time.now.to_i}#{rand(10000)}"
       File.open(temp_filepath, "w+"){|f| f.write(content)}
 
       self.upload(temp_filepath, filepath, options)
