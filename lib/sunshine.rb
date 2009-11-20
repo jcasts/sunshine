@@ -114,15 +114,11 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
     self.setup( parse_args(argv) )
 
     deploy_file = argv.first
-    unless File.file?(deploy_file.to_s)
-      puts "Error: Can't load file '#{deploy_file}'"
-      exit
-    end
+    require deploy_file if File.file?(deploy_file.to_s)
 
-    require deploy_file
   end
 
-  def self.setup(options=nil)
+  def self.setup(options={})
     @options ||= {
       :level => :info,
       :deploy_env => :development,
@@ -132,3 +128,4 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
 
 end
 
+Sunshine.run
