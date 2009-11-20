@@ -3,8 +3,8 @@ module Sunshine
   class App
 
     def self.deploy(*args, &block)
-      app = new *args
-      app.deploy! &block
+      app = new(*args)
+      app.deploy!(&block)
       app
     end
 

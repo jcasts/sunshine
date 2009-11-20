@@ -15,7 +15,7 @@ class Settler
         install "yum install #{pkg_name}"
         uninstall "yum remove #{pkg_name}"
         check_test("yum list #{pkg_name} | grep #{pkg_name} | wc -l", "-ge \"1\"")
-        requires *(options[:require].to_a) if options[:require]
+        requires(*options[:require].to_a) if options[:require]
         instance_eval(&block) if block_given?
       end
     end

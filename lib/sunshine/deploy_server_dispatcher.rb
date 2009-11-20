@@ -21,7 +21,7 @@ module Sunshine
 
     def each(&block)
       warn_if_empty
-      @deploy_servers.each &block
+      @deploy_servers.each(&block)
     end
 
     def exist?(deploy_server)

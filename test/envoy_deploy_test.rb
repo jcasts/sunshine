@@ -1,4 +1,4 @@
-require 'sunshine'
+#require 'sunshine'
 
 Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
 

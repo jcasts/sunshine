@@ -13,7 +13,7 @@ class Settler
         install "tpkg -n -i http://tpkg/tpkg/#{pkg_name}.tpkg"
         uninstall "tpkg -n -r #{pkg_name}"
         check_test("tpkg -q #{@name} | grep #{@name} | wc -l", "-ge \"1\"")
-        requires *(options[:require].to_a) if options[:require]
+        requires(*options[:require].to_a) if options[:require]
         instance_eval(&block) if block_given?
       end
     end

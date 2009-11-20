@@ -6,7 +6,6 @@ module Sunshine
 
     attr_reader :app, :name, :target
 
-    attr_accessor :restart_cmd, :start_cmd, :stop_cmd
     attr_accessor :bin, :pid, :server_name, :port, :processes
     attr_accessor :config_template, :config_path, :config_file
 
@@ -111,6 +110,10 @@ module Sunshine
 
     def stop_cmd
       return @stop_cmd || raise(FatalDeployError, "'stop_cmd' is undefined. Cannot stop #{@name}")
+    end
+
+    def restart_cmd
+      @restart_cmd
     end
 
     def log_files(hash)

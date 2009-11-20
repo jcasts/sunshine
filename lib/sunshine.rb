@@ -67,7 +67,7 @@ module Sunshine
   def self.parse_args argv
     options = {
       'level' => :info,
-      'deploy_env' => :qa,
+      'deploy_env' => :development,
     }
 
     opts = OptionParser.new do |opt|
@@ -75,9 +75,10 @@ module Sunshine
       opt.version = Sunshine::VERSION
       opt.release = nil
       opt.banner = <<-EOF
+
 Usage: #{opt.program_name} [options]
 
-Sunshine is a gem that provides a light, consistant api for application deployment. 
+Sunshine is a gem that provides a light, consistant api for rake applications deployment. 
       EOF
 
       opt.separator nil
@@ -88,9 +89,20 @@ Sunshine is a gem that provides a light, consistant api for application deployme
       end
 
       opt.on('-e', '--env [DEPLOY_ENV]',
-             'Sets the deploy environment. Defaults to qa.') do |value|
+             'Sets the deploy environment. Defaults to development.') do |value|
         options['deploy_env'] = value
       end
+
+      opt.on_tail("-h", "--help", "Show this message") do
+        puts opt
+        exit
+      end
+
+      opt.on_tail("-v", "--version", "Sunshine version") do
+        puts VERSION
+        exit
+      end
+
     end
 
     opts.parse! argv

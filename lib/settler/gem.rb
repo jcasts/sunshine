@@ -10,7 +10,7 @@ class Settler
         install "gem install #{@name}#{version}"
         uninstall "gem uninstall #{@name}#{version}"
         check "gem list #{@name} -i#{version}"
-        requires *(options[:require].to_a) if options[:require]
+        requires(*options[:require].to_a) if options[:require]
         instance_eval(&block) if block_given?
       end
     end
