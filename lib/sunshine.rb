@@ -103,4 +103,4 @@ Sunshine is a gem that provides a light, consistant api for application deployme
 
 end
 
-Sunshine.run # Remove this once the gem is called from the cmd line
+Sunshine.run
