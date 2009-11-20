@@ -1,4 +1,6 @@
 require 'rubygems'
+require 'rainbow'
+
 require 'settler'
 require 'yaml'
 require 'open3'
@@ -6,7 +8,6 @@ require 'net/ssh'
 require 'net/scp'
 require 'erb'
 require 'logger'
-require 'rainbow'
 require 'optparse'
 
 
