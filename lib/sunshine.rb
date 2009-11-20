@@ -65,10 +65,7 @@ module Sunshine
   end
 
   def self.parse_args argv
-    options = {
-      'level' => :info,
-      'deploy_env' => :development,
-    }
+    options = {}
 
     opts = OptionParser.new do |opt|
       opt.program_name = File.basename $0
@@ -76,22 +73,25 @@ module Sunshine
       opt.release = nil
       opt.banner = <<-EOF
 
-Usage: #{opt.program_name} [options]
+Usage: #{opt.program_name} deploy_file [options]
 
-Sunshine is a gem that provides a light, consistant api for rake applications deployment. 
+Sunshine is a gem that provides a light, consistant api for rack applications deployment. 
       EOF
 
       opt.separator nil
 
       opt.on('-l', '--level [LEVEL]',
              'Set trace level. Defaults to info.') do |value|
-        options['level'] = value.downcase.to_sym
+        options[:level] = value.downcase.to_sym
       end
 
       opt.on('-e', '--env [DEPLOY_ENV]',
              'Sets the deploy environment. Defaults to development.') do |value|
-        options['deploy_env'] = value
+        options[:deploy_env] = value
       end
+
+      opt.separator nil
+      opt.separator "Common options:"
 
       opt.on_tail("-h", "--help", "Show this message") do
         puts opt
@@ -110,10 +110,25 @@ Sunshine is a gem that provides a light, consistant api for rake applications de
     options
   end
 
-  def self.run argv = ARGV
-    @options = parse_args argv
+  def self.run(argv=ARGV)
+    self.setup( parse_args(argv) )
+
+    deploy_file = argv.first
+    unless File.file?(deploy_file.to_s)
+      puts "Error: Can't load file '#{deploy_file}'"
+      exit
+    end
+
+    require deploy_file
+  end
+
+  def self.setup(options=nil)
+    @options ||= {
+      :level => :info,
+      :deploy_env => :development,
+    }
+    @options.merge!(options)
   end
 
 end
 
-Sunshine.run

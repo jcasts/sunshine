@@ -2,3 +2,4 @@
 
 require 'sunshine'
 
+Sunshine.run
