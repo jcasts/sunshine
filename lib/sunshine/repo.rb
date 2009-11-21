@@ -7,7 +7,7 @@ module Sunshine
     ##
     # Creates a new repo subclass object
     def self.new_of_type(repo_type, url)
-      repo_sym = "#{repo_type.capitalize}Repo"
+      repo = "#{repo_type.capitalize}Repo"
       Sunshine.const_get(repo).new(url)
     end
 

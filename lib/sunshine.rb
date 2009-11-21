@@ -50,11 +50,11 @@ module Sunshine
 
 
   def self.logger
-    @logger ||= Sunshine::Output.new :level => @options['level']
+    @logger ||= Sunshine::Output.new :level => @debug_level
   end
 
   def self.deploy_env
-    @options['deploy_env']
+    @deploy_env
   end
 
   def self.run_local(str)
@@ -115,15 +115,11 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
 
     deploy_file = argv.first
     require deploy_file if File.file?(deploy_file.to_s)
-
   end
 
   def self.setup(options={})
-    @options ||= {
-      :level => :info,
-      :deploy_env => :development,
-    }
-    @options.merge!(options)
+    @debug_level = options[:level] || @debug_level || :info
+    @deploy_env = options[:deploy_env] || @deploy_env || :development
   end
 
 end

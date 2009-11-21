@@ -4,16 +4,15 @@ module Sunshine
 
     class ConnectionError < FatalDeployError; end
 
-    attr_reader :host, :user, :app
+    attr_reader :host, :user
     attr_accessor :roles
 
     MAX_CONNECT_TRIES = 3
 
-    def initialize(user_at_host, app, options={})
+    def initialize(user_at_host, options={})
       @user, @host = user_at_host.split("@")
       @user ||= options.delete(:user)
       @roles = options.delete(:roles).to_a
-      @app = app
       @options = options
       @ssh_session = nil
     end

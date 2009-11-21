@@ -2,8 +2,7 @@ module Sunshine
 
   class DeployServerDispatcher
 
-    def initialize(app, *deploy_servers)
-      @app = app
+    def initialize(*deploy_servers)
       @deploy_servers = []
       self.add(*deploy_servers)
     end
@@ -21,7 +20,7 @@ module Sunshine
     # Append a deploy server. Supports strings (user@server)
     # and DeployServer objects
     def <<(deploy_server)
-      deploy_server = DeployServer.new(deploy_server, @app) unless DeployServer === deploy_server
+      deploy_server = DeployServer.new(deploy_server) unless DeployServer === deploy_server
       @deploy_servers.push(deploy_server) unless self.exist?(deploy_server)
     end
 
@@ -46,7 +45,7 @@ module Sunshine
         (next unless ds.roles.include?(query[:role])) if query[:role]
         true
       end
-      self.class.new(@app, *results)
+      self.class.new(*results)
     end
 
     ##

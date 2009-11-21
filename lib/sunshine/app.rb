@@ -127,9 +127,11 @@ module Sunshine
     # TODO: Support something else than geminstaller :(
     def install_gems(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Installing gems" do
+        d_servers.each do |deploy_server|
           Sunshine::Dependencies.install 'geminstaller',
-            :console => lambda{|cmd_str| d_servers.run(cmd_str)}
-          d_servers.run "cd #{self.checkout_path} && geminstaller"
+            :console => lambda{|cmd_str| deploy_server.run(cmd_str)}
+          deploy_server.run "cd #{self.checkout_path} && geminstaller"
+        end
       end
     end
 
@@ -155,7 +157,7 @@ module Sunshine
       @health = Healthcheck.new(self)
 
       server_list = config_hash[:deploy_servers].to_a
-      @deploy_servers = DeployServerDispatcher.new(self, *server_list)
+      @deploy_servers = DeployServerDispatcher.new(*server_list)
     end
 
   end
