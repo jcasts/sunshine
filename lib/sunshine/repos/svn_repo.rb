@@ -6,6 +6,7 @@ module Sunshine
       response = Sunshine.run_local("svn log #{@url} --limit 1 --xml")
       @revision = response.match(/revision="(.*)">/)[1]
       @committer = response.match(/<author>(.*)<\/author>/)[1]
+      @branch = @url.split("/").last
       true
     end
 

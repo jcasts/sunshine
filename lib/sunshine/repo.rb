@@ -4,24 +4,48 @@ module Sunshine
 
   class Repo
 
-    include Open3
-
+    ##
+    # Creates a new repo subclass object
     def self.new_of_type(repo_type, url)
-      repo_sym = "#{repo_type.capitalize}Repo".to_sym
-      Sunshine.const_get(repo_sym).new(url)
+      repo_sym = "#{repo_type.capitalize}Repo"
+      Sunshine.const_get(repo).new(url)
     end
 
-    attr_reader :url, :revision, :committer
+    attr_reader :url
 
     def initialize(url)
       @url = url
-      update_repo_info
     end
 
+    ##
+    # Get the revision
+    def revision
+      update_repo_info unless @revision
+      @revision
+    end
+
+    ##
+    # Get the last committer
+    def committer
+      update_repo_info unless @committer
+      @committer
+    end
+
+    ##
+    # Get the current branch
+    def branch
+      update_repo_info unless @branch
+      @branch
+    end
+
+    ##
+    # Update the repo information - Implemented by subclass
     def update_repo_info
       raise RepoError, "The 'update_repo_info' method must be implemented by child classes"
     end
 
+    ##
+    # Checkout code to a deploy_server - Implemented by subclass
     def checkout_to(server, path)
       raise RepoError, "The 'checkout_to' method must be implemented by child classes"
     end
