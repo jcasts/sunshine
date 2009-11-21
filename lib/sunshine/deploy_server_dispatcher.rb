@@ -8,37 +8,69 @@ module Sunshine
       self.add(*deploy_servers)
     end
 
+    ##
+    # Add a list of deploy servers. Supports strings (user@server)
+    # and DeployServer objects
     def add(*arr)
       arr.each do |ds|
         self << ds
       end
     end
 
+    ##
+    # Append a deploy server. Supports strings (user@server)
+    # and DeployServer objects
     def <<(deploy_server)
       deploy_server = DeployServer.new(deploy_server, @app) unless DeployServer === deploy_server
       @deploy_servers.push(deploy_server) unless self.exist?(deploy_server)
     end
 
+    ##
+    # Iterate over all deploy servers
     def each(&block)
       warn_if_empty
       @deploy_servers.each(&block)
     end
 
+    ##
+    # Find deploy servers matching the passed requirements
+    # Returns a DeployServerDispatcher object
+    #   find :user => 'db'
+    #   find :host => 'someserver.com'
+    #   find :role => :web
+    def find(query=nil)
+      return self if query.nil? || query == :all
+      results = @deploy_servers.select do |ds|
+        (next unless ds.user == query[:user]) if query[:user]
+        (next unless ds.host == query[:host]) if query[:host]
+        (next unless ds.roles.include?(query[:role])) if query[:role]
+        true
+      end
+      self.class.new(@app, *results)
+    end
+
+    ##
+    # Returns true if the dispatcher has a deploy_server with the passed
+    # host or passed deploy_server's host
     def exist?(deploy_server)
       deploy_server_host = deploy_server.host rescue deploy_server.split("@").last
       !@deploy_servers.select{|ds| ds.host == deploy_server_host}.empty?
     end
 
+    ##
+    # Checks if the dispatcher has any deploy servers
     def empty?
       @deploy_servers.empty?
     end
 
+    ##
+    # Returns the number of deploy servers
     def length
       @deploy_servers.length
     end
 
     ##
-    # Forward to deploy servers
+    # Forwarding methods to deploy servers
 
     def connect(*args, &block)
       call_each_method :connect, *args, &block

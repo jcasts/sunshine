@@ -10,7 +10,7 @@ module Sunshine
       app
     end
 
-    attr_reader :name, :repo, :health
+    attr_reader :name, :repo, :health, :deploy_servers
     attr_accessor :deploy_path, :current_path, :checkout_path, :shared_path
 
     def initialize(*args, &block)
@@ -27,12 +27,6 @@ module Sunshine
       config_hash = (config_hash[:defaults] || {}).merge(config_hash[Sunshine.deploy_env] || {})
       @deploy_options = config_hash.merge(@deploy_options)
       update_attributes
-    end
-
-    ##
-    # Gets deploy servers based on host
-    # TODO: add server naming and grouping/roles
-    def deploy_servers(host=nil)
     end
 
     ##
@@ -70,7 +64,7 @@ module Sunshine
     def revert!
       Sunshine.logger.info :app, "Reverting to previous deploy..." do
         deploy_servers.each do |deploy_server|
-          deploy_server.run "rm -rf #{@checkout_path}"
+          deploy_server.run "rm -rf #{self.checkout_path}"
           last_deploy = deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
 
           if last_deploy
@@ -85,10 +79,9 @@ module Sunshine
 
     ##
     # Checks out the app's codebase to one or all deploy servers
-    def checkout_codebase(deploy_server=nil)
+    def checkout_codebase(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Checking out codebase" do
-        deploy_server ||= @deploy_servers
-        @repo.checkout_to(deploy_server, @checkout_path)
+        @repo.checkout_to(d_servers, self.checkout_path)
       end
 
     rescue => e
@@ -97,16 +90,15 @@ module Sunshine
 
     ##
     # Creates a VERSION file with deploy information
-    def make_deploy_info_file(deploy_server=nil)
+    def make_deploy_info_file(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Creating VERSION file" do
-        deploy_server ||= @deploy_servers
         info = []
         info << "deployed_at: #{Time.now.to_i}"
         info << "deployed_by: #{Sunshine.run_local("whoami")}"
         info << "scm_url: #{@repo.url}"
         info << "scm_rev: #{@repo.revision}"
         contents = info.join("\n")
-        deploy_server.make_file "#{@checkout_path}/VERSION", contents
+        d_servers.make_file "#{self.checkout_path}/VERSION", contents
       end
 
     rescue => e
@@ -115,10 +107,9 @@ module Sunshine
 
     ##
     # Creates a symlink to the app's checkout path
-    def symlink_current_dir(deploy_server=nil)
-      Sunshine.logger.info :app, "Symlinking #{@checkout_path} -> #{@current_path}" do
-        deploy_server ||= @deploy_servers
-        deploy_server.symlink(@checkout_path, @current_path)
+    def symlink_current_dir(d_servers = @deploy_servers)
+      Sunshine.logger.info :app, "Symlinking #{self.checkout_path} -> #{@current_path}" do
+        d_servers.symlink(self.checkout_path, @current_path)
       end
 
     rescue => e
@@ -127,36 +118,33 @@ module Sunshine
 
     ##
     # TODO: Install app dependencies
-    def install_dependencies(deploy_server=nil)
-      deploy_server ||= @deploy_servers
+    def install_dependencies(d_servers = @deploy_servers)
       # TODO: probably will implement yum, apt, or tpkg
     end
 
     ##
     # Install gem dependencies
     # TODO: Support something else than geminstaller :(
-    def install_gems(deploy_server=nil)
+    def install_gems(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Installing gems" do
-        @deploy_servers.each do |deploy_server|
           Sunshine::Dependencies.install 'geminstaller',
-            :console => lambda{|cmd_str| deploy_server.run(cmd_str)}
-          deploy_server.run "cd #{@checkout_path} && geminstaller"
-        end
+            :console => lambda{|cmd_str| d_servers.run(cmd_str)}
+          d_servers.run "cd #{self.checkout_path} && geminstaller"
       end
     end
 
 
     private
 
-    def update_attributes(config_hash=@deploy_options)
+    def update_attributes(config_hash = @deploy_options)
       @name = config_hash[:name]
 
       @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])
 
+      @checkout_path = "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
       @deploy_path = config_hash[:deploy_path]
       @current_path = "#{@deploy_path}/current"
       @deploys_path = "#{@deploy_path}/deploys"
-      @checkout_path = "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
       @shared_path = "#{@deploy_path}/shared"
 
       @health = Healthcheck.new(self)
