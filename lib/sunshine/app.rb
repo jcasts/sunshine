@@ -133,6 +133,12 @@ module Sunshine
       end
     end
 
+    ##
+    # Determine and return a remote path to checkout code to
+    def checkout_path
+      @checkout_path ||= "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
+    end
+
 
     private
 
@@ -141,7 +147,6 @@ module Sunshine
 
       @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])
 
-      @checkout_path = "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
       @deploy_path = config_hash[:deploy_path]
       @current_path = "#{@deploy_path}/current"
       @deploys_path = "#{@deploy_path}/deploys"
