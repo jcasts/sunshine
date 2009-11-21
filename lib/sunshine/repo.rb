@@ -39,6 +39,20 @@ module Sunshine
     end
 
     ##
+    # Get the current date
+    def date
+      update_repo_info unless @date
+      @date
+    end
+
+    ##
+    # Get the current message
+    def message
+      update_repo_info unless @message
+      @message
+    end
+
+    ##
     # Update the repo information - Implemented by subclass
     def update_repo_info
       raise RepoError, "The 'update_repo_info' method must be implemented by child classes"

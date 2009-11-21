@@ -6,8 +6,12 @@ module Sunshine
       response = Sunshine.run_local("svn log #{@url} --limit 1 --xml")
       @revision = response.match(/revision="(.*)">/)[1]
       @committer = response.match(/<author>(.*)<\/author>/)[1]
+      @date = DateTime.parse response.match(/<date>(.*)<\/date>/)[1]
+      @message = response.match(/<msg>(.*)<\/msg>/)[1]
       @branch = @url.split("/").last
       true
+    rescue => e
+      raise RepoError, "Could not update repo info:\n#{e.message}"
     end
 
     def checkout_to(deploy_server, path)
