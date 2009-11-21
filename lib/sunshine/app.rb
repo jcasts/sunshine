@@ -2,13 +2,15 @@ module Sunshine
 
   class App
 
+    ##
+    # Initialize and deploy an application
     def self.deploy(*args, &block)
       app = new(*args)
       app.deploy!(&block)
       app
     end
 
-    attr_reader :name, :repo, :deploy_servers, :health
+    attr_reader :name, :repo, :health
     attr_accessor :deploy_path, :current_path, :checkout_path, :shared_path
 
     def initialize(*args, &block)
@@ -18,6 +20,8 @@ module Sunshine
       yield(self) if block_given?
     end
 
+    ##
+    # Loads a yaml config file
     def load_config(config_file)
       config_hash = YAML.load_file(config_file)
       config_hash = (config_hash[:defaults] || {}).merge(config_hash[Sunshine.deploy_env] || {})
@@ -25,6 +29,15 @@ module Sunshine
       update_attributes
     end
 
+    ##
+    # Gets deploy servers based on host
+    # TODO: add server naming and grouping/roles
+    def deploy_servers(host=nil)
+    end
+
+    ##
+    # Deploy the application to deploy servers and
+    # call user's post-deploy code
     def deploy!(&block)
       Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
         @deploy_servers.connect
@@ -51,6 +64,9 @@ module Sunshine
       end
     end
 
+    ##
+    # Symlink current directory to previous checkout and remove
+    # the current deploy directory
     def revert!
       Sunshine.logger.info :app, "Reverting to previous deploy..." do
         deploy_servers.each do |deploy_server|
@@ -67,6 +83,8 @@ module Sunshine
       end
     end
 
+    ##
+    # Checks out the app's codebase to one or all deploy servers
     def checkout_codebase(deploy_server=nil)
       Sunshine.logger.info :app, "Checking out codebase" do
         deploy_server ||= @deploy_servers
@@ -77,6 +95,8 @@ module Sunshine
       raise CriticalDeployError, e.message
     end
 
+    ##
+    # Creates a VERSION file with deploy information
     def make_deploy_info_file(deploy_server=nil)
       Sunshine.logger.info :app, "Creating VERSION file" do
         deploy_server ||= @deploy_servers
@@ -93,6 +113,8 @@ module Sunshine
       Sunshine.logger.warn :app, "#{e.class} (non-critical):#{e.message}. Failed creating VERSION file"
     end
 
+    ##
+    # Creates a symlink to the app's checkout path
     def symlink_current_dir(deploy_server=nil)
       Sunshine.logger.info :app, "Symlinking #{@checkout_path} -> #{@current_path}" do
         deploy_server ||= @deploy_servers
@@ -103,11 +125,16 @@ module Sunshine
       raise CriticalDeployError, e.message
     end
 
+    ##
+    # TODO: Install app dependencies
     def install_dependencies(deploy_server=nil)
       deploy_server ||= @deploy_servers
       # TODO: probably will implement yum, apt, or tpkg
     end
 
+    ##
+    # Install gem dependencies
+    # TODO: Support something else than geminstaller :(
     def install_gems(deploy_server=nil)
       Sunshine.logger.info :app, "Installing gems" do
         @deploy_servers.each do |deploy_server|

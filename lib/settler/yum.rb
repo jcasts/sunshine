@@ -23,7 +23,11 @@ class Settler
     private
 
     def run_command(command, options={})
-      Settler.install 'yum', options
+      if @dependency_lib.exist?('yum')
+        @dependency_lib.install 'yum', options
+      else
+        Settler.install 'yum', options
+      end
       super
     end
 
