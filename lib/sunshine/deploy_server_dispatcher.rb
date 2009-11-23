@@ -95,10 +95,6 @@ module Sunshine
       call_each_method :make_file, *args, &block
     end
 
-    def os_name(*args, &block)
-      call_each_method :os_name, *args, &block
-    end
-
     def run(*args, &block)
       call_each_method :run, *args, &block
     end
@@ -107,11 +103,9 @@ module Sunshine
     private
 
     def call_each_method(method_name, *args, &block)
-      results = {}
       self.each do |deploy_server|
-        results[deploy_server.host] = deploy_server.method(method_name).call(*args, &block)
+        deploy_server.method(method_name).call(*args, &block)
       end
-      results
     end
 
     def warn_if_empty

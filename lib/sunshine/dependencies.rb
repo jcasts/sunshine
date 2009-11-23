@@ -13,6 +13,3 @@ class Sunshine::Dependencies < Settler
   gem 'rainbows', :version => "0.5.0"
 
 end
-
-# Sunshine::Dependencies.install 'nginx', 'rainbows', :console => lambda{ |cmd| deploy_server.run(cmd) }
-
