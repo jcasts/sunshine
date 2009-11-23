@@ -75,10 +75,6 @@ module Sunshine
       call_each_method :connect, *args, &block
     end
 
-    def connected?(*args, &block)
-      call_each_method :connected?, *args, &block
-    end
-
     def disconnect(*args, &block)
       call_each_method :disconnect, *args, &block
     end
