@@ -5,7 +5,7 @@ class TestApp < Test::Unit::TestCase
   def setup
     @config = {:name => "parity",
                :repo => {:type => "svn", :url => "svn://subversion.flight.yellowpages.com/argo/parity/trunk"},
-               :deploy_servers => ["nextgen@np5.wc1.yellowpages.com"],
+               :deploy_servers => ["nextgen@np4.wc1.yellowpages.com"],
                :deploy_path => "/usr/local/nextgen/parity"}
   end
 
@@ -36,6 +36,11 @@ class TestApp < Test::Unit::TestCase
       def run(cmd)
         (@run_log ||= []) << cmd
       end
+
+      attr_reader :upload_log
+      def upload(*args)
+        (@upload_log ||= []) << args
+      end
     end
 
     app = Sunshine::App.deploy @config do
@@ -43,11 +48,10 @@ class TestApp < Test::Unit::TestCase
     end
 
     run_results = []
-    checkout_path = "#{app.deploy_path}/revisions/#{app.repo.revision}"
-    run_results << "test -d #{checkout_path} && rm -rf #{checkout_path}"
-    run_results << "mkdir #{checkout_path} && svn checkout -r #{app.repo.revision} #{app.repo.url} #{checkout_path}"
-    run_results << "test -f #{app.checkout_path}/VERSION && rm #{app.checkout_path}/VERSION"
-    run_results << "echo 'deployed_at: #{Time.now.to_i}\ndeployed_by: #{Sunshine.run_local("whoami")}\nscm_url: #{app.repo.url}\nscm_rev: #{app.repo.revision}' >> #{app.checkout_path}/VERSION"
+    run_results << "mkdir -p #{app.deploy_path}"
+    run_results << "test -d #{app.checkout_path} && rm -rf #{app.checkout_path}"
+    run_results << "mkdir -p #{app.checkout_path} && svn checkout -r #{app.repo.revision} #{app.repo.url} #{app.checkout_path}"
+    run_results << "ln -sfT #{app.checkout_path} #{app.current_path}"
 
     app.deploy_servers.each do |server|
       run_results.each_index do |i|
@@ -55,6 +59,9 @@ class TestApp < Test::Unit::TestCase
       end
     end
     assert yield_called
+
+  ensure
+    load 'sunshine/deploy_server.rb'
   end
 
 

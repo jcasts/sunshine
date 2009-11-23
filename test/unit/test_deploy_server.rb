@@ -5,7 +5,7 @@ class TestDeployServer < Test::Unit::TestCase
 
   def setup
     @app = Sunshine::App.new TEST_APP_CONFIG_FILE
-    @deploy_server = Sunshine::DeployServer.new("nextgen@np4.wc1.yellowpages.com", @app)
+    @deploy_server = Sunshine::DeployServer.new("nextgen@np4.wc1.yellowpages.com")
     @deploy_server.connect
   end
 
@@ -36,7 +36,7 @@ class TestDeployServer < Test::Unit::TestCase
   def test_run_with_stderr
     @deploy_server.run("echo 'this is an error' 1>&2")
     raise "Didn't raise SSHCmdError on stderr stream"
-  rescue Sunshine::DeployServer::SSHCmdError => e
+  rescue Sunshine::SSHCmdError => e
     assert_equal "this is an error\n", e.message
     assert_equal @deploy_server, e.deploy_server
   end
@@ -56,10 +56,10 @@ class TestDeployServer < Test::Unit::TestCase
     FileUtils.rm_rf "sunshine_test"
   end
 
-  def test_make_file!
-    @deploy_server.make_file!("sunshine_test_file", "test data")
+  def test_make_file
+    @deploy_server.make_file("sunshine_test_file", "test data")
     file_read = @deploy_server.run "cat sunshine_test_file"
-    assert_equal "test data\n", file_read
+    assert_equal "test data", file_read
     @deploy_server.run "rm sunshine_test_file"
   end
 

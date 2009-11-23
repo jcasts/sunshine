@@ -37,6 +37,7 @@ module Sunshine
         @deploy_servers.connect
       end
       @deploy_servers.each do |deploy_server|
+        self.make_app_directory     deploy_server
         self.checkout_codebase      deploy_server
         self.make_deploy_info_file  deploy_server
         self.symlink_current_dir    deploy_server
@@ -75,6 +76,17 @@ module Sunshine
           end
         end
       end
+    end
+
+    ##
+    # Creates the base application directory
+    def make_app_directory(d_servers = @deploy_servers)
+      Sunshine.logger.info :app, "Creating #{@name} base directory" do
+        d_servers.run "mkdir -p #{@deploy_path}"
+      end
+
+    rescue => e
+      raise FatalDeployError, e.message
     end
 
     ##

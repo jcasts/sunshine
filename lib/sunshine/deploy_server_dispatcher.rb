@@ -32,6 +32,12 @@ module Sunshine
     end
 
     ##
+    # Get the deploy server at a given index
+    def [](index)
+      @deploy_servers[index]
+    end
+
+    ##
     # Find deploy servers matching the passed requirements
     # Returns a DeployServerDispatcher object
     #   find :user => 'db'

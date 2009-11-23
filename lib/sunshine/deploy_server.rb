@@ -109,20 +109,18 @@ module Sunshine
     # Runs a command via SSH. Optional block is passed the
     # stream(stderr, stdout) and string data
     def run(string_cmd, &block)
-      stdout = ""
-      stderr = ""
+      output = {}
       last_stream = nil
       Sunshine.logger.info @host, "Running: #{string_cmd}" do
         @ssh_session.exec!(string_cmd) do |channel, stream, data|
-          stdout << data if stream == :stdout
-          stderr << data if stream == :stderr
+          ( output[stream] ||= "" ) << data
           last_stream = stream unless data.chomp.empty?
           Sunshine.logger.log(">>", data, :type => (last_stream == :stdout ? :debug : :error))
           yield(stream, data) if block_given?
         end
       end
-      raise SSHCmdError.new(stderr, self) if last_stream == :stderr && !stderr.empty?
-      stdout
+      raise SSHCmdError.new(output[:stderr], self) if last_stream == :stderr
+      output[:stdout]
     end
 
     def os_name
