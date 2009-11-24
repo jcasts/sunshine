@@ -129,6 +129,8 @@ module Sunshine
       output[:stdout]
     end
 
+    alias call run
+
     def os_name
       @os_name ||= run("uname -s").strip.downcase
     end

@@ -155,10 +155,10 @@ Missing dependencies #{missing.join(", ")}")
 
     def run_command(command, options={})
       cmd = options[:console] || @cmd
-      if Proc === command
-        command.call(cmd)
-      else
+      if String === command
         cmd.call(command)
+      else
+        command.call(cmd)
       end
     end
 

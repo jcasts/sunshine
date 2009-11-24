@@ -38,7 +38,7 @@ module Sunshine
 
           begin
             Sunshine::Dependencies.install @name,
-              :console => proc{|cmd_str| deploy_server.run(cmd_str)}
+              :console => deploy_server
           rescue => e
             raise DependencyError,
                   "Could not install dependency #{@name} => #{e.class}: #{e.message}"
