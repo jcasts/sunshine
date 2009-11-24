@@ -6,6 +6,8 @@ class Sunshine::Dependencies < Settler
 
   #yum 'ruby'
 
+  gem 'bundler'
+
   gem 'geminstaller'
 
   gem 'passenger', :version => "~>2.2.7"

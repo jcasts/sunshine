@@ -129,20 +129,13 @@ module Sunshine
     end
 
     ##
-    # TODO: Install app dependencies
-    def install_dependencies(d_servers = @deploy_servers)
-      # TODO: probably will implement yum, apt, or tpkg
-    end
-
-    ##
     # Install gem dependencies
     # TODO: Support something else than geminstaller :(
     def install_gems(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Installing gems" do
         d_servers.each do |deploy_server|
-          Sunshine::Dependencies.install 'geminstaller',
-            :console => lambda{|cmd_str| deploy_server.run(cmd_str)}
-          deploy_server.run "cd #{self.checkout_path} && geminstaller"
+          run_geminstaller(deploy_server) if deploy_server.file?("#{@checkout_path}/config/geminstaller.yml")
+          run_bundler(deploy_server) if deploy_server.file?("#{@checkout_path}/Gemfile")
         end
       end
     end
@@ -155,6 +148,18 @@ module Sunshine
 
 
     private
+
+    def run_geminstaller(deploy_server)
+      Sunshine::Dependencies.install 'geminstaller',
+        :console => lambda{|cmd_str| deploy_server.run(cmd_str)}
+      deploy_server.run "cd #{self.checkout_path} && geminstaller"
+    end
+
+    def run_bundler(deploy_server)
+      Sunshine::Dependencies.install 'bundler',
+        :console => lambda{|cmd_str| deploy_server.run(cmd_str)}
+      deploy_server.run "cd #{self.checkout_path} && gem bundle"
+    end
 
     def update_attributes(config_hash = @deploy_options)
       @name = config_hash[:name]

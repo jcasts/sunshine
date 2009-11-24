@@ -87,6 +87,12 @@ module Sunshine
     end
 
     ##
+    # Checks if the given file exists
+    def file?(filepath)
+      run "test -f #{filepath} && echo true || echo false" == true
+    end
+
+    ##
     # Create a file remotely
     def make_file(filepath, content, options={})
       FileUtils.mkdir_p "tmp"
