@@ -130,7 +130,6 @@ module Sunshine
 
     ##
     # Install gem dependencies
-    # TODO: Support something else than geminstaller :(
     def install_gems(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Installing gems" do
         d_servers.each do |deploy_server|
@@ -177,6 +176,13 @@ module Sunshine
       @health = Healthcheck.new(self)
 
       server_list = config_hash[:deploy_servers].to_a
+      server_list.map! do |server_def|
+        if Hash === server_def
+          host = server_def.keys.first
+          server_def = [host, {:roles => server_def[host].split(" ")}]
+        end
+        DeployServer.new(*server_def.to_a)
+      end
       @deploy_servers = DeployServerDispatcher.new(*server_list)
     end
 

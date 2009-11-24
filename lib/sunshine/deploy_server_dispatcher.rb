@@ -17,10 +17,8 @@ module Sunshine
     end
 
     ##
-    # Append a deploy server. Supports strings (user@server)
-    # and DeployServer objects
+    # Append a deploy server
     def <<(deploy_server)
-      deploy_server = DeployServer.new(deploy_server) unless DeployServer === deploy_server
       @deploy_servers.push(deploy_server) unless self.exist?(deploy_server)
     end
 
