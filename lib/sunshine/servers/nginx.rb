@@ -17,6 +17,8 @@ module Sunshine
 
     def setup(&block)
       super do |deploy_server|
+        passenger_root = setup_passenger(deploy_server) if use_passenger?
+
         deploy_server.upload "#{TEMPLATES_DIR}/nginx_proxy.conf",
                              "#{@config_path}/nginx_proxy.conf"
 
@@ -27,8 +29,22 @@ module Sunshine
       end
     end
 
+    ##
+    # Check if passenger is required to run the application
+    def use_passenger?
+      @target.is_a?(Sunshine::App)
+    end
 
     private
+
+    def setup_passenger(deploy_server)
+      Dependencies.install 'passenger',
+            :console => proc{|cmd| deploy_server.run(cmd) }
+      str = deploy_server.run "gem list passenger -d"
+      version = str.match(/passenger\s\((.*)\)$/)[1]
+      gempath = str.match(/Installed\sat:\s(.*)$/)[1]
+      File.join(gempath, "gems/passenger-#{version}")
+    end
 
     def run_sudo?
       @port < 1024

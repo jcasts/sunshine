@@ -15,6 +15,11 @@ events {
 }
 
 http {
+
+  <% if use_passenger? %>
+  passenger_root <%= passenger_root %>;
+  <% end %>
+
   client_body_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
   proxy_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
 
@@ -64,6 +69,11 @@ http {
     server_name <%= server_name %>;
     port_in_redirect off; # needed for the F5, unfortunately
     server_name_in_redirect off;
+
+    <% if use_passenger? %>
+    passenger_enabled on;
+    <% end %>
+
     root <%= app.current_path %>/public;
 
     log_format partner_api '$remote_addr - $remote_user [$time_local] '

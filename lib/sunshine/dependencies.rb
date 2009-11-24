@@ -8,6 +8,8 @@ class Sunshine::Dependencies < Settler
 
   gem 'geminstaller'
 
+  gem 'passenger', :version => "~>2.2.7"
+
   gem 'unicorn', :version => "~>0.93"
 
   gem 'rainbows', :version => "0.5.0"

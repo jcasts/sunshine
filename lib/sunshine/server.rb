@@ -47,9 +47,10 @@ module Sunshine
           server_name = @server_name || deploy_server.host # Pass server_name to binding
 
           deploy_server.run "mkdir -p #{remote_dirs.join(" ")}"
-          deploy_server.make_file self.config_file_path, build_server_config(binding)
 
           yield(deploy_server) if block_given?
+
+          deploy_server.make_file self.config_file_path, build_server_config(binding)
 
         end
 
