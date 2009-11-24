@@ -138,6 +138,9 @@ module Sunshine
           run_bundler(deploy_server) if deploy_server.file?("#{@checkout_path}/Gemfile")
         end
       end
+
+    rescue => e
+      raise CriticalDeployError, e.message
     end
 
     ##
