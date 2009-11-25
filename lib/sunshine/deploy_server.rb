@@ -37,7 +37,7 @@ module Sunshine
 
         Sunshine.logger.info :ssh, "User '#{@user}' can't log into #{@host}. Try entering a password (#{tries}/#{MAX_CONNECT_TRIES}):"
 
-        @options[:password] = self.query_for_password
+        self.query_for_password
         retry
 
       end
@@ -46,14 +46,7 @@ module Sunshine
     ##
     # Query the user for a password
     def query_for_password
-      password = nil
-      begin
-        system "stty -echo"
-        password = gets.chomp
-      ensure
-        system "stty echo"
-      end
-      password
+      @options[:password] = Sunshine.console.hidden_prompt("\n[#{@user}@#{@host}]:".bright)
     end
 
     ##

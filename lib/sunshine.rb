@@ -29,6 +29,7 @@ module Sunshine
   class FatalDeployError < Exception; end
   class DependencyError < FatalDeployError; end
 
+  require 'sunshine/console'
   require 'sunshine/output'
 
   require 'sunshine/dependencies'
@@ -49,8 +50,13 @@ module Sunshine
 
 
 
+  def self.console
+    @console ||= Sunshine::Console.new
+  end
+
   def self.logger
-    @logger ||= Sunshine::Output.new :level => @debug_level
+    @logger ||= Sunshine::Output.new :level => @debug_level,
+      :console => self.console
   end
 
   def self.deploy_env
