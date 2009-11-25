@@ -30,7 +30,7 @@ module Sunshine
 
       rescue Net::SSH::AuthenticationFailed => e
 
-        raise ConnectionError, "Failed to connect to #{@host}" unless tries < MAX_CONNECT_TRIES
+        raise ConnectionError, "Failed to connect to #{@host}" unless Sunshine.interactive? && tries < MAX_CONNECT_TRIES
         tries = tries.next
 
         Sunshine.logger.info @host, "#{e.class}: #{e.message}"

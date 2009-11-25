@@ -57,6 +57,10 @@ module Sunshine
     @deploy_env
   end
 
+  def self.interactive?
+    !@auto
+  end
+
   def self.run_local(str)
     stdin, stdout, stderr = Open3.popen3(str)
     stderr = stderr.read
@@ -90,6 +94,11 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
         options[:deploy_env] = value
       end
 
+      opt.on('-a', '--auto',
+             'Non-interactive - automate or fail') do
+        options[:auto] = true
+      end
+
       opt.separator nil
       opt.separator "Common options:"
 
@@ -120,6 +129,7 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
   def self.setup(options={})
     @debug_level = options[:level] || @debug_level || :info
     @deploy_env = options[:deploy_env] || @deploy_env || :development
+    @auto = options[:auto] || @auto || false
   end
 
 end
