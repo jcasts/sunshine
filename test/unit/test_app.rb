@@ -70,10 +70,11 @@ class TestApp < Test::Unit::TestCase
   def assert_attributes_equal(attr_hash, app)
     assert_equal attr_hash[:name], app.name
     assert_equal attr_hash[:repo][:url], app.repo.url
-    assert_equal attr_hash[:repo][:type], app.repo.class.name.split("::").last[0..-5].downcase
+    # assert_equal attr_hash[:repo][:type], app.repo.class.name.split("::").last[0..-5].downcase
     assert_equal attr_hash[:deploy_path], app.deploy_path
 
     attr_hash[:deploy_servers].each_with_index do |server_def, i|
+      server_def = server_def.keys.first if Hash === server_def
       user, url = server_def.split("@")
       assert_equal user, app.deploy_servers[i].user
       assert_equal url, app.deploy_servers[i].host

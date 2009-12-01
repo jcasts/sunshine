@@ -2,8 +2,6 @@ module Sunshine
 
   class Server
 
-    TEMPLATES_DIR = "server_configs"
-
     attr_reader :app, :name, :target
 
     attr_accessor :bin, :pid, :server_name, :port, :processes
@@ -20,8 +18,8 @@ module Sunshine
       @processes   = options[:processes] || 1
       @server_name = options[:server_name]
 
-      @config_template = options[:config_template] || "#{TEMPLATES_DIR}/#{@name}.conf.erb"
-      @config_path     = options[:config_path] || "#{@app.current_path}/server_config"
+      @config_template = options[:config_template] || "templates/#{@name}/*"
+      @config_path     = options[:config_path] || "#{@app.current_path}/server_configs/#{@name}"
       @config_file     = options[:config_file] || "#{@name}.conf"
 
       log_path  = options[:log_path] || "#{@app.shared_path}/log"
@@ -50,7 +48,7 @@ module Sunshine
 
           yield(deploy_server) if block_given?
 
-          deploy_server.make_file self.config_file_path, build_server_config(binding)
+          self.upload_config_files(deploy_server, binding)
 
         end
 
@@ -129,6 +127,21 @@ module Sunshine
       "#{@config_path}/#{@config_file}"
     end
 
+    def upload_config_files(deploy_server, setup_binding=binding)
+      self.config_template_files.each do |config_file|
+        if File.extname(config_file) == ".erb"
+          deploy_server.make_file "#{@config_path}/#{config_file[0..-5]}", build_erb(config_file, setup_binding)
+        else
+          deploy_server.upload config_file, "#{@config_path}/#{config_file}"
+        end
+      end
+    end
+
+    def config_template_files
+      @config_template_files ||= Dir[@config_template].select{|f| File.file?(f)}
+    end
+
+
     private
 
     def remote_dirs
@@ -138,8 +151,8 @@ module Sunshine
       dirs
     end
 
-    def build_server_config(custom_binding=nil)
-      str = File.read(@config_template)
+    def build_erb(erb_file, custom_binding=nil)
+      str = File.read(erb_file)
       ERB.new(str, nil, '-').result(custom_binding || binding)
     end
 

@@ -176,7 +176,7 @@ module Sunshine
       @health = Healthcheck.new(self)
 
       server_list = config_hash[:deploy_servers].to_a
-      server_list.map! do |server_def|
+      server_list = server_list.map do |server_def|
         if Hash === server_def
           host = server_def.keys.first
           server_def = [host, {:roles => server_def[host].split(" ")}]

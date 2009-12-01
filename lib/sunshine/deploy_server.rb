@@ -35,7 +35,7 @@ module Sunshine
 
         Sunshine.logger.info @host, "#{e.class}: #{e.message}"
 
-        Sunshine.logger.info :ssh, "User '#{@user}' can't log into #{@host}. Try entering a password (#{tries}/#{MAX_CONNECT_TRIES}):"
+        Sunshine.logger.info :ssh, "User '#{@user}' can't log into #{@host}. Try entering a password (#{tries}/#{MAX_CONNECT_TRIES})"
 
         self.query_for_password
         retry

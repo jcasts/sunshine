@@ -18,13 +18,6 @@ module Sunshine
     def setup(&block)
       super do |deploy_server|
         passenger_root = setup_passenger(deploy_server) if use_passenger?
-
-        deploy_server.upload "#{TEMPLATES_DIR}/nginx_proxy.conf",
-                             "#{@config_path}/nginx_proxy.conf"
-
-        deploy_server.upload "#{TEMPLATES_DIR}/nginx_optimize.conf",
-                             "#{@config_path}/nginx_optimize.conf"
-
         yield(deploy_server) if block_given?
       end
     end

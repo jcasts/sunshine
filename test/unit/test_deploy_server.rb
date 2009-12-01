@@ -1,6 +1,5 @@
 require 'test/test_helper'
 
-# TODO: abstract hitting a live server to something else.
 class TestDeployServer < Test::Unit::TestCase
 
   def setup
