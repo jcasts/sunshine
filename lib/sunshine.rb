@@ -129,6 +129,7 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
     self.setup( parse_args(argv) )
 
     deploy_file = argv.first
+    deploy_file ||= "Sunshine"
     require deploy_file if File.file?(deploy_file.to_s)
   end
 
