@@ -12,7 +12,7 @@ module Sunshine
     def initialize(user_at_host, options={})
       @user, @host = user_at_host.split("@")
       @user ||= options.delete(:user)
-      @roles = options.delete(:roles).to_a
+      @roles = options.delete(:roles).to_a.map{|r| r.to_sym }
       @options = options
       @ssh_session = nil
     end

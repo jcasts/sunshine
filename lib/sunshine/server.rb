@@ -4,7 +4,7 @@ module Sunshine
 
     attr_reader :app, :name, :target
 
-    attr_accessor :bin, :pid, :server_name, :port, :processes
+    attr_accessor :bin, :pid, :server_name, :port, :processes, :deploy_servers
     attr_accessor :config_template, :config_path, :config_file
 
     def initialize(app, options={})
@@ -17,6 +17,7 @@ module Sunshine
       @port        = options[:port] || 80
       @processes   = options[:processes] || 1
       @server_name = options[:server_name]
+      @deploy_servers = options[:deploy_servers] || @app.deploy_servers.find(:role => :web)
 
       @config_template = options[:config_template] || "templates/#{@name}/*"
       @config_path     = options[:config_path] || "#{@app.current_path}/server_configs/#{@name}"
@@ -32,7 +33,7 @@ module Sunshine
     def setup(&block)
       Sunshine.logger.info @name, "Setting up #{@name} server" do
 
-        @app.deploy_servers.each do |deploy_server|
+        @deploy_servers.each do |deploy_server|
 
           begin
             Sunshine::Dependencies.install @name, :call => deploy_server
@@ -61,7 +62,7 @@ module Sunshine
       self.setup
       Sunshine.logger.info @name, "Starting #{@name} server" do
 
-        @app.deploy_servers.each do |deploy_server|
+        @deploy_servers.each do |deploy_server|
           begin
             deploy_server.run(start_cmd)
             yield(deploy_server) if block_given?
@@ -76,7 +77,7 @@ module Sunshine
     def stop(&block)
       Sunshine.logger.info @name, "Stopping #{@name} server" do
 
-        @app.deploy_servers.each do |deploy_server|
+        @deploy_servers.each do |deploy_server|
           begin
             deploy_server.run(stop_cmd)
             yield(deploy_server) if block_given?
@@ -92,7 +93,7 @@ module Sunshine
       if @restart_cmd
         self.setup
         begin
-          @app.deploy_servers.run(@restart_cmd)
+          @deploy_servers.run(@restart_cmd)
         rescue => e
           raise FatalDeployError, "Could not stop server #{@name}:\n#{e.message}"
         end
