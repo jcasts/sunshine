@@ -143,6 +143,14 @@ module Sunshine
     end
 
     ##
+    # Run a rake task on any or all deploy servers
+    def rake(command, d_servers = @deploy_servers)
+      Sunshine.logger.info :app, "Running Rake task '#{command}'" do
+        d_servers.run "cd #{@checkout_path}; rake #{command}"
+      end
+    end
+
+    ##
     # Determine and return a remote path to checkout code to
     def checkout_path
       @checkout_path ||= "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
