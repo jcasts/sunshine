@@ -154,7 +154,7 @@ Missing dependencies #{missing.join(", ")}")
     private
 
     def run_command(command, options={})
-      cmd = options[:console] || @cmd
+      cmd = options[:call] || @cmd
       if String === command
         cmd.call(command)
       else

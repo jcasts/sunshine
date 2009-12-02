@@ -1,6 +1,6 @@
 require 'sunshine'
-require 'test/mocks/mock_ssh'
-require 'test/mocks/mock_repo'
+# require 'test/mocks/mock_ssh'
+# require 'test/mocks/mock_repo'
 
 Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
 

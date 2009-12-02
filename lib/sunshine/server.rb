@@ -35,8 +35,7 @@ module Sunshine
         @app.deploy_servers.each do |deploy_server|
 
           begin
-            Sunshine::Dependencies.install @name,
-              :console => deploy_server
+            Sunshine::Dependencies.install @name, :call => deploy_server
           rescue => e
             raise DependencyError,
                   "Could not install dependency #{@name} => #{e.class}: #{e.message}"
@@ -130,9 +129,11 @@ module Sunshine
     def upload_config_files(deploy_server, setup_binding=binding)
       self.config_template_files.each do |config_file|
         if File.extname(config_file) == ".erb"
-          deploy_server.make_file "#{@config_path}/#{config_file[0..-5]}", build_erb(config_file, setup_binding)
+          filename = File.basename(config_file[0..-5])
+          deploy_server.make_file "#{@config_path}/#{filename}", build_erb(config_file, setup_binding)
         else
-          deploy_server.upload config_file, "#{@config_path}/#{config_file}"
+          filename = File.basename(config_file)
+          deploy_server.upload config_file, "#{@config_path}/#{filename}"
         end
       end
     end

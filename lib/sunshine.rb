@@ -43,10 +43,10 @@ module Sunshine
   require 'sunshine/deploy_server'
   require 'sunshine/app'
 
-  require "sunshine/server"
-  require "sunshine/servers/nginx"
-  require "sunshine/servers/unicorn"
-  require "sunshine/servers/rainbows"
+  require 'sunshine/server'
+  require 'sunshine/servers/nginx'
+  require 'sunshine/servers/unicorn'
+  require 'sunshine/servers/rainbows'
 
 
 

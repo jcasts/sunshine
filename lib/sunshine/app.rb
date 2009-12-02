@@ -152,14 +152,12 @@ module Sunshine
     private
 
     def run_geminstaller(deploy_server)
-      Sunshine::Dependencies.install 'geminstaller',
-        :console => deploy_server
+      Sunshine::Dependencies.install 'geminstaller', :call => deploy_server
       deploy_server.run "cd #{self.checkout_path} && geminstaller"
     end
 
     def run_bundler(deploy_server)
-      Sunshine::Dependencies.install 'bundler',
-        :console => deploy_server
+      Sunshine::Dependencies.install 'bundler', :call => deploy_server
       deploy_server.run "cd #{self.checkout_path} && gem bundle"
     end
 
