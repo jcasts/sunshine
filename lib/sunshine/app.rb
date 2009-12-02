@@ -146,7 +146,10 @@ module Sunshine
     # Run a rake task on any or all deploy servers
     def rake(command, d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Running Rake task '#{command}'" do
-        d_servers.run "cd #{@checkout_path}; rake #{command}"
+        d_servers.each do |deploy_server|
+          Sunshine::Dependencies.install 'rake', :call => deploy_server
+          deploy_server.run "cd #{@checkout_path}; rake #{command}"
+        end
       end
     end
 
