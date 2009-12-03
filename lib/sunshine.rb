@@ -15,7 +15,18 @@ module Sunshine
 
   VERSION = '0.0.1'
 
-  class CmdError < Exception; end
+  class SunshineException < Exception
+    def initialize(input=nil)
+      if Exception === input
+        super(input.message)
+        self.set_backtrace(input.backtrace)
+      else
+        super(input)
+      end
+    end
+  end
+
+  class CmdError < SunshineException; end
 
   class SSHCmdError < CmdError
     attr_reader :deploy_server
@@ -25,8 +36,8 @@ module Sunshine
     end
   end
 
-  class CriticalDeployError < Exception; end
-  class FatalDeployError < Exception; end
+  class CriticalDeployError < SunshineException; end
+  class FatalDeployError < SunshineException; end
   class DependencyError < FatalDeployError; end
 
   require 'sunshine/console'

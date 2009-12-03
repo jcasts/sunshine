@@ -9,7 +9,7 @@ module Sunshine
 
     def stop_cmd
       sudo = run_sudo? ? "sudo " : ""
-      cmd = "test -f #{@pid} && #{sudo}kill -QUIT `cat #{@pid}`;"
+      cmd = "test -f #{@pid} && #{sudo}kill -QUIT $(cat #{@pid});"
       cmd << "sleep 2 ; rm -f #{@pid};"
       cmd << "#{sudo}pkill -QUIT -f '#{@app.current_path}/.*nginx';"
       cmd << "#{sudo}pkill -9 -f '#{@app.current_path}/.*nginx'"

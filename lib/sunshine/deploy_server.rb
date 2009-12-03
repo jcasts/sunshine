@@ -5,7 +5,7 @@ module Sunshine
     class ConnectionError < FatalDeployError; end
 
     attr_reader :host, :user
-    attr_accessor :roles
+    attr_accessor :roles, :env
 
     MAX_CONNECT_TRIES = 3
 
@@ -13,6 +13,7 @@ module Sunshine
       @user, @host = user_at_host.split("@")
       @user ||= options.delete(:user)
       @roles = options.delete(:roles).to_a.map{|r| r.to_sym }
+      @env = options.delete(:env) || {}
       @options = options
       @ssh_session = nil
     end
@@ -82,7 +83,7 @@ module Sunshine
     ##
     # Checks if the given file exists
     def file?(filepath)
-      run "test -f #{filepath} && echo true || echo false" == true
+      run("test -f #{filepath} && echo true || echo false") == 'true'
     end
 
     ##
@@ -111,6 +112,7 @@ module Sunshine
       output = {}
       last_stream = nil
       Sunshine.logger.info @host, "Running: #{string_cmd}" do
+        string_cmd = build_cmd(string_cmd)
         @ssh_session.exec!(string_cmd) do |channel, stream, data|
           ( output[stream] ||= "" ) << data
           last_stream = stream unless data.chomp.empty?
@@ -124,8 +126,20 @@ module Sunshine
 
     alias call run
 
+    ##
+    # Get the name of the remote OS
     def os_name
       @os_name ||= run("uname -s").strip.downcase
+    end
+
+
+    private
+
+    def build_cmd(string)
+      return string unless @env && !@env.empty?
+      env_str = @env.to_a.map{|e| e.join("=")}.join(" ")
+      string = string.gsub(/'/){|s| "'\\''"}
+      "env #{env_str} sh -c '#{string}'"
     end
 
   end

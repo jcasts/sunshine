@@ -12,6 +12,7 @@ module Sunshine
 
     attr_reader :name, :repo, :health, :deploy_servers
     attr_accessor :deploy_path, :current_path, :checkout_path, :shared_path
+    attr_accessor :deploy_env
 
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
@@ -24,7 +25,7 @@ module Sunshine
     # Loads a yaml config file
     def load_config(config_file)
       config_hash = YAML.load_file(config_file)
-      config_hash = (config_hash[:defaults] || {}).merge(config_hash[Sunshine.deploy_env] || {})
+      config_hash = (config_hash[:defaults] || {}).merge(config_hash[@deploy_env] || {})
       @deploy_options = config_hash.merge(@deploy_options)
       update_attributes
     end
@@ -46,12 +47,15 @@ module Sunshine
 
     rescue CriticalDeployError => e
       Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy" do
+        Sunshine.logger.error '>>', e.backtrace.join("\n")
         revert!
         yield(self) if block_given?
       end
 
     rescue FatalDeployError => e
-      Sunshine.logger.fatal :app, "#{e.class}: #{e.message}"
+      Sunshine.logger.fatal :app, "#{e.class}: #{e.message}" do
+        Sunshine.logger.error '>>', e.backtrace.join("\n")
+      end
 
     ensure
       Sunshine.logger.info :app, "Ending deploy of #{@name}" do
@@ -86,7 +90,7 @@ module Sunshine
       end
 
     rescue => e
-      raise FatalDeployError, e.message
+      raise FatalDeployError.new(e)
     end
 
     ##
@@ -97,7 +101,7 @@ module Sunshine
       end
 
     rescue => e
-      raise CriticalDeployError, e.message
+      raise CriticalDeployError.new(e)
     end
 
     ##
@@ -125,7 +129,7 @@ module Sunshine
       end
 
     rescue => e
-      raise CriticalDeployError, e.message
+      raise CriticalDeployError.new(e)
     end
 
     ##
@@ -139,7 +143,7 @@ module Sunshine
       end
 
     rescue => e
-      raise CriticalDeployError, e.message
+      raise CriticalDeployError.new(e)
     end
 
     ##
@@ -154,20 +158,22 @@ module Sunshine
     end
 
     ##
-    # Set deploy-time environment shell variables
-    def shell_env(hash, d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Setting remote shell variables" do
-        cmd = hash.to_a.map{|e| e.join("=")}.join("; ")
-        d_servers.run cmd
-      end
-    end
-
-    ##
     # Determine and return a remote path to checkout code to
     def checkout_path
       @checkout_path ||= "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
     end
 
+    ##
+    # Set and return the remote shell env variables
+    def shell_env(env_hash=nil)
+      env_hash ||= {}
+      @shell_env.merge!(env_hash)
+      @deploy_servers.each do |deploy_server|
+        deploy_server.env.merge!(@shell_env)
+      end
+      Sunshine.logger.info :app, "Shell env: #{@shell_env.inspect}"
+      @shell_env.dup
+    end
 
     private
 
@@ -183,6 +189,8 @@ module Sunshine
 
     def update_attributes(config_hash = @deploy_options)
       @name = config_hash[:name]
+
+      @deploy_env = config_hash[:deploy_env] || Sunshine.deploy_env
 
       @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])
 
@@ -202,6 +210,9 @@ module Sunshine
         DeployServer.new(*server_def.to_a)
       end
       @deploy_servers = DeployServerDispatcher.new(*server_list)
+
+      @shell_env = {"RAKE_ENV" => @deploy_env.to_s, "RAILS_ENV" => @deploy_env.to_s}
+      self.shell_env(config_hash[:shell_env])
     end
 
   end
