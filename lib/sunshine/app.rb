@@ -154,6 +154,15 @@ module Sunshine
     end
 
     ##
+    # Set deploy-time environment shell variables
+    def shell_env(hash, d_servers = @deploy_servers)
+      Sunshine.logger.info :app, "Setting remote shell variables" do
+        cmd = hash.to_a.map{|e| e.join("=")}.join("; ")
+        d_servers.run cmd
+      end
+    end
+
+    ##
     # Determine and return a remote path to checkout code to
     def checkout_path
       @checkout_path ||= "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"

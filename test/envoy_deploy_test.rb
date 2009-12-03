@@ -1,8 +1,8 @@
 require 'sunshine'
-# require 'test/mocks/mock_ssh'
-# require 'test/mocks/mock_repo'
 
 Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
+
+  app.shell_env "RAKE_ENV" => "integration"
 
   rainbows = Sunshine::Rainbows.new(app, :port => 5001)
 
@@ -13,6 +13,7 @@ Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
                   :stdout      => "#{app.shared_path}/log/access.log"
 
   app.install_gems
+  # app.rake 'db:migrate', app.deploy_servers.find(:role => :db)
 
   rainbows.restart
   nginx.restart
