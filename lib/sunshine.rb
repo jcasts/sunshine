@@ -74,6 +74,10 @@ module Sunshine
     @deploy_env
   end
 
+  def self.max_deploy_versions
+    @max_deploy_versions
+  end
+
   def self.interactive?
     !@auto
   end
@@ -148,6 +152,7 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
     @debug_level = options[:level] || @debug_level || :info
     @deploy_env = options[:deploy_env] || @deploy_env || :development
     @auto = options[:auto] || @auto || false
+    @max_deploy_versions = options[:max_deploy_versions] || @max_deploy_versions || 5
   end
 
 end

@@ -44,6 +44,7 @@ module Sunshine
         self.symlink_current_dir    deploy_server
       end
       yield(self) if block_given?
+      self.remove_old_deploys
 
     rescue CriticalDeployError => e
       Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy" do
@@ -130,6 +131,21 @@ module Sunshine
 
     rescue => e
       raise CriticalDeployError.new(e)
+    end
+
+    ##
+    # Removes old deploys from the checkout_dir based on Sunshine's max_deploy_versions
+    def remove_old_deploys(d_servers = @deploy_servers)
+      Sunshine.logger.info :app, "Removing old deploys (max = #{Sunshine.max_deploy_versions})" do
+        d_servers.each do |deploy_server|
+          deploys = deploy_server.run("ls -1 #{@deploys_path}").split("\n")
+          if deploys.length > Sunshine.max_deploy_versions
+            rm_deploys = deploys[Sunshine.max_deploy_versions..-1]
+            rm_deploys.map!{|d| "#{@deploys_path}/#{d}"}
+            deploy_server.run("rm -rf #{rm_deploys.join(" ")}")
+          end
+        end
+      end
     end
 
     ##
