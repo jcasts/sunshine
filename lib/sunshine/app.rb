@@ -11,7 +11,7 @@ module Sunshine
     end
 
     attr_reader :name, :repo, :health, :deploy_servers
-    attr_accessor :deploy_path, :current_path, :checkout_path, :shared_path
+    attr_accessor :deploy_path, :current_path, :shared_path
     attr_accessor :deploy_env
 
     def initialize(*args, &block)

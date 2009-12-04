@@ -66,20 +66,20 @@ module Sunshine
   end
 
   def self.logger
-    @logger ||= Sunshine::Output.new :level => @debug_level,
+    @logger ||= Sunshine::Output.new :level => @config['level'],
       :console => self.console
   end
 
   def self.deploy_env
-    @deploy_env
+    @config['deploy_env']
   end
 
   def self.max_deploy_versions
-    @max_deploy_versions
+    @config['max_deploy_versions']
   end
 
   def self.interactive?
-    !@auto
+    !@config['auto']
   end
 
   def self.run_local(str)
@@ -98,26 +98,30 @@ module Sunshine
       opt.release = nil
       opt.banner = <<-EOF
 
-Usage: #{opt.program_name} deploy_file [options]
+Usage: #{opt.program_name} [deploy_file] [options]
 
 Sunshine is a gem that provides a light, consistant api for rack applications deployment. 
       EOF
 
       opt.separator nil
+      opt.separator "[deploy_file]: Load a specific deploy script. Defaults to ./Sunshine."
+
+      opt.separator nil
+      opt.separator "Deploy-time options:"
 
       opt.on('-l', '--level [LEVEL]',
              'Set trace level. Defaults to info.') do |value|
-        options[:level] = value.downcase.to_sym
+        options['level'] = value.downcase.to_sym
       end
 
       opt.on('-e', '--env [DEPLOY_ENV]',
              'Sets the deploy environment. Defaults to development.') do |value|
-        options[:deploy_env] = value
+        options['deploy_env'] = value
       end
 
       opt.on('-a', '--auto',
              'Non-interactive - automate or fail') do
-        options[:auto] = true
+        options['auto'] = true
       end
 
       opt.separator nil
@@ -140,19 +144,38 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
     options
   end
 
+  USER_CONFIG_FILE = File.expand_path("~/.sunshine")
+
+  DEFAULT_CONFIG = {
+    'level'               => :info,
+    'deploy_env'          => :development,
+    'auto'                => false,
+    'max_deploy_versions' => 5
+  }
+
+  def self.load_config(filepath=nil)
+    YAML.load_file(filepath || USER_CONFIG_FILE)
+  end
+
   def self.run(argv=ARGV)
-    self.setup( parse_args(argv) )
+    unless File.file? USER_CONFIG_FILE
+      File.open(USER_CONFIG_FILE, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml}
+      puts "Missing config file was created for you: #{USER_CONFIG_FILE}"
+      puts DEFAULT_CONFIG.to_yaml
+      exit
+    end
+
+    config = load_config.merge( parse_args(argv) )
+    self.setup( config )
 
     deploy_file = argv.first
     deploy_file ||= "Sunshine"
     require deploy_file if File.file?(deploy_file.to_s)
   end
 
-  def self.setup(options={})
-    @debug_level = options[:level] || @debug_level || :info
-    @deploy_env = options[:deploy_env] || @deploy_env || :development
-    @auto = options[:auto] || @auto || false
-    @max_deploy_versions = options[:max_deploy_versions] || @max_deploy_versions || 5
+  def self.setup(new_config={})
+    @config ||= DEFAULT_CONFIG
+    @config.merge! new_config
   end
 
 end
