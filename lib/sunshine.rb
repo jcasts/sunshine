@@ -104,7 +104,7 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
       EOF
 
       opt.separator nil
-      opt.separator "[deploy_file]: Load a specific deploy script. Defaults to ./Sunshine."
+      opt.separator "[deploy_file]: Load a specific deploy script or app path. Defaults to ./Sunshine."
 
       opt.separator nil
       opt.separator "Deploy-time options:"
@@ -169,8 +169,10 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
     self.setup( config )
 
     deploy_file = argv.first
+    deploy_file = File.join(deploy_file, "Sunshine") if deploy_file && File.directory?(deploy_file)
     deploy_file ||= "Sunshine"
-    require deploy_file if File.file?(deploy_file.to_s)
+    puts "Running #{deploy_file}"
+    require deploy_file
   end
 
   def self.setup(new_config={})

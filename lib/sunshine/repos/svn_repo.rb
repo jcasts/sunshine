@@ -11,7 +11,7 @@ module Sunshine
       @branch = @url.split("/").last
       true
     rescue => e
-      raise RepoError.new(e)#, "Could not update repo info:\n#{e.message}"
+      raise RepoError.new(e)
     end
 
     def checkout_to(deploy_server, path)
