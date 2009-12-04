@@ -1,6 +1,6 @@
 module Sunshine
 
-  class RepoError < Exception; end
+  class RepoError < SunshineException; end
 
   class Repo
 

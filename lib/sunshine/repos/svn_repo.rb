@@ -7,11 +7,11 @@ module Sunshine
       @revision = response.match(/revision="(.*)">/)[1]
       @committer = response.match(/<author>(.*)<\/author>/)[1]
       @date = DateTime.parse response.match(/<date>(.*)<\/date>/)[1]
-      @message = response.match(/<msg>(.*)<\/msg>/)[1]
+      @message = response.match(/<msg>(.*)<\/msg>/m)[1]
       @branch = @url.split("/").last
       true
     rescue => e
-      raise RepoError, "Could not update repo info:\n#{e.message}"
+      raise RepoError.new(e)#, "Could not update repo info:\n#{e.message}"
     end
 
     def checkout_to(deploy_server, path)
