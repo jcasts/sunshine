@@ -10,7 +10,6 @@ require 'erb'
 require 'logger'
 require 'optparse'
 
-
 module Sunshine
 
   VERSION = '0.0.1'
@@ -170,7 +169,7 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
 
     deploy_file = argv.first
     deploy_file = File.join(deploy_file, "Sunshine") if deploy_file && File.directory?(deploy_file)
-    deploy_file ||= "Sunshine"
+    deploy_file ||= "sunshine"
     puts "Running #{deploy_file}"
     require deploy_file
   end
