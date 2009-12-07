@@ -32,9 +32,13 @@ def record_files(path="*", file_arr=[], &block)
   return file_arr
 end
 
+Hoe.plugin :isolate
+
 Hoe.spec 'sunshine' do |p|
   developer('Jeremie Castagna', 'jcastagna@atti.com')
-  self.extra_deps = [['rainbow', '>= 1.0.4']]
+  self.extra_deps << ['rainbow', '>= 1.0.4']
+  self.extra_deps << ['net-ssh'] # FIX: version
+  self.extra_deps << ['net-scp'] # FIX: version
 end
 
 # vim: syntax=Ruby
