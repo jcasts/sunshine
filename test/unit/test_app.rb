@@ -32,9 +32,13 @@ class TestApp < Test::Unit::TestCase
     yield_called = false
 
     Sunshine::DeployServer.class_eval do
+      undef run
+      undef upload
+
       attr_reader :run_log
       def run(cmd)
         (@run_log ||= []) << cmd
+        "some random stdout"
       end
 
       attr_reader :upload_log
@@ -61,6 +65,7 @@ class TestApp < Test::Unit::TestCase
     assert yield_called
 
   ensure
+    Sunshine.send(:remove_const, :DeployServer)
     load 'sunshine/deploy_server.rb'
   end
 

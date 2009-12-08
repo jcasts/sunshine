@@ -17,6 +17,7 @@ module Sunshine
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
       @deploy_options = Hash === args.first ? args.shift : {}
+      @deploy_env = @deploy_options[:deploy_env] || Sunshine.deploy_env
       config_file ? load_config(config_file) : update_attributes
       yield(self) if block_given?
     end
@@ -205,8 +206,6 @@ module Sunshine
 
     def update_attributes(config_hash = @deploy_options)
       @name = config_hash[:name]
-
-      @deploy_env = config_hash[:deploy_env] || Sunshine.deploy_env
 
       @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])
 

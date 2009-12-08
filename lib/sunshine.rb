@@ -66,7 +66,7 @@ module Sunshine
 
   def self.logger
     @logger ||= Sunshine::Output.new :level => @config['level'],
-      :console => self.console
+      :output => self.console
   end
 
   def self.deploy_env

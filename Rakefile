@@ -37,8 +37,8 @@ Hoe.plugin :isolate
 Hoe.spec 'sunshine' do |p|
   developer('Jeremie Castagna', 'jcastagna@atti.com')
   self.extra_deps << ['rainbow', '>= 1.0.4']
-  self.extra_deps << ['net-ssh'] # FIX: version
-  self.extra_deps << ['net-scp'] # FIX: version
+  self.extra_deps << ['net-ssh', '>= 2.0.15']
+  self.extra_deps << ['net-scp', '>= 1.0.2']
 end
 
 # vim: syntax=Ruby

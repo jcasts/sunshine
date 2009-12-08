@@ -55,5 +55,7 @@ class MockSCP
 end
 
 
+Net.send(:remove_const, :SSH)
+Net.send(:remove_const, :SCP)
 Net::SSH = MockSSH
 Net::SCP = MockSCP

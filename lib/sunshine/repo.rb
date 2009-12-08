@@ -15,6 +15,11 @@ module Sunshine
 
     def initialize(url)
       @url = url
+      @revision = nil
+      @committer = nil
+      @branch = nil
+      @date = nil
+      @message = nil
     end
 
     ##

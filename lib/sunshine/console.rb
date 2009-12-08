@@ -29,6 +29,10 @@ module Sunshine
 
     alias << write
 
+    def close
+      @output.close
+    end
+
   end
 
 end
