@@ -35,7 +35,8 @@ class Settler
       deps.each{|dep| self.dependencies[dep].install! options }
     end
 
-    ## Uninstall one or more dependencies
+    ##
+    # Uninstall one or more dependencies
     def uninstall(*deps)
       options = Hash === deps.last ? deps.delete_at(deps.length - 1) : {}
       deps.each{|dep| self.dependencies[dep].uninstall! options }

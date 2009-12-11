@@ -32,6 +32,9 @@ module Sunshine
       }
     end
 
+    ##
+    # Setup the server app, parse and upload config templates,
+    # and install dependencies.
     def setup(&block)
       Sunshine.logger.info @name, "Setting up #{@name} server" do
 
@@ -61,6 +64,8 @@ module Sunshine
       raise FatalDeployError, "Could not setup server #{@name}:\n#{e.message}"
     end
 
+    ##
+    # Start the server app after running setup.
     def start(&block)
       self.setup
       Sunshine.logger.info @name, "Starting #{@name} server" do
@@ -78,6 +83,8 @@ module Sunshine
       end
     end
 
+    ##
+    # Stop the server app.
     def stop(&block)
       Sunshine.logger.info @name, "Stopping #{@name} server" do
 
@@ -94,13 +101,17 @@ module Sunshine
       end
     end
 
+    ##
+    # Restarts the server using the restart_cmd attribute if provided.
+    # If restart_cmd is not provided, calls stop and start.
     def restart
       if @restart_cmd
         self.setup
         begin
           @deploy_servers.run(@restart_cmd)
         rescue => e
-          raise FatalDeployError, "Could not stop server #{@name}:\n#{e.message}"
+          raise FatalDeployError,
+            "Could not stop server #{@name}:\n#{e.message}"
         end
       else
         self.stop
@@ -108,35 +119,58 @@ module Sunshine
       end
     end
 
+    ##
+    # Gets the command that starts the server.
+    # Should be overridden by child classes.
     def start_cmd
-      return @start_cmd || raise(FatalDeployError, "'start_cmd' is undefined. Cannot start #{@name}")
+      return @start_cmd ||
+        raise(FatalDeployError, "@start_cmd is undefined. Can't start #{@name}")
     end
 
+    ##
+    # Gets the command that stops the server.
+    # Should be overridden by child classes.
     def stop_cmd
-      return @stop_cmd || raise(FatalDeployError, "'stop_cmd' is undefined. Cannot stop #{@name}")
+      return @stop_cmd ||
+        raise(FatalDeployError, "@stop_cmd is undefined. Can't stop #{@name}")
     end
 
+    ##
+    # Gets the command that restarts the server.
     def restart_cmd
       @restart_cmd
     end
 
+    ##
+    # Append or override server log files:
+    #   server.log_files :stderr => "/all_logs/stderr.log"
     def log_files(hash)
       @log_files.merge!(hash)
     end
 
+    ##
+    # Get the path of a log file:
+    #  server.log_file(:stderr)
+    #  #=> "/all_logs/stderr.log"
     def log_file(key)
       @log_files[key]
     end
 
+    ##
+    # Get the file path to the server's config file
     def config_file_path
       "#{@config_path}/#{@config_file}"
     end
 
+    ##
+    # Upload config files and run them through erb with the provided
+    # binding if necessary.
     def upload_config_files(deploy_server, setup_binding=binding)
       self.config_template_files.each do |config_file|
         if File.extname(config_file) == ".erb"
           filename = File.basename(config_file[0..-5])
-          deploy_server.make_file "#{@config_path}/#{filename}", build_erb(config_file, setup_binding)
+          deploy_server.make_file "#{@config_path}/#{filename}",
+            build_erb(config_file, setup_binding)
         else
           filename = File.basename(config_file)
           deploy_server.upload config_file, "#{@config_path}/#{filename}"
@@ -144,6 +178,8 @@ module Sunshine
       end
     end
 
+    ##
+    # Get the array of local config template files needed by the server.
     def config_template_files
       @config_template_files ||= Dir[@config_template].select{|f| File.file?(f)}
     end

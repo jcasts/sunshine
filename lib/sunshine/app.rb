@@ -3,7 +3,7 @@ module Sunshine
   class App
 
     ##
-    # Initialize and deploy an application
+    # Initialize and deploy an application.
     def self.deploy(*args, &block)
       app = new(*args)
       app.deploy!(&block)
@@ -23,7 +23,7 @@ module Sunshine
     end
 
     ##
-    # Loads a yaml config file
+    # Loads a yaml config file.
     def load_config(config_file)
       config_hash = YAML.load_file(config_file)
       default_config = config_hash[:defaults] || {}
@@ -35,7 +35,7 @@ module Sunshine
 
     ##
     # Deploy the application to deploy servers and
-    # call user's post-deploy code
+    # call user's post-deploy code.
     def deploy!(&block)
       Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
         @deploy_servers.connect
@@ -69,7 +69,7 @@ module Sunshine
 
     ##
     # Symlink current directory to previous checkout and remove
-    # the current deploy directory
+    # the current deploy directory.
     def revert!
       Sunshine.logger.info :app, "Reverting to previous deploy..." do
         deploy_servers.each do |deploy_server|
@@ -91,7 +91,7 @@ module Sunshine
     end
 
     ##
-    # Creates the base application directory
+    # Creates the base application directory.
     def make_app_directory(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Creating #{@name} base directory" do
         d_servers.run "mkdir -p #{@deploy_path}"
@@ -102,7 +102,7 @@ module Sunshine
     end
 
     ##
-    # Checks out the app's codebase to one or all deploy servers
+    # Checks out the app's codebase to one or all deploy servers.
     def checkout_codebase(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Checking out codebase" do
         @repo.checkout_to(d_servers, self.checkout_path)
@@ -113,7 +113,7 @@ module Sunshine
     end
 
     ##
-    # Creates a VERSION file with deploy information
+    # Creates a VERSION file with deploy information.
     def make_deploy_info_file(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Creating VERSION file" do
         info = []
@@ -131,7 +131,7 @@ module Sunshine
     end
 
     ##
-    # Creates a symlink to the app's checkout path
+    # Creates a symlink to the app's checkout path.
     def symlink_current_dir(d_servers = @deploy_servers)
       Sunshine.logger.info :app,
         "Symlinking #{self.checkout_path} -> #{@current_path}" do
@@ -144,7 +144,7 @@ module Sunshine
 
     ##
     # Removes old deploys from the checkout_dir
-    # based on Sunshine's max_deploy_versions
+    # based on Sunshine's max_deploy_versions.
     def remove_old_deploys(d_servers = @deploy_servers)
       Sunshine.logger.info :app,
         "Removing old deploys (max = #{Sunshine.max_deploy_versions})" do
@@ -160,7 +160,7 @@ module Sunshine
     end
 
     ##
-    # Install gem dependencies
+    # Install gem dependencies.
     def install_gems(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Installing gems" do
         d_servers.each do |deploy_server|
@@ -176,7 +176,7 @@ module Sunshine
     end
 
     ##
-    # Run a rake task on any or all deploy servers
+    # Run a rake task on any or all deploy servers.
     def rake(command, d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Running Rake task '#{command}'" do
         d_servers.each do |deploy_server|
@@ -187,13 +187,13 @@ module Sunshine
     end
 
     ##
-    # Determine and return a remote path to checkout code to
+    # Determine and return a remote path to checkout code to.
     def checkout_path
       @checkout_path ||= "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
     end
 
     ##
-    # Set and return the remote shell env variables
+    # Set and return the remote shell env variables.
     def shell_env(env_hash=nil)
       env_hash ||= {}
       @shell_env.merge!(env_hash)

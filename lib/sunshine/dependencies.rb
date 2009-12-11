@@ -1,5 +1,9 @@
 require "settler"
 
+##
+# Defines Sunshine deploy server dependencies.
+# TODO: Reinable yum or use a different bundle manager.
+#       Yum is difficult to install from scratch - maybe use apt.
 class Sunshine::Dependencies < Settler
 
   #yum 'nginx'
@@ -16,7 +20,7 @@ class Sunshine::Dependencies < Settler
     requires 'chronic'
   end
 
-  gem 'mogwai_logpush', :version => "~>0.0"
+  gem 'mogwai_logpush', :version => "~>0.0.2"
 
   gem 'passenger', :version => "~>2.2"
 
