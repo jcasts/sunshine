@@ -17,10 +17,12 @@ module Sunshine
       @port        = options[:port] || 80
       @processes   = options[:processes] || 1
       @server_name = options[:server_name]
-      @deploy_servers = options[:deploy_servers] || @app.deploy_servers.find(:role => :web)
+      @deploy_servers = options[:deploy_servers] ||
+        @app.deploy_servers.find(:role => :web)
 
       @config_template = options[:config_template] || "templates/#{@name}/*"
-      @config_path     = options[:config_path] || "#{@app.current_path}/server_configs/#{@name}"
+      @config_path     = options[:config_path] ||
+        "#{@app.current_path}/server_configs/#{@name}"
       @config_file     = options[:config_file] || "#{@name}.conf"
 
       log_path  = options[:log_path] || "#{@app.shared_path}/log"
@@ -39,10 +41,11 @@ module Sunshine
             Sunshine::Dependencies.install @name, :call => deploy_server
           rescue => e
             raise DependencyError,
-                  "Could not install dependency #{@name} => #{e.class}: #{e.message}"
+             "Failed installing dependency #{@name} => #{e.class}: #{e.message}"
           end if Sunshine::Dependencies.exist?(@name)
 
-          server_name = @server_name || deploy_server.host # Pass server_name to binding
+          # Pass server_name to binding
+          server_name = @server_name || deploy_server.host
 
           deploy_server.run "mkdir -p #{remote_dirs.join(" ")}"
 
@@ -67,7 +70,8 @@ module Sunshine
             deploy_server.run(start_cmd)
             yield(deploy_server) if block_given?
           rescue => e
-            raise FatalDeployError, "Could not start server #{@name}:\n#{e.message}"
+            raise FatalDeployError,
+              "Could not start server #{@name}:\n#{e.message}"
           end
         end
 
@@ -82,7 +86,8 @@ module Sunshine
             deploy_server.run(stop_cmd)
             yield(deploy_server) if block_given?
           rescue => e
-            raise FatalDeployError, "Could not stop server #{@name}:\n#{e.message}"
+            raise FatalDeployError,
+              "Could not stop server #{@name}:\n#{e.message}"
           end
         end
 

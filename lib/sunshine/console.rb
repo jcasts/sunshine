@@ -33,6 +33,15 @@ module Sunshine
       @output.close
     end
 
+
+    def run(str)
+      stdin, stdout, stderr = Open3.popen3(str)
+      stderr = stderr.read
+      raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless
+        stderr.empty?
+      stdout.read.strip
+    end
+
   end
 
 end

@@ -31,12 +31,14 @@ module Sunshine
 
       rescue Net::SSH::AuthenticationFailed => e
 
-        raise ConnectionError, "Failed to connect to #{@host}" unless Sunshine.interactive? && tries < MAX_CONNECT_TRIES
+        raise ConnectionError, "Failed to connect to #{@host}" unless
+          Sunshine.interactive? && tries < MAX_CONNECT_TRIES
         tries = tries.next
 
         Sunshine.logger.info @host, "#{e.class}: #{e.message}"
 
-        Sunshine.logger.info :ssh, "User '#{@user}' can't log into #{@host}. Try entering a password (#{tries}/#{MAX_CONNECT_TRIES})"
+        Sunshine.logger.info :ssh, "User '#{@user}' can't log into #{@host}."+
+          " Try entering a password (#{tries}/#{MAX_CONNECT_TRIES})"
 
         self.query_for_password
         retry
@@ -47,7 +49,8 @@ module Sunshine
     ##
     # Query the user for a password
     def query_for_password
-      @options[:password] = Sunshine.console.hidden_prompt("\n[#{@user}@#{@host}]:".bright)
+      @options[:password] =
+        Sunshine.console.hidden_prompt("\n[#{@user}@#{@host}]:".bright)
     end
 
     ##
@@ -68,7 +71,8 @@ module Sunshine
     ##
     # Uploads a file via SCP
     def upload(from_path, to_path, options={}, &block)
-      raise Errno::ENOENT, "No such file or directory - #{from_path}" unless File.exists?(from_path)
+      raise Errno::ENOENT, "No such file or directory - #{from_path}" unless
+        File.exists?(from_path)
       Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}"
       @ssh_session.scp.upload!(from_path, to_path, options, &block)
     end
@@ -90,7 +94,8 @@ module Sunshine
     # Create a file remotely
     def make_file(filepath, content, options={})
       FileUtils.mkdir_p "tmp"
-      temp_filepath = "tmp/#{File.basename(filepath)}_#{Time.now.to_i}#{rand(10000)}"
+      temp_filepath =
+        "tmp/#{File.basename(filepath)}_#{Time.now.to_i}#{rand(10000)}"
       File.open(temp_filepath, "w+"){|f| f.write(content)}
 
       self.upload(temp_filepath, filepath, options)
@@ -116,7 +121,8 @@ module Sunshine
         @ssh_session.exec!(string_cmd) do |channel, stream, data|
           ( output[stream] ||= "" ) << data
           last_stream = stream unless data.chomp.empty?
-          Sunshine.logger.log(">>", data, :type => (last_stream == :stdout ? :debug : :error))
+          Sunshine.logger.log ">>", data,
+            :type => (last_stream == :stdout ? :debug : :error)
           yield(stream, data) if block_given?
         end
       end

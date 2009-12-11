@@ -60,13 +60,15 @@ module Sunshine
     ##
     # Update the repo information - Implemented by subclass
     def update_repo_info
-      raise RepoError, "The 'update_repo_info' method must be implemented by child classes"
+      raise RepoError,
+        "The 'update_repo_info' method must be implemented by child classes"
     end
 
     ##
     # Checkout code to a deploy_server - Implemented by subclass
     def checkout_to(server, path)
-      raise RepoError, "The 'checkout_to' method must be implemented by child classes"
+      raise RepoError,
+        "The 'checkout_to' method must be implemented by child classes"
     end
 
   end

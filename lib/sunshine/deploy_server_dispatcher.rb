@@ -56,7 +56,8 @@ module Sunshine
     # Returns true if the dispatcher has a deploy_server with the passed
     # host or passed deploy_server's host
     def exist?(deploy_server)
-      deploy_server_host = deploy_server.host rescue deploy_server.split("@").last
+      deploy_server_host = String === deploy_server ?
+        deploy_server.split("@").last : deploy_server.host
       !@deploy_servers.select{|ds| ds.host == deploy_server_host}.empty?
     end
 

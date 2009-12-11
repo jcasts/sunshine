@@ -26,8 +26,10 @@ module Sunshine
     # Loads a yaml config file
     def load_config(config_file)
       config_hash = YAML.load_file(config_file)
-      config_hash = (config_hash[:defaults] || {}).merge(config_hash[@deploy_env] || {})
-      @deploy_options = config_hash.merge(@deploy_options)
+      default_config = config_hash[:defaults] || {}
+      current_config = config_hash[@deploy_env] || {}
+      current_config = default_config.merge(current_config)
+      @deploy_options = current_config.merge(@deploy_options)
       update_attributes
     end
 
@@ -72,13 +74,17 @@ module Sunshine
       Sunshine.logger.info :app, "Reverting to previous deploy..." do
         deploy_servers.each do |deploy_server|
           deploy_server.run "rm -rf #{self.checkout_path}"
-          last_deploy = deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
+          last_deploy =
+            deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
 
           if last_deploy
-            deploy_server.symlink("#{@deploys_path}/#{last_deploy}", @current_path)
-            Sunshine.logger.info :app, "#{deploy_server.host}: Reverted to #{last_deploy}"
+            deploy_server.symlink \
+              "#{@deploys_path}/#{last_deploy}", @current_path
+            Sunshine.logger.info :app,
+              "#{deploy_server.host}: Reverted to #{last_deploy}"
           else
-            Sunshine.logger.info :app, "#{deploy_server.host}: No previous deploy to revert to."
+            Sunshine.logger.info :app,
+              "#{deploy_server.host}: No previous deploy to revert to."
           end
         end
       end
@@ -112,7 +118,7 @@ module Sunshine
       Sunshine.logger.info :app, "Creating VERSION file" do
         info = []
         info << "deployed_at: #{Time.now.to_i}"
-        info << "deployed_by: #{Sunshine.run_local("whoami")}"
+        info << "deployed_by: #{Sunshine.console.run("whoami")}"
         info << "scm_url: #{@repo.url}"
         info << "scm_rev: #{@repo.revision}"
         contents = info.join("\n")
@@ -120,13 +126,15 @@ module Sunshine
       end
 
     rescue => e
-      Sunshine.logger.warn :app, "#{e.class} (non-critical):#{e.message}. Failed creating VERSION file"
+      Sunshine.logger.warn :app,
+        "#{e.class} (non-critical):#{e.message}. Failed creating VERSION file"
     end
 
     ##
     # Creates a symlink to the app's checkout path
     def symlink_current_dir(d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Symlinking #{self.checkout_path} -> #{@current_path}" do
+      Sunshine.logger.info :app,
+        "Symlinking #{self.checkout_path} -> #{@current_path}" do
         d_servers.symlink(self.checkout_path, @current_path)
       end
 
@@ -135,9 +143,11 @@ module Sunshine
     end
 
     ##
-    # Removes old deploys from the checkout_dir based on Sunshine's max_deploy_versions
+    # Removes old deploys from the checkout_dir
+    # based on Sunshine's max_deploy_versions
     def remove_old_deploys(d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Removing old deploys (max = #{Sunshine.max_deploy_versions})" do
+      Sunshine.logger.info :app,
+        "Removing old deploys (max = #{Sunshine.max_deploy_versions})" do
         d_servers.each do |deploy_server|
           deploys = deploy_server.run("ls -1 #{@deploys_path}").split("\n")
           if deploys.length > Sunshine.max_deploy_versions
@@ -154,8 +164,10 @@ module Sunshine
     def install_gems(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Installing gems" do
         d_servers.each do |deploy_server|
-          run_geminstaller(deploy_server) if deploy_server.file?("#{@checkout_path}/config/geminstaller.yml")
-          run_bundler(deploy_server) if deploy_server.file?("#{@checkout_path}/Gemfile")
+          run_geminstaller(deploy_server) if
+            deploy_server.file?("#{@checkout_path}/config/geminstaller.yml")
+          run_bundler(deploy_server) if
+            deploy_server.file?("#{@checkout_path}/Gemfile")
         end
       end
 
@@ -207,7 +219,8 @@ module Sunshine
     def update_attributes(config_hash = @deploy_options)
       @name = config_hash[:name]
 
-      @repo = Sunshine::Repo.new_of_type(config_hash[:repo][:type], config_hash[:repo][:url])
+      @repo = Sunshine::Repo.new_of_type \
+        config_hash[:repo][:type], config_hash[:repo][:url]
 
       @deploy_path = config_hash[:deploy_path]
       @current_path = "#{@deploy_path}/current"
@@ -226,7 +239,10 @@ module Sunshine
       end
       @deploy_servers = DeployServerDispatcher.new(*server_list)
 
-      @shell_env = {"RAKE_ENV" => @deploy_env.to_s, "RAILS_ENV" => @deploy_env.to_s}
+      @shell_env = {
+        "RAKE_ENV" => @deploy_env.to_s,
+        "RAILS_ENV" => @deploy_env.to_s
+      }
       self.shell_env(config_hash[:shell_env])
     end
 

@@ -38,7 +38,8 @@ class Settler
     # The check command must echo true or false
     def check(cmd_str=nil, &block)
       @check = cmd_str || block
-      @check = proc{|cmd| cmd.call(cmd_str).strip == "true" } if String === @check
+      @check = proc{|cmd| cmd.call(cmd_str).strip == "true" } if
+        String === @check
     end
 
     ##
@@ -91,7 +92,8 @@ Missing dependencies #{missing.join(", ")}")
       end
 
       run_command(@install, options)
-      raise(InstallError, "Failed installing #{@name}") unless installed?(options)
+      raise(InstallError, "Failed installing #{@name}") unless
+        installed?(options)
     end
 
     ##
@@ -110,7 +112,12 @@ Missing dependencies #{missing.join(", ")}")
     #   :remove_children => true - removes direct child dependencies
     #   :remove_children => :recursive - removes children recursively
     def uninstall!(options={})
-      raise(UninstallError, "The #{@name} has child dependencies. If you want to remove it anyway, use :force => true or :remove_children => (true || :recursive)") if !options[:remove_children] && !options[:force]
+      if !options[:remove_children] && !options[:force]
+        raise UninstallError,
+          "The #{@name} has child dependencies. "+
+          "If you want to remove it anyway, use :force => true or "+
+          ":remove_children => (true || :recursive)"
+      end
       uninstall_children!(options) if options[:remove_children]
       run_command(@uninstall, options)
       raise(UninstallError, "Failed removing #{@name}") if installed?(options)
@@ -125,7 +132,8 @@ Missing dependencies #{missing.join(", ")}")
     def uninstall_children!(options={})
       options = options.dup
       @children.each do |dep|
-        options.delete(:remove_children) unless options[:remove_children] == :recursive
+        options.delete(:remove_children) unless
+          options[:remove_children] == :recursive
         @dependency_lib.dependencies[dep].uninstall!(options)
       end
     end
@@ -165,7 +173,8 @@ Missing dependencies #{missing.join(", ")}")
     def run_local(str)
       stdin, stdout, stderr = Open3.popen3(str)
       stderr = stderr.read
-      raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless stderr.empty?
+      raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless
+        stderr.empty?
       stdout.read.strip
     end
 

@@ -69,23 +69,25 @@ module Sunshine
       :output => self.console
   end
 
+  ##
+  # The default deploy environment to use. Set with the -e option.
+  # See App#deploy_env for app specific deploy environments.
   def self.deploy_env
     @config['deploy_env']
   end
 
+  ##
+  # Maximum number of deploys (history) to keep on the remote server,
+  # 5 by default. Overridden in the ~/.sunshine config file.
   def self.max_deploy_versions
     @config['max_deploy_versions']
   end
 
+  ##
+  # Should sunshine ever ask for user input? True by default; overridden with
+  # the -a option.
   def self.interactive?
     !@config['auto']
-  end
-
-  def self.run_local(str)
-    stdin, stdout, stderr = Open3.popen3(str)
-    stderr = stderr.read
-    raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless stderr.empty?
-    stdout.read.strip
   end
 
   def self.parse_args argv
@@ -99,11 +101,12 @@ module Sunshine
 
 Usage: #{opt.program_name} [deploy_file] [options]
 
-Sunshine is a gem that provides a light, consistant api for rack applications deployment. 
+Sunshine provides a light api for rack applications deployment. 
       EOF
 
       opt.separator nil
-      opt.separator "[deploy_file]: Load a specific deploy script or app path. Defaults to ./Sunshine."
+      opt.separator "[deploy_file]: Load a deploy script or app path."+
+        " Defaults to ./Sunshine."
 
       opt.separator nil
       opt.separator "Deploy-time options:"
@@ -168,7 +171,8 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
     self.setup( config )
 
     deploy_file = argv.first
-    deploy_file = File.join(deploy_file, "Sunshine") if deploy_file && File.directory?(deploy_file)
+    deploy_file = File.join(deploy_file, "Sunshine") if
+      deploy_file && File.directory?(deploy_file)
     deploy_file ||= "sunshine"
     puts "Running #{deploy_file}"
     require deploy_file
