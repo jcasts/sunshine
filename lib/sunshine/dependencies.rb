@@ -6,15 +6,25 @@ class Sunshine::Dependencies < Settler
 
   #yum 'ruby'
 
+  #yum 'logrotate'
+
   gem 'rake', :version => "~>0.8"
 
-  gem 'passenger', :version => "~>2.2.7"
+  gem 'chronic', :version => "~>0.2"
 
-  gem 'bundler'
+  gem 'javan-whenever', :version => "~>0.3" do
+    requires 'chronic'
+  end
 
-  gem 'geminstaller'
+  gem 'mogwai_logpush', :version => "~>0.0"
 
-  gem 'unicorn', :version => "~>0.93"
+  gem 'passenger', :version => "~>2.2"
+
+  gem 'bundler', :version => "~>0.7"
+
+  gem 'geminstaller', :version => "~>0.5"
+
+  gem 'unicorn', :version => "~>0.9"
 
   gem 'rainbows', :version => "0.5.0"
 

@@ -108,12 +108,12 @@ Sunshine is a gem that provides a light, consistant api for rack applications de
       opt.separator nil
       opt.separator "Deploy-time options:"
 
-      opt.on('-l', '--level [LEVEL]',
+      opt.on('-l', '--level LEVEL',
              'Set trace level. Defaults to info.') do |value|
         options['level'] = value.downcase.to_sym
       end
 
-      opt.on('-e', '--env [DEPLOY_ENV]',
+      opt.on('-e', '--env DEPLOY_ENV',
              'Sets the deploy environment. Defaults to development.') do |value|
         options['deploy_env'] = value
       end
