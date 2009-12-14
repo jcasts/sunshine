@@ -54,6 +54,8 @@ module Sunshine
       stdout.read.chomp
     end
 
+    alias call run
+
   end
 
 end

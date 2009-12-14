@@ -100,6 +100,7 @@ module Sunshine
       call_each_method :run, *args, &block
     end
 
+    alias call run
 
     private
 

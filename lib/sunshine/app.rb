@@ -16,21 +16,41 @@ module Sunshine
 
     def initialize(*args, &block)
       config_file = String === args.first ? args.shift : nil
-      @deploy_options = Hash === args.first ? args.shift : {}
-      @deploy_env = @deploy_options[:deploy_env] || Sunshine.deploy_env
-      config_file ? load_config(config_file) : update_attributes
-      yield(self) if block_given?
-    end
+      deploy_options = Hash === args.first ? args.shift : {}
+      @deploy_env = deploy_options[:deploy_env] || Sunshine.deploy_env
+      deploy_options.merge!(load_config(config_file)) if config_file
 
-    ##
-    # Loads a yaml config file.
-    def load_config(config_file)
-      config_hash = YAML.load_file(config_file)
-      default_config = config_hash[:defaults] || {}
-      current_config = config_hash[@deploy_env] || {}
-      current_config = default_config.merge(current_config)
-      @deploy_options = current_config.merge(@deploy_options)
-      update_attributes
+      @name = deploy_options[:name]
+
+      @deploy_path = deploy_options[:deploy_path]
+      @current_path = "#{@deploy_path}/current"
+      @deploys_path = "#{@deploy_path}/deploys"
+      @shared_path = "#{@deploy_path}/shared"
+
+      @shell_env = {
+        "RAKE_ENV" => @deploy_env.to_s,
+        "RAILS_ENV" => @deploy_env.to_s
+      }
+      self.shell_env(deploy_options[:shell_env]) if deploy_options[:shell_env]
+
+      #@crontab = Crontab.new(self.name, @deploy_servers)
+
+      @health = Healthcheck.new(self)
+
+      @repo = Sunshine::Repo.new_of_type \
+        deploy_options[:repo][:type], deploy_options[:repo][:url]
+
+      server_list = deploy_options[:deploy_servers].to_a
+      server_list = server_list.map do |server_def|
+        if Hash === server_def
+          host = server_def.keys.first
+          server_def = [host, {:roles => server_def[host].split(" ")}]
+        end
+        DeployServer.new(*server_def.to_a)
+      end
+      @deploy_servers = DeployServerDispatcher.new(*server_list)
+
+      yield(self) if block_given?
     end
 
     ##
@@ -204,6 +224,7 @@ module Sunshine
       @shell_env.dup
     end
 
+
     private
 
     def run_geminstaller(deploy_server)
@@ -216,34 +237,11 @@ module Sunshine
       deploy_server.run "cd #{self.checkout_path} && gem bundle"
     end
 
-    def update_attributes(config_hash = @deploy_options)
-      @name = config_hash[:name]
-
-      @repo = Sunshine::Repo.new_of_type \
-        config_hash[:repo][:type], config_hash[:repo][:url]
-
-      @deploy_path = config_hash[:deploy_path]
-      @current_path = "#{@deploy_path}/current"
-      @deploys_path = "#{@deploy_path}/deploys"
-      @shared_path = "#{@deploy_path}/shared"
-
-      @health = Healthcheck.new(self)
-
-      server_list = config_hash[:deploy_servers].to_a
-      server_list = server_list.map do |server_def|
-        if Hash === server_def
-          host = server_def.keys.first
-          server_def = [host, {:roles => server_def[host].split(" ")}]
-        end
-        DeployServer.new(*server_def.to_a)
-      end
-      @deploy_servers = DeployServerDispatcher.new(*server_list)
-
-      @shell_env = {
-        "RAKE_ENV" => @deploy_env.to_s,
-        "RAILS_ENV" => @deploy_env.to_s
-      }
-      self.shell_env(config_hash[:shell_env])
+    def load_config(config_file)
+      config_hash = YAML.load_file(config_file)
+      default_config = config_hash[:defaults] || {}
+      current_config = config_hash[@deploy_env] || {}
+      default_config.merge(current_config)
     end
 
   end
