@@ -62,8 +62,8 @@ module Sunshine
     #   > [MAIN] Start something else
     #
     # Log level is set to the instance's default unless
-    # specified in the options argument with :level => :some_level.
-    # The default log level is :info.
+    # specified in the options argument with :level => Logger::LEVEL.
+    # The default log level is Logger::INFO
     #
     # Best practice for using log levels is to call the level methods
     # which all work similarly to the log method:

@@ -3,8 +3,10 @@ require 'test/test_helper'
 class TestApp < Test::Unit::TestCase
 
   def setup
+    svn_url = "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
+
     @config = {:name => "parity",
-               :repo => {:type => "svn", :url => "svn://subversion.flight.yellowpages.com/argo/parity/trunk"},
+               :repo => {:type => "svn", :url => svn_url},
                :deploy_servers => ["nextgen@np4.wc1.yellowpages.com"],
                :deploy_path => "/usr/local/nextgen/parity"}
   end

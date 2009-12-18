@@ -68,7 +68,8 @@ module Sunshine
   end
 
   def self.logger
-    @logger ||= Sunshine::Output.new :level => @config['level'],
+    log_level = Logger.const_get(@config['level'].upcase)
+    @logger ||= Sunshine::Output.new :level => log_level,
       :output => self.console
   end
 
@@ -116,7 +117,7 @@ Sunshine provides a light api for rack applications deployment.
 
       opt.on('-l', '--level LEVEL',
              'Set trace level. Defaults to info.') do |value|
-        options['level'] = Logger.const_get(value.upcase)
+        options['level'] = value
       end
 
       opt.on('-e', '--env DEPLOY_ENV',
