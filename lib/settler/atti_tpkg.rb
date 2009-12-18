@@ -2,8 +2,6 @@ class Settler
 
   class AttiTpkg < Dependency
 
-    register_with_settler "atti_tpkg"
-
     def initialize(dependency_lib, name, options={}, &block)
       super(dependency_lib, name, options) do
         pkg_name = @pkg.dup
@@ -12,7 +10,7 @@ class Settler
 
         install "tpkg -n -i http://tpkg/tpkg/#{pkg_name}.tpkg"
         uninstall "tpkg -n -r #{pkg_name}"
-        check_test("tpkg -q #{@pkg} | grep #{@pkg} | wc -l", "-ge \"1\"")
+        check_test("tpkg -q #{@pkg} | grep -c #{@pkg}", "-ge 1")
         requires(*options[:require].to_a) if options[:require]
         instance_eval(&block) if block_given?
       end

@@ -2,8 +2,6 @@ class Settler
 
   class Gem < Dependency
 
-    register_with_settler
-
     def initialize(dependency_lib, name, options={}, &block)
       super(dependency_lib, name, options) do
         version = options[:version] ? " --version '#{options[:version]}'" : ""

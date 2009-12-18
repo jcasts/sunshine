@@ -78,15 +78,15 @@ class Settler
 
     ##
     # Run the install command for the dependency
-    # Allows option: :skip_parents => true
+    # Allows option:
+    # :skip_parents:: true - install regardless of missing parent dependencies
     def install!(options={})
       return if installed?(options)
 
       if options[:skip_parents]
-        missing = missing_parent?
-        if missing
-          raise(InstallError, "Could not install #{@name}. \
-Missing dependencies #{missing.join(", ")}")
+        if missing_parent?
+          raise(InstallError, "Could not install #{@name}. "+
+            "Missing dependencies #{missing.join(", ")}")
         end
       else
         install_parents!(options)
@@ -99,7 +99,8 @@ Missing dependencies #{missing.join(", ")}")
 
     ##
     # Call install on direct parent dependencies
-    # Allows option: :skip_parents => true
+    # Allows option:
+    # :skip_parents:: true - install regardless of missing parent dependencies
     def install_parents!(options={})
       @parents.each do |dep|
         @dependency_lib.dependencies[dep].install!(options)
@@ -109,15 +110,12 @@ Missing dependencies #{missing.join(", ")}")
     ##
     # Run the uninstall command for the dependency
     # Allows options:
-    #   :force => true - uninstalls regardless of child dependencies
-    #   :remove_children => true - removes direct child dependencies
-    #   :remove_children => :recursive - removes children recursively
+    # :force:: true - uninstalls regardless of child dependencies
+    # :remove_children:: true - removes direct child dependencies
+    # :remove_children:: :recursive - removes children recursively
     def uninstall!(options={})
       if !options[:remove_children] && !options[:force]
-        raise UninstallError,
-          "The #{@name} has child dependencies. "+
-          "If you want to remove it anyway, use :force => true or "+
-          ":remove_children => (true || :recursive)"
+        raise UninstallError, "The #{@name} has child dependencies."
       end
       uninstall_children!(options) if options[:remove_children]
       run_command(@uninstall, options)
@@ -127,9 +125,9 @@ Missing dependencies #{missing.join(", ")}")
     ##
     # Removes child dependencies
     # Allows options:
-    #   :force => true - uninstalls regardless of child dependencies
-    #   :remove_children => true - removes direct child dependencies
-    #   :remove_children => :recursive - removes children recursively
+    # :force:: true - uninstalls regardless of child dependencies
+    # :remove_children:: true - removes direct child dependencies
+    # :remove_children:: :recursive - removes children recursively
     def uninstall_children!(options={})
       options = options.dup
       @children.each do |dep|
@@ -172,24 +170,28 @@ Missing dependencies #{missing.join(", ")}")
     end
 
     def run_local(str)
-      stdin, stdout, stderr = Open3.popen3(str)
-      stderr = stderr.read
-      raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless
-        stderr.empty?
-      stdout.read.strip
+      result = nil
+      Open4.popen4(str) do |pid, stdin, stdout, stderr|
+        stderr = stderr.read
+        raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless
+          stderr.empty?
+        result = stdout.read.strip
+      end
+      result
     end
 
-    def self.register_with_settler(method_name=nil)
-      class_name = self.to_s.split(":").last
-      method_name ||= class_name.downcase
-      Settler.class_eval <<-STR
+    def self.inherited(subclass)
+      class_name = subclass.to_s.split(":").last
+      method_name = class_name.gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+       gsub(/([a-z\d])([A-Z])/,'\1_\2').downcase
+      Settler.class_eval <<-STR, __FILE__, __LINE__ + 1
       def self.#{method_name}(name, options={}, &block)
         dependencies[name] = #{class_name}.new(self, name, options, &block)
       end
       STR
     end
 
-    register_with_settler
+    inherited self
 
   end
 

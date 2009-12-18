@@ -2,8 +2,6 @@ class Settler
 
   class Yum < Dependency
 
-    register_with_settler
-
     def initialize(dependency_lib, name, options={}, &block)
       super(dependency_lib, name, options) do
         pkg_name = @pkg.dup
