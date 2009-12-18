@@ -19,6 +19,8 @@ module Sunshine
     ##
     # Append a deploy server
     def <<(deploy_server)
+      deploy_server = DeployServer.new(deploy_server) unless
+        DeployServer === deploy_server
       @deploy_servers.push(deploy_server) unless self.exist?(deploy_server)
     end
 
@@ -53,12 +55,9 @@ module Sunshine
     end
 
     ##
-    # Returns true if the dispatcher has a deploy_server with the passed
-    # host or passed deploy_server's host
+    # Returns true if the dispatcher has a matching deploy_server
     def exist?(deploy_server)
-      deploy_server_host = String === deploy_server ?
-        deploy_server.split("@").last : deploy_server.host
-      !@deploy_servers.select{|ds| ds.host == deploy_server_host}.empty?
+      @deploy_servers.include? deploy_server
     end
 
     ##
