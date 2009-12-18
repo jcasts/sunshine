@@ -143,7 +143,7 @@ Missing dependencies #{missing.join(", ")}")
     # Run the check command to verify that the dependency is installed
     def installed?(options={})
       run_command(@check, options)
-    rescue CmdError
+    rescue CmdError => e
       false
     end
 
