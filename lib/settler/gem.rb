@@ -30,6 +30,8 @@ class Settler
         @dependency_lib.exist?('ruby')
       @dependency_lib.install 'rubygems', options if
         @dependency_lib.exist?('rubygems')
+      @dependency_lib.install 'ruby-devel', options if
+        @dependency_lib.exist?('ruby-devel')
       super
     end
 
