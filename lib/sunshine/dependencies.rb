@@ -10,10 +10,8 @@ class Sunshine::Dependencies < Settler
 
   yum 'ruby', :pkg => 'ruby-ypc'
 
-  yum 'ruby-devel'
-
   yum 'rubygems' do
-    requires 'ruby', 'ruby-devel'
+    requires 'ruby'
     install  'yum install rubygems && gem update --system --no-ri --no-rdoc'
     check do |cmd|
       cmd.call("test $(gem -v) && echo $(gem -v) || echo 0").strip >= '1.3.5'
