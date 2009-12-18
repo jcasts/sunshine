@@ -25,7 +25,7 @@ module Sunshine
         "#{@app.current_path}/server_configs/#{@name}"
       @config_file     = options[:config_file] || "#{@name}.conf"
 
-      log_path  = options[:log_path] || "#{@app.shared_path}/log"
+      log_path  = options[:log_path] || @app.log_path
       @log_files = {
         :stderr => (options[:stderr_log] || "#{log_path}/#{@name}_stderr.log"),
         :stdout => (options[:stdout_log] || "#{log_path}/#{@name}_stdout.log")
@@ -169,8 +169,8 @@ module Sunshine
       self.config_template_files.each do |config_file|
         if File.extname(config_file) == ".erb"
           filename = File.basename(config_file[0..-5])
-          deploy_server.make_file "#{@config_path}/#{filename}",
-            build_erb(config_file, setup_binding)
+          parsed_config = @app.build_erb(config_file, setup_binding)
+          deploy_server.make_file "#{@config_path}/#{filename}", parsed_config
         else
           filename = File.basename(config_file)
           deploy_server.upload config_file, "#{@config_path}/#{filename}"
@@ -192,11 +192,6 @@ module Sunshine
       dirs.concat [@config_path, File.dirname(@pid)]
       dirs.delete_if{|d| d == "."}
       dirs
-    end
-
-    def build_erb(erb_file, custom_binding=nil)
-      str = File.read(erb_file)
-      ERB.new(str, nil, '-').result(custom_binding || binding)
     end
 
   end

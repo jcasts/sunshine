@@ -47,16 +47,18 @@ module Sunshine
   require 'sunshine/repo'
   require 'sunshine/repos/svn_repo'
 
+  require 'sunshine/server'
+  require 'sunshine/servers/nginx'
+  require 'sunshine/servers/unicorn'
+  require 'sunshine/servers/rainbows'
+
+  require 'sunshine/crontab'
+
   require 'sunshine/healthcheck'
 
   require 'sunshine/deploy_server_dispatcher'
   require 'sunshine/deploy_server'
   require 'sunshine/app'
-
-  require 'sunshine/server'
-  require 'sunshine/servers/nginx'
-  require 'sunshine/servers/unicorn'
-  require 'sunshine/servers/rainbows'
 
 
 

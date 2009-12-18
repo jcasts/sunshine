@@ -10,8 +10,8 @@ module Sunshine
       app
     end
 
-    attr_reader :name, :repo, :health, :deploy_servers
-    attr_accessor :deploy_path, :current_path, :shared_path
+    attr_reader :name, :repo, :health, :deploy_servers, :crontab
+    attr_accessor :deploy_path, :current_path, :shared_path, :log_path
     attr_accessor :deploy_env
 
     def initialize(*args, &block)
@@ -26,6 +26,7 @@ module Sunshine
       @current_path = "#{@deploy_path}/current"
       @deploys_path = "#{@deploy_path}/deploys"
       @shared_path = "#{@deploy_path}/shared"
+      @log_path = "#{@shared_path}/log"
 
       @shell_env = {
         "RAKE_ENV" => @deploy_env.to_s,
@@ -33,7 +34,7 @@ module Sunshine
       }
       self.shell_env(deploy_options[:shell_env]) if deploy_options[:shell_env]
 
-      #@crontab = Crontab.new(self.name, @deploy_servers)
+      @crontab = Crontab.new(self.name)
 
       @health = Healthcheck.new(self)
 
@@ -66,7 +67,10 @@ module Sunshine
         self.make_deploy_info_file  deploy_server
         self.symlink_current_dir    deploy_server
       end
+
       yield(self) if block_given?
+
+      self.setup_logrotate
       self.remove_old_deploys
 
     rescue CriticalDeployError => e
@@ -147,7 +151,7 @@ module Sunshine
 
     rescue => e
       Sunshine.logger.warn :app,
-        "#{e.class} (non-critical):#{e.message}. Failed creating VERSION file"
+        "#{e.class} (non-critical): #{e.message}. Failed creating VERSION file"
     end
 
     ##
@@ -160,6 +164,33 @@ module Sunshine
 
     rescue => e
       raise CriticalDeployError.new(e)
+    end
+
+    ##
+    # Upload logrotate config file, install dependencies,
+    # and add to the crontab.
+    def setup_logrotate
+      Sunshine.logger.info :app, "Setting up log rotation..." do
+        @crontab.add "logrotate",
+          "00 * * * * #{@user} /usr/sbin/logrotate --state /dev/null --force "+
+          "#{@current_path}/config/logrotate.conf"
+        @deploy_servers.each do |deploy_server|
+          logrotate_conf =
+            build_erb("templates/logrotate/logrotate.conf.erb", binding)
+          config_path = "#{@deploy_path}/config"
+          deploy_server.run "mkdir -p #{config_path}"
+          deploy_server.make_file "#{config_path}/logrotate.conf",
+            logrotate_conf
+          # TODO: Add logrotate dependency
+          Sunshine::Dependencies.install 'mogwai_logpush', :call =>deploy_server
+          @crontab.write! deploy_server
+        end
+      end
+
+    rescue => e
+      Sunshine.logger.warn :app,
+        "#{e.class} (non-critical): #{e.message}. Failed setting up logrotate."+
+        "Log files may not be rotated or pushed to Mogwai!"
     end
 
     ##
@@ -224,6 +255,13 @@ module Sunshine
       @shell_env.dup
     end
 
+    ##
+    # Parse an erb file and return the newly created string.
+    # Default binding is the app's binding.
+    def build_erb(erb_file, custom_binding=nil)
+      str = File.read(erb_file)
+      ERB.new(str, nil, '-').result(custom_binding || binding)
+    end
 
     private
 
