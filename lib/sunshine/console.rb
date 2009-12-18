@@ -47,11 +47,14 @@ module Sunshine
     # Execute a command on the local system and return the output.
     # Raises CmdError on stderr.
     def run(str)
-      stdin, stdout, stderr = Open3.popen3(str)
-      stderr = stderr.read
-      raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless
-        stderr.empty?
-      stdout.read.chomp
+      result = nil
+      Open4.popen4(str) do |pid, stdin, stdout, stderr|
+        stderr = stderr.read
+        raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless
+          stderr.empty?
+        result = stdout.read.chomp
+      end
+      result
     end
 
     alias call run
