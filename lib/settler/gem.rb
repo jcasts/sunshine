@@ -14,7 +14,7 @@ class Settler
         end
         install "gem install #{@pkg}#{version}#{source}#{install_opts}"
         uninstall "gem uninstall #{@pkg}#{version}"
-        check "gem list #{@pkg} -i#{version}"
+        check "gem list #{@pkg} -i#{version} || echo false"
         requires(*options[:require].to_a) if options[:require]
         instance_eval(&block) if block_given?
       end

@@ -7,7 +7,7 @@ class Settler
   class Dependency
 
 
-    attr_reader :name
+    attr_reader :name, :pkg, :parents, :children
 
     def initialize(dependency_lib, name, options={}, &block)
       @dependency_lib = dependency_lib

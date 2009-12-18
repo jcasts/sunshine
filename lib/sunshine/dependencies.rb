@@ -12,9 +12,9 @@ class Sunshine::Dependencies < Settler
 
   yum 'rubygems' do
     requires 'ruby'
-    install  'yum install rubygems && gem update --system --no-ri --no-rdoc'
+    install  'yum install -y rubygems && gem update --system --no-ri --no-rdoc'
     check do |cmd|
-      cmd.call("test $(gem -v) && echo $(gem -v) || echo 0").strip >= '1.3.5'
+      cmd.call("gem -v || echo 0").strip >= '1.3.5'
     end
   end
 
