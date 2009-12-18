@@ -8,9 +8,9 @@ module Sunshine
     end
 
     def stop_cmd
-      cmd = "(test -f #{@pid} && kill -QUIT $(cat #{@pid})) || true; "
+      cmd = "test -f #{@pid} && kill -QUIT $(cat #{@pid}) || echo false; "
       cmd << "sleep 2 ; rm -f #{@pid}; "
-      cmd << "pkill -9 -f '#{@app.current_path}/.*/#{File.basename(@pid)}'"
+      #cmd << "pkill -9 -f #{@app.current_path}/.*/#{File.basename(@pid)}"
     end
 
   end
