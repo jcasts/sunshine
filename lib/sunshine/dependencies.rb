@@ -2,25 +2,26 @@ require "settler"
 
 ##
 # Defines Sunshine deploy server dependencies.
-# TODO: Reinable yum or use a different bundle manager.
-#       Yum is difficult to install from scratch - maybe use apt.
 class Sunshine::Dependencies < Settler
 
-  #yum 'nginx'
+  yum 'nginx'
 
-  #yum 'ruby'
+  yum 'logrotate'
 
-  #yum 'logrotate'
+  yum 'ruby', :pkg => 'ruby-ypc'
+
+  yum 'rubygems' do
+    requires 'ruby'
+    install  'yum install rubygems && gem update --system --no-ri --no-rdoc'
+    check{|cmd| cmd.call('gem -v').strip >= '1.3.5'}
+  end
 
   gem 'rake', :version => "~>0.8"
 
-  gem 'chronic', :version => "~>0.2"
-
-  gem 'javan-whenever', :version => "~>0.3" do
-    requires 'chronic'
-  end
-
-  gem 'mogwai_logpush', :version => "~>0.0.2"
+  # TODO: Fix dependencies: mogwai gem -> libcurl -> libidn
+  gem 'mogwai_logpush',
+    :version => "~>0.0.2",
+    :source  => "http://gems.atti.wc1.yellowpages.com"
 
   gem 'passenger', :version => "~>2.2"
 
@@ -30,6 +31,6 @@ class Sunshine::Dependencies < Settler
 
   gem 'unicorn', :version => "~>0.9"
 
-  gem 'rainbows', :version => "0.5.0"
+  gem 'rainbows', :version => "0.6.0"
 
 end

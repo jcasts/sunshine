@@ -12,6 +12,7 @@ class Settler
     def initialize(dependency_lib, name, options={}, &block)
       @dependency_lib = dependency_lib
       @name = name.to_s
+      @pkg = options[:pkg] || @name
       @install = nil
       @uninstall = nil
       @check = nil

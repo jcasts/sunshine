@@ -7,12 +7,30 @@ class Settler
     def initialize(dependency_lib, name, options={}, &block)
       super(dependency_lib, name, options) do
         version = options[:version] ? " --version '#{options[:version]}'" : ""
-        install "gem install #{@name}#{version}"
-        uninstall "gem uninstall #{@name}#{version}"
-        check "gem list #{@name} -i#{version}"
+        source = if options[:source]
+          " --source #{options[:source]} --source http://gemcutter.org"
+        end
+        install_opts = " --no-ri --no-rdoc"
+        if options[:opts]
+          install_opts = "#{install_opts} -- #{options[:opts]}"
+        end
+        install "gem install #{@pkg}#{version}#{source}#{install_opts}"
+        uninstall "gem uninstall #{@pkg}#{version}"
+        check "gem list #{@pkg} -i#{version}"
         requires(*options[:require].to_a) if options[:require]
         instance_eval(&block) if block_given?
       end
+    end
+
+
+    private
+
+    def run_command(command, options={})
+      @dependency_lib.install 'ruby', options if
+        @dependency_lib.exist?('ruby')
+      @dependency_lib.install 'rubygems', options if
+        @dependency_lib.exist?('rubygems')
+      super
     end
 
   end

@@ -27,7 +27,8 @@ def record_files(path="*", file_arr=[], &block)
       next if block_given? && !yield(child_path)
       file_arr << child_path
     end
-    record_files(child_path+"/*", file_arr, &block) if File.directory?(child_path)
+    record_files(child_path+"/*", file_arr, &block) if
+      File.directory?(child_path)
   end
   return file_arr
 end
