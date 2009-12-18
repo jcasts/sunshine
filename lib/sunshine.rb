@@ -3,7 +3,7 @@ require 'rainbow'
 
 require 'settler'
 require 'yaml'
-require 'open3'
+require 'open4'
 require 'net/ssh'
 require 'net/scp'
 require 'erb'
