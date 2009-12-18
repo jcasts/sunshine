@@ -28,12 +28,6 @@ module Sunshine
       @shared_path = "#{@deploy_path}/shared"
       @log_path = "#{@shared_path}/log"
 
-      @shell_env = {
-        "RAKE_ENV" => @deploy_env.to_s,
-        "RAILS_ENV" => @deploy_env.to_s
-      }
-      self.shell_env(deploy_options[:shell_env]) if deploy_options[:shell_env]
-
       @crontab = Crontab.new(self.name)
 
       @health = Healthcheck.new(self)
@@ -50,6 +44,12 @@ module Sunshine
         DeployServer.new(*server_def.to_a)
       end
       @deploy_servers = DeployServerDispatcher.new(*server_list)
+
+      @shell_env = {
+        "RAKE_ENV" => @deploy_env.to_s,
+        "RAILS_ENV" => @deploy_env.to_s
+      }
+      self.shell_env(deploy_options[:shell_env])
 
       yield(self) if block_given?
     end

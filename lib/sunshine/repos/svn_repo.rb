@@ -17,7 +17,7 @@ module Sunshine
     def checkout_to(deploy_server, path)
       Sunshine.logger.info :svn,
         "Checking out to #{deploy_server.host} #{path}" do
-        deploy_server.run "test -d #{path} && rm -rf #{path}"
+        deploy_server.run "test -d #{path} && rm -rf #{path} || echo false"
         deploy_server.run \
           "mkdir -p #{path} && svn checkout -r #{@revision} #{@url} #{path}"
       end
