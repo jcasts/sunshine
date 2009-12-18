@@ -5,38 +5,35 @@ module Sunshine
   # during the Sunshine runtime.
   class Output
 
+    COLORS = {
+      Logger::UNKNOWN => :red,
+      Logger::FATAL   => :red,
+      Logger::ERROR   => :red,
+      Logger::WARN    => :yellow,
+      Logger::INFO    => :default,
+      Logger::DEBUG   => :cyan,
+    }
+
     def initialize(options={})
-      @logger = Logger.new options[:output] || STDOUT
+      @logger = Logger.new options[:output] || $stdout
       @logger.formatter = lambda{|sev, time, progname, msg| msg}
-      @logger.level = options[:level] ?
-        Logger.const_get(options[:level].to_s.upcase) : Logger::DEBUG
+      @logger.level = options[:level] || Logger::DEBUG
       @indent = 0
-      @colors = {
-        Logger::UNKNOWN => :red,
-        Logger::FATAL   => :red,
-        Logger::ERROR   => :red,
-        Logger::WARN    => :yellow,
-        Logger::INFO    => :default,
-        Logger::DEBUG   => :cyan,
-      }
     end
 
     ##
     # Prints messages according to the standard output format.
     # Options supported:
-    #   :type:    type/level of the log message
-    #   :break:   number of line breaks to insert before the message
+    #   :level:    level of the log message
     #   :indent:  indentation of the message
     def print(title, message, options={})
-      severity = options[:type] ?
-        Logger.const_get(options[:type].to_s.upcase) : Logger::DEBUG
-      color = @colors[severity]
-      new_lines = "\n" * (options[:break] || 0)
+      severity = options[:level] || Logger::DEBUG
+      color = COLORS[severity]
       indent = " " * (options[:indent].to_i * 2)
 
       print_string = message.split("\n")
       print_string.map!{|m| "#{indent}[#{title}] #{m.chomp}"}
-      print_string = "#{new_lines}#{print_string.join("\n")} \n"
+      print_string = "#{print_string.join("\n")} \n"
       print_string = print_string.foreground(color)
       print_string = print_string.bright if indent.empty?
 
@@ -65,7 +62,7 @@ module Sunshine
     #   > [MAIN] Start something else
     #
     # Log level is set to the instance's default unless
-    # specified in the options argument with :type => :some_level.
+    # specified in the options argument with :level => :some_level.
     # The default log level is :info.
     #
     # Best practice for using log levels is to call the level methods
@@ -88,37 +85,37 @@ module Sunshine
     ##
     # Log an message of log level unknown.
     def unknown(title, message, options={}, &block)
-      self.log(title, message, options.merge(:type => :unknown), &block)
+      self.log(title, message, options.merge(:level => Logger::UNKNOWN), &block)
     end
 
     ##
     # Log an message of log level fatal.
     def fatal(title, message, options={}, &block)
-      self.log(title, message, options.merge(:type => :fatal), &block)
+      self.log(title, message, options.merge(:level => Logger::FATAL), &block)
     end
 
     ##
     # Log an message of log level error.
     def error(title, message, options={}, &block)
-      self.log(title, message, options.merge(:type => :error), &block)
+      self.log(title, message, options.merge(:level => Logger::ERROR), &block)
     end
 
     ##
     # Log an message of log level warn.
     def warn(title, message, options={}, &block)
-      self.log(title, message, options.merge(:type => :warn), &block)
+      self.log(title, message, options.merge(:level => Logger::WARN), &block)
     end
 
     ##
     # Log an message of log level info.
     def info(title, message, options={}, &block)
-      self.log(title, message, options.merge(:type => :info), &block)
+      self.log(title, message, options.merge(:level => Logger::INFO), &block)
     end
 
     ##
     # Log an message of log level debug.
     def debug(title, message, options={}, &block)
-      self.log(title, message, options.merge(:type => :debug), &block)
+      self.log(title, message, options.merge(:level => Logger::DEBUG), &block)
     end
   end
 

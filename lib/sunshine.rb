@@ -9,12 +9,13 @@ require 'net/scp'
 require 'erb'
 require 'logger'
 require 'optparse'
+require 'time'
 
 module Sunshine
 
   VERSION = '0.0.1'
 
-  class SunshineException < Exception
+  class Exception < StandardError
     def initialize(input=nil)
       if Exception === input
         super(input.message)
@@ -25,7 +26,7 @@ module Sunshine
     end
   end
 
-  class CmdError < SunshineException; end
+  class CmdError < Exception; end
 
   class SSHCmdError < CmdError
     attr_reader :deploy_server
@@ -35,8 +36,8 @@ module Sunshine
     end
   end
 
-  class CriticalDeployError < SunshineException; end
-  class FatalDeployError < SunshineException; end
+  class CriticalDeployError < Exception; end
+  class FatalDeployError < Exception; end
   class DependencyError < FatalDeployError; end
 
   require 'sunshine/console'
@@ -115,7 +116,7 @@ Sunshine provides a light api for rack applications deployment.
 
       opt.on('-l', '--level LEVEL',
              'Set trace level. Defaults to info.') do |value|
-        options['level'] = value.downcase.to_sym
+        options['level'] = Logger.const_get(value.upcase)
       end
 
       opt.on('-e', '--env DEPLOY_ENV',
@@ -128,19 +129,6 @@ Sunshine provides a light api for rack applications deployment.
         options['auto'] = true
       end
 
-      opt.separator nil
-      opt.separator "Common options:"
-
-      opt.on_tail("-h", "--help", "Show this message") do
-        puts opt
-        exit
-      end
-
-      opt.on_tail("-v", "--version", "Sunshine version") do
-        puts VERSION
-        exit
-      end
-
     end
 
     opts.parse! argv
@@ -151,7 +139,7 @@ Sunshine provides a light api for rack applications deployment.
   USER_CONFIG_FILE = File.expand_path("~/.sunshine")
 
   DEFAULT_CONFIG = {
-    'level'               => :info,
+    'level'               => Logger::INFO,
     'deploy_env'          => :development,
     'auto'                => false,
     'max_deploy_versions' => 5
@@ -166,7 +154,7 @@ Sunshine provides a light api for rack applications deployment.
       File.open(USER_CONFIG_FILE, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml}
       puts "Missing config file was created for you: #{USER_CONFIG_FILE}"
       puts DEFAULT_CONFIG.to_yaml
-      exit
+      exit 1
     end
 
     config = load_config.merge( parse_args(argv) )

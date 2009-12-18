@@ -165,7 +165,7 @@ module Sunshine
     ##
     # Upload config files and run them through erb with the provided
     # binding if necessary.
-    def upload_config_files(deploy_server, setup_binding=binding)
+    def upload_config_files(deploy_server, setup_binding)
       self.config_template_files.each do |config_file|
         if File.extname(config_file) == ".erb"
           filename = File.basename(config_file[0..-5])

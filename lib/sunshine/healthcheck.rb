@@ -21,9 +21,9 @@ module Sunshine
       stat = {}
       @app.deploy_servers.each do |ds|
         stat[ds.host] = {}
-        stat[ds.host] = :ok and next if server_file_exists? ds, @hc_file
         stat[ds.host] = :disabled and next if
           server_file_exists?(ds, @hc_disabled_file)
+        stat[ds.host] = :ok and next if server_file_exists? ds, @hc_file
         stat[ds.host] = :down
       end
       stat

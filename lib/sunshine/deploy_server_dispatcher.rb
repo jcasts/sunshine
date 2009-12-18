@@ -44,9 +44,9 @@ module Sunshine
     def find(query=nil)
       return self if query.nil? || query == :all
       results = @deploy_servers.select do |ds|
-        (next unless ds.user == query[:user]) if query[:user]
-        (next unless ds.host == query[:host]) if query[:host]
-        (next unless ds.roles.include?(query[:role])) if query[:role]
+        next unless ds.user == query[:user] if query[:user]
+        next unless ds.host == query[:host] if query[:host]
+        next unless ds.roles.include?(query[:role]) if query[:role]
         true
       end
       self.class.new(*results)
@@ -106,7 +106,7 @@ module Sunshine
 
     def call_each_method(method_name, *args, &block)
       self.each do |deploy_server|
-        deploy_server.method(method_name).call(*args, &block)
+        deploy_server.send(method_name, *args, &block)
       end
     end
 

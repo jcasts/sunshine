@@ -4,7 +4,7 @@ module Sunshine
   # The Console class handles local input, output and execution to the shell.
   class Console
 
-    def initialize(output = STDOUT)
+    def initialize(output = $stdout)
       @output = output
     end
 

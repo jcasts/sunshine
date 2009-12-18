@@ -14,9 +14,9 @@ module Sunshine
     attr_accessor :deploy_path, :current_path, :shared_path, :log_path
     attr_accessor :deploy_env
 
-    def initialize(*args, &block)
-      config_file = String === args.first ? args.shift : nil
-      deploy_options = Hash === args.first ? args.shift : {}
+    def initialize(*args)
+      config_file = args.shift if String === args.first
+      deploy_options = args.empty? ? {} : args.first
       @deploy_env = deploy_options[:deploy_env] || Sunshine.deploy_env
       deploy_options.merge!(load_config(config_file)) if config_file
 
@@ -122,7 +122,7 @@ module Sunshine
       end
 
     rescue => e
-      raise FatalDeployError.new(e)
+      raise FatalDeployError, e
     end
 
     ##
@@ -133,7 +133,7 @@ module Sunshine
       end
 
     rescue => e
-      raise CriticalDeployError.new(e)
+      raise CriticalDeployError, e
     end
 
     ##
@@ -163,7 +163,7 @@ module Sunshine
       end
 
     rescue => e
-      raise CriticalDeployError.new(e)
+      raise CriticalDeployError, e
     end
 
     ##
@@ -223,7 +223,7 @@ module Sunshine
       end
 
     rescue => e
-      raise CriticalDeployError.new(e)
+      raise CriticalDeployError, e
     end
 
     ##
