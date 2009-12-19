@@ -11,6 +11,7 @@ lib/settler/yum.rb
 lib/sunshine.rb
 lib/sunshine/app.rb
 lib/sunshine/console.rb
+lib/sunshine/crontab.rb
 lib/sunshine/dependencies.rb
 lib/sunshine/deploy_server.rb
 lib/sunshine/deploy_server_dispatcher.rb
@@ -22,6 +23,7 @@ lib/sunshine/server.rb
 lib/sunshine/servers/nginx.rb
 lib/sunshine/servers/rainbows.rb
 lib/sunshine/servers/unicorn.rb
+templates/logrotate/logrotate.conf.erb
 templates/nginx/nginx.conf.erb
 templates/nginx/nginx_optimize.conf
 templates/nginx/nginx_proxy.conf
@@ -30,6 +32,7 @@ templates/unicorn/unicorn.conf.erb
 test/envoy_deploy_test.rb
 test/fixtures/app_configs/test_app.yml
 test/fixtures/sunshine_test/test_upload
+test/mocks/mock_console.rb
 test/mocks/mock_repo.rb
 test/mocks/mock_ssh.rb
 test/test_helper.rb
