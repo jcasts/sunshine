@@ -4,3 +4,15 @@ listen "0.0.0.0:<%= port %>"
 pid "<%= pid %>"
 stderr_path "<%= log_file :stderr %>"
 stdout_path "<%= log_file :stdout %>"
+
+<% if concurrency && !concurrency.empty? %>
+Rainbows! do
+  use <%= concurrency[:model].inspect %>
+  <% if concurrency[:connections] %>
+  worker_connections <%= concurrency[:connections] %>
+  <% end %>
+  <% if concurrency[:timeout] %>
+  keepalive_timeout <%= concurrency[:timeout] %>
+  <% end %>
+end
+<% end %>
