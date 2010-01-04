@@ -7,7 +7,7 @@ class TestApp < Test::Unit::TestCase
 
     @config = {:name => "parity",
                :repo => {:type => "svn", :url => svn_url},
-               :deploy_servers => ["nextgen@np4.wc1.yellowpages.com"],
+               :deploy_servers => ["jcastagna@jcast.np.wc1.yellowpages.com"],
                :deploy_path => "/usr/local/nextgen/parity"}
   end
 
@@ -82,9 +82,7 @@ class TestApp < Test::Unit::TestCase
 
     attr_hash[:deploy_servers].each_with_index do |server_def, i|
       server_def = server_def.keys.first if Hash === server_def
-      user, url = server_def.split("@")
-      assert_equal user, app.deploy_servers[i].user
-      assert_equal url, app.deploy_servers[i].host
+      assert_equal server_def, app.deploy_servers[i].host
     end
   end
 
