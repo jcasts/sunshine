@@ -181,7 +181,7 @@ module Sunshine
           deploy_server.run "mkdir -p #{config_path}"
           deploy_server.make_file "#{config_path}/logrotate.conf",
             logrotate_conf
-          # TODO: Add logrotate dependency
+          Sunshine::Dependencies.install 'logrotate', :call =>deploy_server
           Sunshine::Dependencies.install 'mogwai_logpush', :call =>deploy_server
           @crontab.write! deploy_server
         end
@@ -267,7 +267,7 @@ module Sunshine
 
     def run_geminstaller(deploy_server)
       Sunshine::Dependencies.install 'geminstaller', :call => deploy_server
-      deploy_server.run "cd #{self.checkout_path} && geminstaller"
+      deploy_server.run "cd #{self.checkout_path} && geminstaller -e"
     end
 
     def run_bundler(deploy_server)

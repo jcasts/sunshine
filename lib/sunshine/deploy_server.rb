@@ -4,18 +4,35 @@ module Sunshine
 
     class ConnectionError < FatalDeployError; end
 
+    include Open4
+
+    SUDO_PROMPT = /^Password:/
+
     attr_reader :host, :user
     attr_accessor :roles, :env
 
-    MAX_CONNECT_TRIES = 3
 
-    def initialize(user_at_host, options={})
-      @user, @host = user_at_host.split("@")
-      @user ||= options.delete(:user)
-      @roles = options.delete(:roles).to_a.map{|r| r.to_sym }
-      @env = options.delete(:env) || {}
-      @options = options
-      @ssh_session = nil
+    def initialize host, options={}
+      @host = host
+      @user = options[:user]
+      @roles = options[:roles].to_a.map{|r| r.to_sym }
+      @env = options[:env] || {}
+      @password = options[:password]
+
+      @ssh_flags = [
+        "-o ControlMaster=auto",
+        "-o ControlPath=~/.ssh/sunshine-%r@%h:%p"
+      ]
+      @ssh_flags << "-l #{@user}" if @user
+      @ssh_flags.concat options[:ssh_flags].to_a
+
+      @pid, @inn, @out, @err = nil
+    end
+
+    ##
+    # Checks for equality
+    def ==(deploy_server)
+      @host == deploy_server.host && @user == deploy_server.user
     end
 
     ##
@@ -27,84 +44,91 @@ module Sunshine
     ##
     # Connect to host via SSH. Queries for password on fail
     def connect
-      return if connected?
-      Sunshine.logger.info @host, "Connecting..."
+      return @pid if connected?
+      command = "echo 'ready'; for (( ; ; )); do sleep 100; done"
+      cmd = ["ssh", @ssh_flags, @host, command].flatten
+      @pid, @inn, @out, @err = popen4(*cmd)
+      @inn.sync = true
 
-      tries = 0
-      begin
-
-        @ssh_session = Net::SSH.start(@host, @user, @options)
-
-      rescue Net::SSH::AuthenticationFailed => e
-
-        raise ConnectionError, "Failed to connect to #{@host}" unless
-          Sunshine.interactive? && tries < MAX_CONNECT_TRIES
-        tries = tries.next
-
-        Sunshine.logger.info @host, "#{e.class}: #{e.message}"
-
-        Sunshine.logger.info :ssh, "User '#{@user}' can't log into #{@host}."+
-          " Try entering a password (#{tries}/#{MAX_CONNECT_TRIES})"
-
-        self.query_for_password
-        retry
-
+      data = ""
+      ready = false
+      until ready || @out.eof? do
+        data << @out.readpartial(1024)
+        ready = data == "ready\n"
       end
+
+      unless ready
+        disconnect
+        raise ConnectionError, "Can't connect to #{@host}"
+      end
+
+      @pid
     end
 
     ##
-    # Query the user for a password
-    def query_for_password
-      @options[:password] =
-        Sunshine.console.hidden_prompt("\n[#{@user}@#{@host}]:".bright)
+    # Prompt the user for a password
+    def prompt_for_password
+      @password = Sunshine.console.ask("#{@host} Password:") do |q|
+        q.echo = "•"
+      end
     end
 
     ##
     # Check if SSH session is open
     def connected?
-      !@ssh_session.nil? && !@ssh_session.closed?
+      Process.kill(0, @pid) && @pid rescue false
     end
 
     ##
     # Disconnect from host
     def disconnect
       return unless connected?
-      Sunshine.logger.info @host, "Disconnecting..."
-      @ssh_session.close
-      @ssh_session = nil
+
+      begin
+        Process.kill("HUP", @pid)
+        Process.wait
+      rescue
+      end
+
+      @inn.close rescue nil
+      @out.close rescue nil
+      @err.close rescue nil
+      @pid = nil
     end
 
     ##
-    # Uploads a file via SCP
-    def upload(from_path, to_path, options={}, &block)
-      raise Errno::ENOENT, "No such file or directory - #{from_path}" unless
-        File.exists?(from_path)
-      Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}"
-      @ssh_session.scp.upload!(from_path, to_path, options, &block)
+    # Uploads a file via rsync
+    def upload(from_path, to_path, sudo=false)
+      Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}" do
+        cmd = build_rsync_cmd from_path, "#{@host}:#{to_path}", sudo
+        run_cmd(cmd)
+      end
     end
 
     ##
-    # Download a file via SCP
-    def download(from_path, to_path, options={}, &block)
-      Sunshine.logger.info @host, "Downloading #{from_path} -> #{to_path}"
-      @ssh_session.scp.download!(from_path, to_path, options, &block)
+    # Download a file via rsync
+    def download(from_path, to_path, sudo=false)
+      Sunshine.logger.info @host, "Downloading #{from_path} -> #{to_path}" do
+        cmd = build_rsync_cmd "#{@host}:#{from_path}", to_path, sudo
+        run_cmd(cmd)
+      end
     end
 
     ##
     # Checks if the given file exists
     def file?(filepath)
-      run("test -f #{filepath} && echo true || echo false") == 'true'
+      run("test -f #{filepath}") && true rescue false
     end
 
     ##
     # Create a file remotely
-    def make_file(filepath, content, options={})
+    def make_file(filepath, content, sudo=false)
       FileUtils.mkdir_p "tmp"
       temp_filepath =
         "tmp/#{File.basename(filepath)}_#{Time.now.to_i}#{rand(10000)}"
       File.open(temp_filepath, "w+"){|f| f.write(content)}
 
-      self.upload(temp_filepath, filepath, options)
+      self.upload(temp_filepath, filepath, sudo)
 
       File.delete(temp_filepath)
       Dir.delete("tmp") if Dir.glob("tmp/*").empty?
@@ -119,22 +143,15 @@ module Sunshine
     ##
     # Runs a command via SSH. Optional block is passed the
     # stream(stderr, stdout) and string data
-    def run(string_cmd, &block)
-      output = {}
-      last_stream = nil
-      Sunshine.logger.info @host, "Running: #{string_cmd}" do
-        string_cmd = build_cmd(string_cmd)
-        @ssh_session.exec!(string_cmd) do |channel, stream, data|
-          ( output[stream] ||= "" ) << data
-          last_stream = stream unless data.chomp.empty?
-          Sunshine.logger.log ">>", data,
-            :type => (last_stream == :stdout ? :debug : :error)
-          yield(stream, data) if block_given?
-        end
+    def run(command_str, sudo=false)
+      command = build_ssh_cmd(command_str, sudo)
+      cmd = ["ssh", @ssh_flags, @host, command].flatten
+
+      Sunshine.logger.info @host, "Running: #{command_str}" do
+        run_cmd(*cmd)
       end
-      raise SSHCmdError.new(output[:stderr], self) if last_stream == :stderr
-      output[:stdout]
     end
+
 
     alias call run
 
@@ -147,11 +164,78 @@ module Sunshine
 
     private
 
-    def build_cmd(string)
-      return string unless @env && !@env.empty?
-      env_str = @env.to_a.map{|e| e.join("=")}.join(" ")
+    def build_rsync_cmd(from_path, to_path, sudo=false)
+      ssh  = ["-e", "\"ssh #{@ssh_flags.join(' ')}\""] if @ssh_flags
+      sudo = sudo ? "--rsync-path='sudo rsync'" : nil
+
+      cmd  = ["rsync", "-azP", sudo, ssh, from_path, to_path]
+      cmd.flatten.compact.join(" ")
+    end
+
+    def build_ssh_cmd(string, sudo=false)
       string = string.gsub(/'/){|s| "'\\''"}
-      "env #{env_str} sh -c '#{string}'"
+      string = "'#{string}'"
+      cmd = ["sh", "-c", string]
+      cmd.unshift "sudo" if sudo
+      if @env && !@env.empty?
+        env_vars = @env.to_a.map{|e| e.join("=")}
+        cmd = ["env", env_vars, cmd]
+      end
+      cmd.flatten
+    end
+
+    def run_cmd(*cmd)
+      result = Hash.new{|h,k| h[k] = []}
+
+      pid, inn, out, err = popen4(*cmd)
+
+      inn.sync   = true
+      streams    = [out, err]
+
+      # Handle process termination ourselves
+      status = nil
+      Thread.start do
+        status = Process.waitpid2(pid).last
+      end
+
+      until streams.empty? do
+        # don't busy loop
+        selected, = select streams, nil, nil, 0.1
+
+        next if selected.nil? or selected.empty?
+
+        selected.each do |stream|
+          if stream.eof? then
+            streams.delete stream if status # we've quit, so no more writing
+            next
+          end
+
+          data = stream.readpartial(1024)
+
+          Sunshine.logger.debug ">>", data if stream == out
+          Sunshine.logger.error ">>", data if stream == err
+
+          if stream == err && data =~ SUDO_PROMPT then
+            inn.puts(@password || prompt_for_password)
+            data << "\n"
+            Sunshine.console << "\n"
+          end
+
+          result[stream] << data
+        end
+      end
+
+      unless status.success? then
+        msg = "Execution failed with status #{status.exitstatus}: #{cmd.join ' '}"
+        raise CmdError.new(self, msg)
+      end
+
+      result[out].join.chomp
+
+    ensure
+      inn.close rescue nil
+      out.close rescue nil
+      err.close rescue nil
     end
 
   end

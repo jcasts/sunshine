@@ -18,12 +18,17 @@ class Sunshine::Dependencies < Settler
     end
   end
 
-  gem 'rake', :version => "~>0.8"
+  yum 'logrotate'
 
-  # TODO: Fix dependencies: mogwai gem -> libcurl -> libidn
+  yum 'curl-devel'
+
   gem 'mogwai_logpush',
     :version => "~>0.0.2",
-    :source  => "http://gems.atti.wc1.yellowpages.com"
+    :source  => "http://gems.atti.wc1.yellowpages.com" do
+    requires 'curl-devel'
+  end
+
+  gem 'rake', :version => "~>0.8"
 
   gem 'passenger', :version => "~>2.2"
 

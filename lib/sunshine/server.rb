@@ -61,7 +61,7 @@ module Sunshine
       end
 
     rescue => e
-      raise FatalDeployError, "Could not setup server #{@name}:\n#{e.message}"
+      raise FatalDeployError.new(e, "Could not setup #{@name}")
     end
 
     ##
@@ -75,8 +75,7 @@ module Sunshine
             deploy_server.run(start_cmd)
             yield(deploy_server) if block_given?
           rescue => e
-            raise FatalDeployError,
-              "Could not start server #{@name}:\n#{e.message}"
+            raise FatalDeployError.new(e, "Could not start #{@name}")
           end
         end
 
@@ -93,8 +92,7 @@ module Sunshine
             deploy_server.run(stop_cmd)
             yield(deploy_server) if block_given?
           rescue => e
-            raise FatalDeployError,
-              "Could not stop server #{@name}:\n#{e.message}"
+            raise FatalDeployError.new(e, "Could not stop #{@name}")
           end
         end
 
@@ -110,8 +108,7 @@ module Sunshine
         begin
           @deploy_servers.run(@restart_cmd)
         rescue => e
-          raise FatalDeployError,
-            "Could not stop server #{@name}:\n#{e.message}"
+          raise FatalDeployError.new(e, "Could not stop #{@name}")
         end
       else
         self.stop

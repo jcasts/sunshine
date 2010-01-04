@@ -39,14 +39,14 @@ class Settler
     # The check command must echo true or false
     def check(cmd_str=nil, &block)
       @check = cmd_str || block
-      @check = proc{|cmd| cmd.call(cmd_str).strip == "true" } if
+      @check = proc{|cmd| cmd.call(cmd_str) && true rescue false } if
         String === @check
     end
 
     ##
     # Define checking that the dependency is installed via unix's 'test'
     def check_test(cmd_str, condition_str)
-      check "test \"$(#{cmd_str})\" #{condition_str} && echo true || echo false"
+      check "test \"$(#{cmd_str})\" #{condition_str}"
     end
 
     ##

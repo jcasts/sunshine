@@ -5,8 +5,6 @@ module Sunshine
     START_IDENTIFIER = "# sunshine start"
     END_IDENTIFIER = "# sunshine end"
 
-    attr_accessor :cmd
-
     def initialize(name)
       @name = name
       @cron_jobs = Hash.new{|hash, key| hash[key] = []}
@@ -17,7 +15,8 @@ module Sunshine
     end
 
     def write!(cmd)
-      crontab = cmd.call("crontab -l")
+      crontab = cmd.call("crontab -l") rescue ""
+      crontab.strip!
       @cron_jobs.each do |namespace, cron_cmd|
         start_id = "#{START_IDENTIFIER} #{@name}:#{namespace}\n"
         end_id = "#{END_IDENTIFIER} #{@name}:#{namespace}\n"

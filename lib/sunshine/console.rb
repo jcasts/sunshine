@@ -6,27 +6,13 @@ module Sunshine
 
     def initialize(output = $stdout)
       @output = output
-    end
-
-    ##
-    # Prompt the user with a hidden input (e.g. for passwords).
-    def hidden_prompt(text=nil)
-      puts text if text
-      input = ''
-      begin
-        system "stty -echo"
-        input = gets.chomp
-      ensure
-        system "stty echo"
-      end
-      input
+      @input = HighLine.new
     end
 
     ##
     # Prompt the user for input.
-    def prompt(text=nil)
-      puts text if text
-      gets.chomp
+    def ask(*args, &block)
+      @input.ask(*args, &block)
     end
 
     ##

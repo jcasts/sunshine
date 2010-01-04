@@ -1,11 +1,10 @@
 require 'rubygems'
+require 'open4'
 require 'rainbow'
+require 'highline'
 
 require 'settler'
 require 'yaml'
-require 'open4'
-require 'net/ssh'
-require 'net/scp'
 require 'erb'
 require 'logger'
 require 'optparse'
@@ -13,12 +12,13 @@ require 'time'
 
 module Sunshine
 
-  VERSION = '0.0.1'
+  VERSION = '0.0.2'
 
   class Exception < StandardError
-    def initialize(input=nil)
+    def initialize input=nil, message=nil
       if Exception === input
-        super(input.message)
+        message = [message, input.message].compact.join(": ")
+        super(message)
         self.set_backtrace(input.backtrace)
       else
         super(input)
@@ -30,7 +30,7 @@ module Sunshine
 
   class SSHCmdError < CmdError
     attr_reader :deploy_server
-    def initialize(message=nil, deploy_server=nil)
+    def initialize message=nil, deploy_server=nil
       @deploy_server = deploy_server
       super(message)
     end
@@ -140,7 +140,7 @@ Sunshine provides a light api for rack applications deployment.
   USER_CONFIG_FILE = File.expand_path("~/.sunshine")
 
   DEFAULT_CONFIG = {
-    'level'               => Logger::INFO,
+    'level'               => 'info',
     'deploy_env'          => :development,
     'auto'                => false,
     'max_deploy_versions' => 5

@@ -33,8 +33,7 @@ module Sunshine
     # Enables healthcheck which should set status to :ok
     def enable!
       Sunshine.logger.info :healthcheck, "Enabling healthcheck" do
-        @app.deploy_servers.run \
-          "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file}"
+        @app.deploy_servers.run("rm -f #{@hc_disabled_file}")
         @app.deploy_servers.run "touch #{@hc_file}"
       end
     end
@@ -52,16 +51,14 @@ module Sunshine
     def remove!
       Sunshine.logger.info :healthcheck, "Removing healthcheck" do
         @app.deploy_servers.run \
-          "test -f #{@hc_disabled_file} && rm -f #{@hc_disabled_file};"+
-          "test -f #{@hc_file} && rm -f #{@hc_file}"
+          "rm -f #{@hc_disabled_file} #{@hc_file}"
       end
     end
 
     private
 
     def server_file_exists?(deploy_server, file)
-      "true" ==
-        deploy_server.run("(test -f #{file} && echo 'true') || echo 'false'")
+      deploy_server.run("test -f #{file}") && true rescue false
     end
 
   end
