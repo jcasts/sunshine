@@ -59,6 +59,7 @@ module Sunshine
         raise ConnectionError, "Can't connect to #{@user}@#{@host}"
       end
 
+      @inn.close
       @pid
     end
 
