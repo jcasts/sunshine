@@ -1,3 +1,5 @@
+require 'tmpdir'
+
 module Sunshine
 
   class DeployServer
@@ -7,9 +9,10 @@ module Sunshine
     include Open4
 
     SUDO_PROMPT = /^Password:/
+    TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
 
     attr_reader :host, :user
-    attr_accessor :roles, :env
+    attr_accessor :roles, :env, :ssh_flags
 
 
     def initialize host, options={}
@@ -39,8 +42,8 @@ module Sunshine
     # Connect to host via SSH. Queries for password on fail
     def connect
       return @pid if connected?
-      command = "echo 'ready'; for (( ; ; )); do sleep 100; done"
-      cmd = ["ssh", @ssh_flags, @host, command].flatten
+      cmd = build_ssh_cmd "echo ready; for (( ; ; )); do sleep 100; done"
+
       @pid, @inn, @out, @err = popen4(*cmd)
       @inn.sync = true
 
@@ -117,15 +120,15 @@ module Sunshine
     ##
     # Create a file remotely
     def make_file(filepath, content, sudo=false)
-      FileUtils.mkdir_p "tmp"
+      FileUtils.mkdir_p TMP_DIR
       temp_filepath =
-        "tmp/#{File.basename(filepath)}_#{Time.now.to_i}#{rand(10000)}"
+        "#{TMP_DIR}/#{File.basename(filepath)}_#{Time.now.to_i}#{rand(10000)}"
       File.open(temp_filepath, "w+"){|f| f.write(content)}
 
       self.upload(temp_filepath, filepath, sudo)
 
       File.delete(temp_filepath)
-      Dir.delete("tmp") if Dir.glob("tmp/*").empty?
+      FileUtils.rm_rf TMP_DIR if Dir.glob("#{TMP_DIR}/*").empty?
     end
 
     ##
@@ -138,8 +141,7 @@ module Sunshine
     # Runs a command via SSH. Optional block is passed the
     # stream(stderr, stdout) and string data
     def run(command_str, sudo=false)
-      command = build_ssh_cmd(command_str, sudo)
-      cmd = ["ssh", @ssh_flags, @host, command].flatten
+      cmd = build_ssh_cmd command_str, sudo
 
       Sunshine.logger.info @host, "Running: #{command_str}" do
         run_cmd(*cmd)
@@ -175,7 +177,7 @@ module Sunshine
         env_vars = @env.to_a.map{|e| e.join("=")}
         cmd = ["env", env_vars, cmd]
       end
-      cmd.flatten
+      ["ssh", @ssh_flags, @host, cmd].flatten
     end
 
     def run_cmd(*cmd)
@@ -221,7 +223,7 @@ module Sunshine
 
       unless status.success? then
         msg = "Execution failed with status #{status.exitstatus}: #{cmd.join ' '}"
-        raise CmdError.new(self, msg)
+        raise CmdError, msg
       end
 
       result[out].join.chomp

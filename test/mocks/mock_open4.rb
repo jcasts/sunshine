@@ -1,6 +1,6 @@
 module MockOpen4
 
-  LOGIN_CMD = "echo 'ready';"
+  LOGIN_CMD = "echo ready;"
 
   CMD_RETURN = {
     LOGIN_CMD => [:out, "ready\n"]
@@ -55,14 +55,28 @@ class StatusStruct < Struct.new("Status", :exitstatus)
 end
 
 Process.class_eval do
+
+  def self.set_exit_code(code)
+    @exit_code = code
+  end
+
   alias old_waitpid2 waitpid2
 
   def self.waitpid2(*args)
     pid = args[0]
     if pid == "test_pid"
-      return [StatusStruct.new(0)]
+      exitcode = @exit_code || 0
+      @exit_code = 0
+      return [StatusStruct.new(exitcode)]
     else
       return old_waitpid2(*args)
     end
+  end
+
+  alias old_kill kill
+
+  def self.kill(type, pid)
+    return true if type == 0 && pid == "test_pid"
+    old_kill(type, pid)
   end
 end

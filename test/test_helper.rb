@@ -1,8 +1,6 @@
 require 'sunshine'
-require 'tmpdir'
 require 'test/unit'
 
-TMP_DIR = File.join Dir.tmpdir, "test_sunshine_#{$$}"
 
 unless ENV['mocks'] == "false"
   require 'test/mocks/mock_open4'
@@ -14,5 +12,9 @@ end
 
 TEST_APP_CONFIG_FILE = "test/fixtures/app_configs/test_app.yml"
 
+
+def set_popen4_exitcode code
+  Process.set_exit_code code
+end
 
 
