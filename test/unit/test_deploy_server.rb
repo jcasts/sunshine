@@ -60,6 +60,26 @@ class TestDeployServer < Test::Unit::TestCase
     assert_ssh_call "uname -s"
   end
 
+  def test_equality
+    ds_equal = Sunshine::DeployServer.new @host
+    ds_diff1 = Sunshine::DeployServer.new @host, :user => "blarg"
+    ds_diff2 = Sunshine::DeployServer.new "some_other_host"
+
+    assert_equal ds_equal, @deploy_server
+    assert ds_diff1 != @deploy_server
+    assert ds_diff2 != @deploy_server
+  end
+
+  def test_file?
+    @deploy_server.file? "some/file/path"
+    assert_ssh_call "test -f some/file/path"
+  end
+
+  def test_symlink
+    @deploy_server.symlink "target_file", "sym_name"
+    assert_ssh_call "ln -sfT target_file sym_name"
+  end
+
 
   def assert_ssh_call(expected)
     ds = @deploy_server

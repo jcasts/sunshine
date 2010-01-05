@@ -148,7 +148,6 @@ module Sunshine
       end
     end
 
-
     alias call run
 
     ##
