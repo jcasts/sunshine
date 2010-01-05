@@ -2,7 +2,7 @@
   :name: envoy
   :repo:
     :type: svn
-    :url:  svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/trunk
+    :url:  svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/tags/200912.2-WAT-235-release
 
   :deploy_path: /usr/local/nextgen/envoy
 
