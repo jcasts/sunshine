@@ -171,10 +171,9 @@ module Sunshine
     # and add to the crontab.
     def setup_logrotate
       Sunshine.logger.info :app, "Setting up log rotation..." do
-        @crontab.add("logrotate") do |deploy_server|
-          "00 * * * * #{deploy_server.user} /usr/sbin/logrotate"+
+        @crontab.add "logrotate",
+          "00 * * * * /usr/sbin/logrotate"+
           " --state /dev/null --force #{@current_path}/config/logrotate.conf"
-        end
         @deploy_servers.each do |deploy_server|
           logrotate_conf =
             build_erb("templates/logrotate/logrotate.conf.erb", binding)

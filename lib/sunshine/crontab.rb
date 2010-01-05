@@ -7,8 +7,7 @@ module Sunshine
       @cron_jobs = Hash.new{|hash, key| hash[key] = []}
     end
 
-    def add namespace, cron_cmd=nil, &block
-      cron_cmd ||= block
+    def add namespace, cron_cmd
       @cron_jobs[namespace] << cron_cmd unless @cron_jobs.include?(cron_cmd)
     end
 
@@ -20,10 +19,6 @@ module Sunshine
         end_id = "# sunshine #{@name}:#{namespace}:end"
 
         crontab.sub!(/#{start_id}.*#{end_id}/m, "")
-
-        cron_arr = cron_arr.map do |cron_cmd|
-          Proc === cron_cmd ? cron_cmd.call(deploy_server) : cron_cmd
-        end
 
         cron_str = "\n#{start_id}\n#{cron_arr.join("\n")}\n#{end_id}\n\n"
 
