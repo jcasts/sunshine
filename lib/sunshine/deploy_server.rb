@@ -17,7 +17,7 @@ module Sunshine
 
     def initialize host, options={}
       @user, @host = host.split("@")
-      @user ||= options[:user]
+      @user = options[:user] if options.has_key?(:user)
       @roles = options[:roles].to_a.map{|r| r.to_sym }
       @env = options[:env] || {}
       @password = options[:password]
@@ -56,7 +56,7 @@ module Sunshine
 
       unless ready
         disconnect
-        raise ConnectionError, "Can't connect to #{@host}"
+        raise ConnectionError, "Can't connect to #{@user}@#{@host}"
       end
 
       @pid
@@ -65,7 +65,7 @@ module Sunshine
     ##
     # Prompt the user for a password
     def prompt_for_password
-      @password = Sunshine.console.ask("#{@host} Password:") do |q|
+      @password = Sunshine.console.ask("#{@user}@#{@host} Password:") do |q|
         q.echo = "•"
       end
     end
