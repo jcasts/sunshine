@@ -2,9 +2,6 @@ module Sunshine
 
   class Crontab
 
-    START_IDENTIFIER = "# sunshine start"
-    END_IDENTIFIER = "# sunshine end"
-
     def initialize name
       @name = name
       @cron_jobs = Hash.new{|hash, key| hash[key] = []}
@@ -16,20 +13,23 @@ module Sunshine
     end
 
     def write! deploy_server
-      crontab = deploy_server.call("crontab -l") rescue ""
+      crontab = deploy_server.run("crontab -l") rescue ""
       crontab.strip!
-      @cron_jobs.each do |namespace, cron_cmd|
-        cron_cmd = cron_cmd.call(deploy_server) if Proc === cron_cmd
+      @cron_jobs.each do |namespace, cron_arr|
+        start_id = "# sunshine #{@name}:#{namespace}:begin"
+        end_id = "# sunshine #{@name}:#{namespace}:end"
 
-        start_id = "#{START_IDENTIFIER} #{@name}:#{namespace}\n"
-        end_id = "#{END_IDENTIFIER} #{@name}:#{namespace}\n"
-
-        cron_str = "\n#{start_id}#{cron_cmd}\n#{end_id}\n"
         crontab.sub!(/#{start_id}.*#{end_id}/m, "")
+
+        cron_arr = cron_arr.map do |cron_cmd|
+          Proc === cron_cmd ? cron_cmd.call(deploy_server) : cron_cmd
+        end
+
+        cron_str = "\n#{start_id}\n#{cron_arr.join("\n")}\n#{end_id}\n\n"
 
         crontab << cron_str
       end
-      deploy_server.call("echo '#{crontab.gsub(/'/){|s| "'\\''"}}' | crontab")
+      deploy_server.run("echo '#{crontab.gsub(/'/){|s| "'\\''"}}' | crontab")
       crontab
     end
 

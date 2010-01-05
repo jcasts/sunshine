@@ -16,8 +16,8 @@ module Sunshine
 
 
     def initialize host, options={}
-      @host = host
-      @user = options[:user]
+      @user, @host = host.split("@")
+      @user ||= options[:user]
       @roles = options[:roles].to_a.map{|r| r.to_sym }
       @env = options[:env] || {}
       @password = options[:password]
@@ -26,7 +26,7 @@ module Sunshine
         "-o ControlMaster=auto",
         "-o ControlPath=~/.ssh/sunshine-%r@%h:%p"
       ]
-      @ssh_flags << "-l #{@user}" if @user
+      @ssh_flags.concat ["-l", @user] if @user
       @ssh_flags.concat options[:ssh_flags].to_a
 
       @pid, @inn, @out, @err = nil
