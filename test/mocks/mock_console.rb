@@ -18,6 +18,10 @@ class MockConsole
   def close(*args)
   end
 
+  def ask(*args, &block)
+    "some input"
+  end
+
 end
 
 Sunshine.send(:remove_const, :Console)

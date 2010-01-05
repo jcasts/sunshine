@@ -36,12 +36,6 @@ module Sunshine
     end
 
     ##
-    # Checks for equality
-    def ==(deploy_server)
-      @host == deploy_server.host && @user == deploy_server.user
-    end
-
-    ##
     # Connect to host via SSH. Queries for password on fail
     def connect
       return @pid if connected?
@@ -53,7 +47,7 @@ module Sunshine
       data = ""
       ready = false
       until ready || @out.eof? do
-        data << @out.readpartial(1024)
+        data << @out.readline
         ready = data == "ready\n"
       end
 

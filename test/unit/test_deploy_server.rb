@@ -3,13 +3,16 @@ require 'test/test_helper'
 class TestDeployServer < Test::Unit::TestCase
 
   def setup
+    FileUtils.mkdir_p TMP_DIR
     @app = Sunshine::App.new TEST_APP_CONFIG_FILE
-    @deploy_server = Sunshine::DeployServer.new("nextgen@np4.wc1.yellowpages.com")
+    @deploy_server =
+      Sunshine::DeployServer.new("jcastagna@jcast.np.wc1.yellowpages.com")
     @deploy_server.connect
   end
 
   def teardown
     @deploy_server.disconnect
+     FileUtils.rm_rf TMP_DIR
   end
 
   def test_connect
@@ -41,14 +44,14 @@ class TestDeployServer < Test::Unit::TestCase
   end
 
   def test_upload
-    @deploy_server.upload("test/fixtures/sunshine_test", "sunshine_test", :recursive => true)
+    @deploy_server.upload("test/fixtures/sunshine_test", "sunshine_test")
     test = @deploy_server.run "test -f sunshine_test/test_upload && echo 'true' || echo 'false'"
     assert_equal "true\n", test
     @deploy_server.run "rm -rf sunshine_test"
   end
 
   def test_download
-    @deploy_server.upload("test/fixtures/sunshine_test", "sunshine_test", :recursive => true)
+    @deploy_server.upload("test/fixtures/sunshine_test", "sunshine_test")
     @deploy_server.download("sunshine_test", ".", :recursive => true)
     assert File.exists?("sunshine_test/test_upload")
     @deploy_server.run "rm -rf sunshine_test"
