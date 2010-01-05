@@ -203,7 +203,7 @@ module Sunshine
         d_servers.each do |deploy_server|
           deploys = deploy_server.run("ls -1 #{@deploys_path}").split("\n")
           if deploys.length > Sunshine.max_deploy_versions
-            rm_deploys = deploys[Sunshine.max_deploy_versions..-1]
+            rm_deploys = deploys[0..-Sunshine.max_deploy_versions]
             rm_deploys.map!{|d| "#{@deploys_path}/#{d}"}
             deploy_server.run("rm -rf #{rm_deploys.join(" ")}")
           end
@@ -217,9 +217,9 @@ module Sunshine
       Sunshine.logger.info :app, "Installing gems" do
         d_servers.each do |deploy_server|
           run_geminstaller(deploy_server) if
-            deploy_server.file?("#{@checkout_path}/config/geminstaller.yml")
+            deploy_server.file?("#{self.checkout_path}/config/geminstaller.yml")
           run_bundler(deploy_server) if
-            deploy_server.file?("#{@checkout_path}/Gemfile")
+            deploy_server.file?("#{self.checkout_path}/Gemfile")
         end
       end
 
@@ -233,7 +233,7 @@ module Sunshine
       Sunshine.logger.info :app, "Running Rake task '#{command}'" do
         d_servers.each do |deploy_server|
           Sunshine::Dependencies.install 'rake', :call => deploy_server
-          deploy_server.run "cd #{@checkout_path}; rake #{command}"
+          deploy_server.run "cd #{self.checkout_path}; rake #{command}"
         end
       end
     end
