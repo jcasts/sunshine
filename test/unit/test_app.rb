@@ -3,6 +3,7 @@ require 'test/test_helper'
 class TestApp < Test::Unit::TestCase
 
   def setup
+    mock_deploy_server_popen4
     svn_url = "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
 
     @config = {:name => "parity",

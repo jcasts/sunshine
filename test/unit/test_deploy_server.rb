@@ -3,6 +3,7 @@ require 'test/test_helper'
 class TestDeployServer < Test::Unit::TestCase
 
   def setup
+    mock_deploy_server_popen4
     @host = "jcastagna@jcast.np.wc1.yellowpages.com"
     @app = Sunshine::App.new TEST_APP_CONFIG_FILE
     @deploy_server = Sunshine::DeployServer.new @host
@@ -51,7 +52,7 @@ class TestDeployServer < Test::Unit::TestCase
   def test_make_file
     @deploy_server.make_file("some_dir/sunshine_test_file", "test data")
     tmp_file = "#{Sunshine::DeployServer::TMP_DIR}/sunshine_test_file"
-    assert_rsync /^#{tmp_file}_[0-9]+/, "#{@host}:some_dir/sunshine_test_file"
+    assert_rsync(/^#{tmp_file}_[0-9]+/, "#{@host}:some_dir/sunshine_test_file")
   end
 
   def test_os_name

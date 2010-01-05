@@ -48,15 +48,17 @@ module MockOpen4
 
 end
 
+
 class StatusStruct < Struct.new("Status", :exitstatus)
   def success?
     self.exitstatus == 0
   end
 end
 
+
 Process.class_eval do
 
-  def self.set_exit_code(code)
+  def self.set_exitcode(code)
     @exit_code = code
   end
 
@@ -65,7 +67,7 @@ Process.class_eval do
   def self.waitpid2(*args)
     pid = args[0]
     if pid == "test_pid"
-      exitcode = @exit_code || 0
+      exitcode = @exit_code ||= 0
       @exit_code = 0
       return [StatusStruct.new(exitcode)]
     else
