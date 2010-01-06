@@ -35,7 +35,7 @@ class TestDeployServer < Test::Unit::TestCase
     @deploy_server.run cmd
     raise "Didn't raise CmdError on stderr"
   rescue Sunshine::CmdError => e
-    ssh_cmd = @deploy_server.send(:build_ssh_cmd, cmd).join(" ")
+    ssh_cmd = @deploy_server.send(:ssh_cmd, cmd).join(" ")
     assert_equal "Execution failed with status 1: #{ssh_cmd}", e.message
   end
 

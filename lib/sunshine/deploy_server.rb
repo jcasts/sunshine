@@ -17,9 +17,10 @@ module Sunshine
 
     def initialize host, options={}
       @user, @host = host.split("@")
-      @user = options[:user] if options.has_key?(:user)
-      @roles = options[:roles].to_a.map{|r| r.to_sym }
-      @env = options[:env] || {}
+
+      @user     = options[:user] if options.has_key?(:user)
+      @roles    = options[:roles].to_a.map{|r| r.to_sym }
+      @env      = options[:env] || {}
       @password = options[:password]
 
       @ssh_flags = [
@@ -32,23 +33,29 @@ module Sunshine
       @pid, @inn, @out, @err = nil
     end
 
+
     ##
     # Checks for equality
-    def ==(deploy_server)
+
+    def == deploy_server
       @host == deploy_server.host && @user == deploy_server.user
     end
 
+
     ##
-    # Connect to host via SSH. Queries for password on fail
+    # Connect to host via SSH
+
     def connect
       return @pid if connected?
-      cmd = build_ssh_cmd "echo ready; for (( ; ; )); do sleep 100; done"
+
+      cmd = ssh_cmd "echo ready; for (( ; ; )); do sleep 100; done"
 
       @pid, @inn, @out, @err = popen4(*cmd)
       @inn.sync = true
 
-      data = ""
+      data  = ""
       ready = false
+
       until ready || @out.eof? do
         data << @out.readline
         ready = data == "ready\n"
@@ -63,27 +70,33 @@ module Sunshine
       @pid
     end
 
+
     ##
     # Prompt the user for a password
+
     def prompt_for_password
       @password = Sunshine.console.ask("#{@user}@#{@host} Password:") do |q|
         q.echo = "•"
       end
     end
 
+
     ##
     # Check if SSH session is open
+
     def connected?
       Process.kill(0, @pid) && @pid rescue false
     end
 
+
     ##
     # Disconnect from host
+
     def disconnect
       return unless connected?
 
       begin
-        Process.kill("HUP", @pid)
+        Process.kill "HUP", @pid
         Process.wait
       rescue
       end
@@ -94,36 +107,46 @@ module Sunshine
       @pid = nil
     end
 
+
     ##
     # Uploads a file via rsync
-    def upload(from_path, to_path, sudo=false)
+
+    def upload from_path, to_path, sudo=false
+      to_path = "#{@host}:#{to_path}"
       Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}" do
-        cmd = build_rsync_cmd from_path, "#{@host}:#{to_path}", sudo
-        run_cmd(cmd)
+        execute rsync_cmd(from_path, to_path, sudo)
       end
     end
+
 
     ##
     # Download a file via rsync
-    def download(from_path, to_path, sudo=false)
+
+    def download from_path, to_path, sudo=false
+      from_path = "#{@host}:#{from_path}"
       Sunshine.logger.info @host, "Downloading #{from_path} -> #{to_path}" do
-        cmd = build_rsync_cmd "#{@host}:#{from_path}", to_path, sudo
-        run_cmd(cmd)
+        execute rsync_cmd(from_path, to_path, sudo)
       end
     end
 
+
     ##
     # Checks if the given file exists
-    def file?(filepath)
+
+    def file? filepath
       run("test -f #{filepath}") && true rescue false
     end
 
+
     ##
     # Create a file remotely
-    def make_file(filepath, content, sudo=false)
+
+    def make_file filepath, content, sudo=false
       FileUtils.mkdir_p TMP_DIR
+
       temp_filepath =
         "#{TMP_DIR}/#{File.basename(filepath)}_#{Time.now.to_i}#{rand(10000)}"
+
       File.open(temp_filepath, "w+"){|f| f.write(content)}
 
       self.upload(temp_filepath, filepath, sudo)
@@ -132,27 +155,31 @@ module Sunshine
       FileUtils.rm_rf TMP_DIR if Dir.glob("#{TMP_DIR}/*").empty?
     end
 
+
     ##
     # Force symlinking a remote directory
-    def symlink(target, symlink_name)
+
+    def symlink target, symlink_name
       run "ln -sfT #{target} #{symlink_name}"
     end
+
 
     ##
     # Runs a command via SSH. Optional block is passed the
     # stream(stderr, stdout) and string data
-    def run(command_str, sudo=false)
-      cmd = build_ssh_cmd command_str, sudo
 
+    def run command_str, sudo=false
       Sunshine.logger.info @host, "Running: #{command_str}" do
-        run_cmd(*cmd)
+        execute ssh_cmd(command_str, sudo)
       end
     end
 
     alias call run
 
+
     ##
     # Get the name of the remote OS
+
     def os_name
       @os_name ||= run("uname -s").strip.downcase
     end
@@ -160,7 +187,7 @@ module Sunshine
 
     private
 
-    def build_rsync_cmd(from_path, to_path, sudo=false)
+    def rsync_cmd from_path, to_path, sudo=false
       ssh  = ["-e", "\"ssh #{@ssh_flags.join(' ')}\""] if @ssh_flags
       sudo = sudo ? "--rsync-path='sudo rsync'" : nil
 
@@ -168,22 +195,27 @@ module Sunshine
       cmd.flatten.compact.join(" ")
     end
 
-    def build_ssh_cmd(string, sudo=false)
+
+    def ssh_cmd string, sudo=false
       string = string.gsub(/'/){|s| "'\\''"}
       string = "'#{string}'"
+
       cmd = ["sh", "-c", string]
       cmd.unshift "sudo" if sudo
+
       if @env && !@env.empty?
         env_vars = @env.to_a.map{|e| e.join("=")}
-        cmd = ["env", env_vars, cmd]
+        cmd      = ["env", env_vars, cmd]
       end
-      ["ssh", @ssh_flags, @host, cmd].flatten
+
+      ["ssh", @ssh_flags, @host, cmd].flatten.compact
     end
 
-    def run_cmd(*cmd)
+
+    def execute cmd
       result = Hash.new{|h,k| h[k] = []}
 
-      pid, inn, out, err = popen4(*cmd)
+      pid, inn, out, err = popen4(*cmd.to_a)
 
       inn.sync   = true
       streams    = [out, err]
