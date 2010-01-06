@@ -70,7 +70,5 @@ module Sunshine
       raise RepoError,
         "The 'checkout_to' method must be implemented by child classes"
     end
-
   end
-
 end

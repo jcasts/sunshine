@@ -15,7 +15,5 @@ module Sunshine
       @concurrency ||= {:model => :ThreadSpawn}
       @concurrency.merge!(options)
     end
-
   end
-
 end

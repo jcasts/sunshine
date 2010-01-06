@@ -12,10 +12,12 @@ class Settler
           options[:version] && options[:rel] &&
           options[:arch] && options[:epoch]
 
-        install "sudo yum install -y #{pkg_name}"
-        uninstall "sudo yum remove -y #{pkg_name}"
-        check_test("yum list installed #{pkg_name} | grep -c #{@pkg}", '-ge 1')
+        install    "sudo yum install -y #{pkg_name}"
+        uninstall  "sudo yum remove -y #{pkg_name}"
+        check_test "yum list installed #{pkg_name} | grep -c #{@pkg}", '-ge 1'
+
         requires(*options[:require].to_a) if options[:require]
+
         instance_eval(&block) if block_given?
       end
     end
@@ -29,7 +31,5 @@ class Settler
       end
       super
     end
-
   end
-
 end

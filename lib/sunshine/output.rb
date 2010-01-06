@@ -118,5 +118,4 @@ module Sunshine
       self.log(title, message, options.merge(:level => Logger::DEBUG), &block)
     end
   end
-
 end

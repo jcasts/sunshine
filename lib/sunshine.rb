@@ -173,7 +173,6 @@ Sunshine provides a light api for rack applications deployment.
     @config ||= DEFAULT_CONFIG
     @config.merge! new_config
   end
-
 end
 
 Sunshine.run

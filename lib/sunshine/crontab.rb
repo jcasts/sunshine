@@ -7,9 +7,17 @@ module Sunshine
       @cron_jobs = Hash.new{|hash, key| hash[key] = []}
     end
 
+
+    ##
+    # Add a cron command to a given namespace
+
     def add namespace, cron_cmd
       @cron_jobs[namespace] << cron_cmd unless @cron_jobs.include?(cron_cmd)
     end
+
+
+    ##
+    # Write the crontab on the given deploy_server
 
     def write! deploy_server
       crontab = deploy_server.run("crontab -l") rescue ""
@@ -27,7 +35,5 @@ module Sunshine
       deploy_server.run("echo '#{crontab.gsub(/'/){|s| "'\\''"}}' | crontab")
       crontab
     end
-
   end
-
 end

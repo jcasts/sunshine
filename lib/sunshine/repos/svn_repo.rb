@@ -14,6 +14,7 @@ module Sunshine
       raise RepoError.new(e)
     end
 
+
     def checkout_to(deploy_server, path)
       Sunshine.logger.info :svn,
         "Checking out to #{deploy_server.host} #{path}" do
@@ -23,7 +24,5 @@ module Sunshine
           "mkdir -p #{path} && svn checkout -r #{@revision} #{@url} #{path}"
       end
     end
-
   end
-
 end

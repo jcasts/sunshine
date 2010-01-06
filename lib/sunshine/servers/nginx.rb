@@ -7,12 +7,14 @@ module Sunshine
       "#{sudo}#{@bin} -c #{self.config_file_path}"
     end
 
+
     def stop_cmd
       sudo = run_sudo? ? "sudo " : ""
       cmd = "test -f #{@pid} && #{sudo}kill -QUIT $(cat #{@pid})"+
         " || echo 'No #{@name} process to stop for #{@app.name}';"
       cmd << "sleep 2 ; rm -f #{@pid};"
     end
+
 
     def setup(&block)
       super do |deploy_server|
@@ -21,11 +23,14 @@ module Sunshine
       end
     end
 
+
     ##
     # Check if passenger is required to run the application
+
     def use_passenger?
       @target.is_a?(Sunshine::App)
     end
+
 
     private
 
@@ -40,7 +45,5 @@ module Sunshine
     def run_sudo?
       @port < 1024
     end
-
   end
-
 end

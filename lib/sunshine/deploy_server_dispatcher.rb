@@ -7,35 +7,44 @@ module Sunshine
       self.add(*deploy_servers)
     end
 
-    ##
-    # Add a list of deploy servers. Supports strings (user@server)
-    # and DeployServer objects
-    def add(*arr)
-      arr.each do |ds|
-        self << ds
-      end
-    end
 
     ##
     # Append a deploy server
+
     def <<(deploy_server)
       deploy_server = DeployServer.new(deploy_server) unless
         DeployServer === deploy_server
       @deploy_servers.push(deploy_server) unless self.exist?(deploy_server)
     end
 
+
+    ##
+    # Get the deploy server at a given index
+
+    def [](index)
+      @deploy_servers[index]
+    end
+
+
+    ##
+    # Add a list of deploy servers. Supports strings (user@server)
+    # and DeployServer objects
+
+    def add(*arr)
+      arr.each do |ds|
+        self << ds
+      end
+    end
+
+
     ##
     # Iterate over all deploy servers
+
     def each(&block)
       warn_if_empty
       @deploy_servers.each(&block)
     end
 
-    ##
-    # Get the deploy server at a given index
-    def [](index)
-      @deploy_servers[index]
-    end
 
     ##
     # Find deploy servers matching the passed requirements
@@ -43,6 +52,7 @@ module Sunshine
     #   find :user => 'db'
     #   find :host => 'someserver.com'
     #   find :role => :web
+
     def find(query=nil)
       return self if query.nil? || query == :all
       results = @deploy_servers.select do |ds|
@@ -54,23 +64,30 @@ module Sunshine
       self.class.new(*results)
     end
 
+
     ##
     # Returns true if the dispatcher has a matching deploy_server
+
     def exist?(deploy_server)
       @deploy_servers.include? deploy_server
     end
 
+
     ##
     # Checks if the dispatcher has any deploy servers
+
     def empty?
       @deploy_servers.empty?
     end
 
+
     ##
     # Returns the number of deploy servers
+
     def length
       @deploy_servers.length
     end
+
 
     ##
     # Forwarding methods to deploy servers
@@ -101,6 +118,7 @@ module Sunshine
 
     alias call run
 
+
     private
 
     def call_each_method(method_name, *args, &block)
@@ -114,7 +132,5 @@ module Sunshine
       Sunshine.logger.warn :deploy_servers,
         "No deploy servers are configured. The action will not be executed."
     end
-
   end
-
 end

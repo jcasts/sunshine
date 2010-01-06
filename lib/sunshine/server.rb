@@ -191,7 +191,5 @@ module Sunshine
       dirs.delete_if{|d| d == "."}
       dirs
     end
-
   end
-
 end

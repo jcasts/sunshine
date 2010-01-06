@@ -72,16 +72,6 @@ module Sunshine
 
 
     ##
-    # Prompt the user for a password
-
-    def prompt_for_password
-      @password = Sunshine.console.ask("#{@user}@#{@host} Password:") do |q|
-        q.echo = "•"
-      end
-    end
-
-
-    ##
     # Check if SSH session is open
 
     def connected?
@@ -105,17 +95,6 @@ module Sunshine
       @out.close rescue nil
       @err.close rescue nil
       @pid = nil
-    end
-
-
-    ##
-    # Uploads a file via rsync
-
-    def upload from_path, to_path, sudo=false
-      to_path = "#{@host}:#{to_path}"
-      Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}" do
-        execute rsync_cmd(from_path, to_path, sudo)
-      end
     end
 
 
@@ -157,10 +136,20 @@ module Sunshine
 
 
     ##
-    # Force symlinking a remote directory
+    # Prompt the user for a password
 
-    def symlink target, symlink_name
-      run "ln -sfT #{target} #{symlink_name}"
+    def prompt_for_password
+      @password = Sunshine.console.ask("#{@user}@#{@host} Password:") do |q|
+        q.echo = "•"
+      end
+    end
+
+
+    ##
+    # Get the name of the remote OS
+
+    def os_name
+      @os_name ||= run("uname -s").strip.downcase
     end
 
 
@@ -178,10 +167,21 @@ module Sunshine
 
 
     ##
-    # Get the name of the remote OS
+    # Force symlinking a remote directory
 
-    def os_name
-      @os_name ||= run("uname -s").strip.downcase
+    def symlink target, symlink_name
+      run "ln -sfT #{target} #{symlink_name}"
+    end
+
+
+    ##
+    # Uploads a file via rsync
+
+    def upload from_path, to_path, sudo=false
+      to_path = "#{@host}:#{to_path}"
+      Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}" do
+        execute rsync_cmd(from_path, to_path, sudo)
+      end
     end
 
 
@@ -265,7 +265,5 @@ module Sunshine
       out.close rescue nil
       err.close rescue nil
     end
-
   end
-
 end
