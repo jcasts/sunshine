@@ -30,6 +30,9 @@ module Sunshine
         :stderr => (options[:stderr_log] || "#{log_path}/#{@name}_stderr.log"),
         :stdout => (options[:stdout_log] || "#{log_path}/#{@name}_stdout.log")
       }
+
+      @app.start_script << lambda{ self.start_cmd }
+      @app.stop_script  << lambda{ self.stop_cmd }
     end
 
     ##

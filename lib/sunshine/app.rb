@@ -13,6 +13,7 @@ module Sunshine
     attr_reader :name, :repo, :health, :deploy_servers, :crontab
     attr_accessor :deploy_path, :current_path, :shared_path, :log_path
     attr_accessor :deploy_env
+    attr_accessor :start_script, :stop_script
 
     def initialize(*args)
       config_file = args.shift if String === args.first
@@ -50,6 +51,9 @@ module Sunshine
         "RAILS_ENV" => @deploy_env.to_s
       }
       self.shell_env(deploy_options[:shell_env])
+
+      @start_script = []
+      @stop_script  = []
 
       yield(self) if block_given?
     end
@@ -174,7 +178,7 @@ module Sunshine
     def setup_logrotate(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Setting up log rotation..." do
         @crontab.add "logrotate",
-          "14 * * * * /usr/sbin/logrotate"+
+          "00 * * * * /usr/sbin/logrotate"+
           " --state /dev/null --force #{@current_path}/config/logrotate.conf"
 
         d_servers.each do |deploy_server|
@@ -223,6 +227,19 @@ module Sunshine
     # start/stop commands.
     def build_control_script(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Building control script" do
+        Sunshine.logger.warn :app, "Start script is empty" if
+          @start_script.empty?
+        Sunshine.logger.warn :app, "Stop script is empty" if @stop_script.empty?
+
+        start_bash = make_bash_script @start_script
+        stop_bash  = make_bash_script @stop_script
+
+        d_servers.each do |deploy_server|
+          deploy_server.make_file "#{@deploy_path}/start", start_bash
+          deploy_server.make_file "#{@deploy_path}/stop", stop_bash
+          deploy_server.run "chmod 0755 #{@deploy_path}/start"
+          deploy_server.run "chmod 0755 #{@deploy_path}/stop"
+        end
       end
     end
 
@@ -280,6 +297,14 @@ module Sunshine
     end
 
     private
+
+    def make_bash_script(cmd_arr)
+      cmd_arr = cmd_arr.map do |cmd|
+        Proc === cmd ? cmd.call : cmd
+        #cmd.split(";").map{|c| c.strip }.delete_if{|c| c.empty? || c.nil?}
+      end
+      "#!/bin/bash\n#{cmd_arr.flatten.join(";\n")};"
+    end
 
     def run_geminstaller(deploy_server)
       Sunshine::Dependencies.install 'geminstaller', :call => deploy_server
