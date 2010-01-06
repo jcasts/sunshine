@@ -4,6 +4,8 @@ require "settler"
 # Defines Sunshine deploy server dependencies.
 class Sunshine::Dependencies < Settler
 
+  yum 'subversion'
+
   yum 'nginx'
 
   yum 'logrotate'

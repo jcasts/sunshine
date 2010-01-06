@@ -17,6 +17,7 @@ module Sunshine
       @port        = options[:port] || 80
       @processes   = options[:processes] || 1
       @server_name = options[:server_name]
+
       @deploy_servers = options[:deploy_servers] ||
         @app.deploy_servers.find(:role => :web)
 
@@ -58,9 +59,7 @@ module Sunshine
           yield(deploy_server) if block_given?
 
           self.upload_config_files(deploy_server, binding)
-
         end
-
       end
 
     rescue => e
@@ -81,7 +80,6 @@ module Sunshine
             raise FatalDeployError.new(e, "Could not start #{@name}")
           end
         end
-
       end
     end
 
@@ -98,7 +96,6 @@ module Sunshine
             raise FatalDeployError.new(e, "Could not stop #{@name}")
           end
         end
-
       end
     end
 
@@ -167,6 +164,7 @@ module Sunshine
     # binding if necessary.
     def upload_config_files(deploy_server, setup_binding)
       self.config_template_files.each do |config_file|
+
         if File.extname(config_file) == ".erb"
           filename = File.basename(config_file[0..-5])
           parsed_config = @app.build_erb(config_file, setup_binding)

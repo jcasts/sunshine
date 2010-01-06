@@ -300,8 +300,8 @@ module Sunshine
 
     def make_bash_script(cmd_arr)
       cmd_arr = cmd_arr.map do |cmd|
-        Proc === cmd ? cmd.call : cmd
-        #cmd.split(";").map{|c| c.strip }.delete_if{|c| c.empty? || c.nil?}
+        cmd = Proc === cmd ? cmd.call : cmd
+        cmd.split(";").map{|c| c.strip }.delete_if{|c| c.empty? || c.nil?}
       end
       "#!/bin/bash\n#{cmd_arr.flatten.join(";\n")};"
     end

@@ -8,10 +8,9 @@ module Sunshine
     end
 
     def stop_cmd
-      cmd = "test -f #{@pid} && kill -QUIT $(cat #{@pid})"+
-        " || echo 'No #{@name} process to stop for #{@app.name}';"
-      cmd << "sleep 2; rm -f #{@pid}; "
-      #cmd << "pkill -9 -f #{@app.current_path}/.*/#{File.basename(@pid)}"
+      "test -f #{@pid} && kill -QUIT $(cat #{@pid})"+
+        " || echo 'No #{@name} process to stop for #{@app.name}';"+
+        "sleep 2; rm -f #{@pid};"
     end
 
   end

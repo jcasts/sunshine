@@ -222,8 +222,8 @@ module Sunshine
       end
 
       unless status.success? then
-        msg = "Execution failed with status #{status.exitstatus}: #{cmd.join ' '}"
-        raise CmdError, msg
+        raise CmdError,
+          "Execution failed with status #{status.exitstatus}: #{cmd.join ' '}"
       end
 
       result[out].join.chomp
