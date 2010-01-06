@@ -61,16 +61,16 @@ module Sunshine
       Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
         @deploy_servers.connect
       end
-      @deploy_servers.each do |deploy_server|
-        self.make_app_directory     deploy_server
-        self.checkout_codebase      deploy_server
-        self.make_deploy_info_file  deploy_server
-        self.symlink_current_dir    deploy_server
-      end
+
+      self.make_app_directory
+      self.checkout_codebase
+      self.make_deploy_info_file
+      self.symlink_current_dir
 
       yield(self) if block_given?
 
       self.setup_logrotate
+      self.build_control_script
       self.remove_old_deploys
 
     rescue CriticalDeployError => e
@@ -87,7 +87,7 @@ module Sunshine
 
     ensure
       Sunshine.logger.info :app, "Ending deploy of #{@name}" do
-        deploy_servers.disconnect
+        @deploy_servers.disconnect
       end
     end
 
@@ -129,7 +129,9 @@ module Sunshine
     # Checks out the app's codebase to one or all deploy servers.
     def checkout_codebase(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Checking out codebase" do
-        @repo.checkout_to(d_servers, self.checkout_path)
+        d_servers.each do |deploy_server|
+          @repo.checkout_to(deploy_server, self.checkout_path)
+        end
       end
 
     rescue => e
@@ -169,20 +171,26 @@ module Sunshine
     ##
     # Upload logrotate config file, install dependencies,
     # and add to the crontab.
-    def setup_logrotate
+    def setup_logrotate(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Setting up log rotation..." do
         @crontab.add "logrotate",
-          "00 * * * * /usr/sbin/logrotate"+
+          "14 * * * * /usr/sbin/logrotate"+
           " --state /dev/null --force #{@current_path}/config/logrotate.conf"
-        @deploy_servers.each do |deploy_server|
+
+        d_servers.each do |deploy_server|
           logrotate_conf =
             build_erb("templates/logrotate/logrotate.conf.erb", binding)
-          config_path = "#{@deploy_path}/config"
+
+          config_path = "#{self.checkout_path}/config"
           deploy_server.run "mkdir -p #{config_path}"
           deploy_server.make_file "#{config_path}/logrotate.conf",
             logrotate_conf
+
+          deploy_server.run "mkdir -p #{@log_path}/rotate"
+
           Sunshine::Dependencies.install 'logrotate', :call =>deploy_server
           Sunshine::Dependencies.install 'mogwai_logpush', :call =>deploy_server
+
           @crontab.write! deploy_server
         end
       end
@@ -207,6 +215,14 @@ module Sunshine
             deploy_server.run("rm -rf #{rm_deploys.join(" ")}")
           end
         end
+      end
+    end
+
+    ##
+    # Creates and uploads a control script for the application with
+    # start/stop commands.
+    def build_control_script(d_servers = @deploy_servers)
+      Sunshine.logger.info :app, "Building control script" do
       end
     end
 
