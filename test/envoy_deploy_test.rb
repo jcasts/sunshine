@@ -13,6 +13,8 @@ Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
                   :stdout      => "#{app.log_path}/access.log"
 
   app.install_gems
+
+  app.upload_tasks 'app', 'common', 'tpkg'
   # app.rake 'db:migrate', app.deploy_servers.find(:role => :db)
 
   rainbows.restart

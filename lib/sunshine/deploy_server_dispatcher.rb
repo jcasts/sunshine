@@ -1,9 +1,8 @@
 module Sunshine
 
-  class DeployServerDispatcher
+  class DeployServerDispatcher < Array
 
     def initialize(*deploy_servers)
-      @deploy_servers = []
       self.add(*deploy_servers)
     end
 
@@ -14,15 +13,8 @@ module Sunshine
     def <<(deploy_server)
       deploy_server = DeployServer.new(deploy_server) unless
         DeployServer === deploy_server
-      @deploy_servers.push(deploy_server) unless self.exist?(deploy_server)
-    end
-
-
-    ##
-    # Get the deploy server at a given index
-
-    def [](index)
-      @deploy_servers[index]
+      self.push(deploy_server) unless self.exist?(deploy_server)
+      self
     end
 
 
@@ -40,9 +32,11 @@ module Sunshine
     ##
     # Iterate over all deploy servers
 
+    alias old_each each
+
     def each(&block)
       warn_if_empty
-      @deploy_servers.each(&block)
+      self.old_each(&block)
     end
 
 
@@ -55,7 +49,7 @@ module Sunshine
 
     def find(query=nil)
       return self if query.nil? || query == :all
-      results = @deploy_servers.select do |ds|
+      results = self.select do |ds|
         next unless ds.user == query[:user] if query[:user]
         next unless ds.host == query[:host] if query[:host]
         next unless ds.roles.include?(query[:role]) if query[:role]
@@ -69,23 +63,7 @@ module Sunshine
     # Returns true if the dispatcher has a matching deploy_server
 
     def exist?(deploy_server)
-      @deploy_servers.include? deploy_server
-    end
-
-
-    ##
-    # Checks if the dispatcher has any deploy servers
-
-    def empty?
-      @deploy_servers.empty?
-    end
-
-
-    ##
-    # Returns the number of deploy servers
-
-    def length
-      @deploy_servers.length
+      self.include? deploy_server
     end
 
 

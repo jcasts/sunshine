@@ -348,6 +348,37 @@ module Sunshine
     end
 
 
+    ##
+    # Upload common rake tasks from the sunshine lib.
+    #   app.upload_tasks
+    #     #=> upload all tasks
+    #   app.upload_tasks 'tpkg', 'common', ...
+    #     #=> upload tpkg and common rake files
+    #
+    # Allows options:
+    # :servers:: ary - a deploy_server, a deploy server dispatcher/array
+    # :path:: str - the remote absolute path to upload the files to
+
+    def upload_tasks *files
+      options   = Hash === files[-1] ? files.delete_at(-1) : {}
+      d_servers = (options[:servers] || @deploy_servers).to_a
+      path      = options[:path] || "#{self.checkout_path}/lib/tasks"
+
+      files.map!{|f| "templates/tasks/#{f}.rake"}
+      files = Dir.glob("templates/tasks/*") if files.empty?
+
+      Sunshine.logger.info :app, "Uploading tasks: #{files.join(" ")}" do
+        files.each do |f|
+          remote = File.join(path, File.basename(f))
+          d_servers.each do |deploy_server|
+            deploy_server.run "mkdir -p #{path}"
+            deploy_server.upload f, remote
+          end
+        end
+      end
+    end
+
+
     private
 
     def make_bash_script(cmd_arr)

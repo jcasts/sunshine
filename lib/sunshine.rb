@@ -67,32 +67,40 @@ module Sunshine
     @console ||= Sunshine::Console.new
   end
 
+
   def self.logger
     log_level = Logger.const_get(@config['level'].upcase)
     @logger ||= Sunshine::Output.new :level => log_level,
       :output => self.console
   end
 
+
   ##
   # The default deploy environment to use. Set with the -e option.
   # See App#deploy_env for app specific deploy environments.
+
   def self.deploy_env
     @config['deploy_env']
   end
 
+
   ##
   # Maximum number of deploys (history) to keep on the remote server,
   # 5 by default. Overridden in the ~/.sunshine config file.
+
   def self.max_deploy_versions
     @config['max_deploy_versions']
   end
 
+
   ##
   # Should sunshine ever ask for user input? True by default; overridden with
   # the -a option.
+
   def self.interactive?
     !@config['auto']
   end
+
 
   def self.parse_args argv
     options = {}
@@ -146,9 +154,11 @@ Sunshine provides a light api for rack applications deployment.
     'max_deploy_versions' => 5
   }
 
+
   def self.load_config(filepath=nil)
     YAML.load_file(filepath || USER_CONFIG_FILE)
   end
+
 
   def self.run(argv=ARGV)
     unless File.file? USER_CONFIG_FILE
@@ -168,6 +178,7 @@ Sunshine provides a light api for rack applications deployment.
     puts "Running #{deploy_file}"
     require deploy_file
   end
+
 
   def self.setup(new_config={})
     @config ||= DEFAULT_CONFIG
