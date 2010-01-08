@@ -14,31 +14,7 @@ module Sunshine
 
   VERSION = '0.0.2'
 
-  class Exception < StandardError
-    def initialize input=nil, message=nil
-      if Exception === input
-        message = [message, input.message].compact.join(": ")
-        super(message)
-        self.set_backtrace(input.backtrace)
-      else
-        super(input)
-      end
-    end
-  end
-
-  class CmdError < Exception; end
-
-  class SSHCmdError < CmdError
-    attr_reader :deploy_server
-    def initialize message=nil, deploy_server=nil
-      @deploy_server = deploy_server
-      super(message)
-    end
-  end
-
-  class CriticalDeployError < Exception; end
-  class FatalDeployError < Exception; end
-  class DependencyError < FatalDeployError; end
+  require 'sunshine/exceptions'
 
   require 'sunshine/console'
   require 'sunshine/output'
@@ -63,10 +39,16 @@ module Sunshine
 
 
 
+  ##
+  # Handles input/output to the shell
+
   def self.console
     @console ||= Sunshine::Console.new
   end
 
+
+  ##
+  # The logger for sunshine.
 
   def self.logger
     log_level = Logger.const_get(@config['level'].upcase)
@@ -111,39 +93,38 @@ module Sunshine
       opt.release = nil
       opt.banner = <<-EOF
 
-Usage: #{opt.program_name} [deploy_file] [options]
+Sunshine is an object oriented deploy tool for rack applications. 
 
-Sunshine provides a light api for rack applications deployment. 
+  Usage:
+    #{opt.program_name} -h/--help
+    #{opt.program_name} -v/--version
+    #{opt.program_name} command [arguments...] [options...]
+
+  Examples:
+    #{opt.program_name} deploy deploy_script.rb
+    #{opt.program_name} restart user@server.com:myapp
+    #{opt.program_name} list myapp myotherapp --health on -r user@server.com
+    #{opt.program_name} list user@server.com:myapp --status
+
+  Commands:
+    add       Register an app with #{opt.program_name}
+    deploy    Run a deploy script
+    list      Display deployed apps
+    restart   Restart a deployed app
+    rm        Unregister an app with #{opt.program_name}
+    start     Start a deployed app
+    stop      Stop a deployed app
+
+  For more help on sunshine commands, use '#{opt.program_name} COMMAND --help'
+
       EOF
-
-      opt.separator nil
-      opt.separator "[deploy_file]: Load a deploy script or app path."+
-        " Defaults to ./Sunshine."
-
-      opt.separator nil
-      opt.separator "Deploy-time options:"
-
-      opt.on('-l', '--level LEVEL',
-             'Set trace level. Defaults to info.') do |value|
-        options['level'] = value
-      end
-
-      opt.on('-e', '--env DEPLOY_ENV',
-             'Sets the deploy environment. Defaults to development.') do |value|
-        options['deploy_env'] = value
-      end
-
-      opt.on('-a', '--auto',
-             'Non-interactive - automate or fail') do
-        options['auto'] = true
-      end
-
     end
 
     opts.parse! argv
-
-    options
+    puts opts
   end
+
+  COMMANDS = %w{add deploy list restart rm start stop}
 
   USER_CONFIG_FILE = File.expand_path("~/.sunshine")
 
@@ -160,30 +141,104 @@ Sunshine provides a light api for rack applications deployment.
   end
 
 
-  def self.run(argv=ARGV)
-    unless File.file? USER_CONFIG_FILE
-      File.open(USER_CONFIG_FILE, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml}
-      puts "Missing config file was created for you: #{USER_CONFIG_FILE}"
-      puts DEFAULT_CONFIG.to_yaml
-      exit 1
-    end
+  ##
+  # Setup sunshine with a custom config:
+  #   Sunshine.setup 'level' => 'debug', 'deploy_env' => :production
 
-    config = load_config.merge( parse_args(argv) )
-    self.setup( config )
-
-    deploy_file = argv.first
-    deploy_file = File.join(deploy_file, "Sunshine") if
-      deploy_file && File.directory?(deploy_file)
-    deploy_file ||= "sunshine"
-    puts "Running #{deploy_file}"
-    require deploy_file
-  end
-
-
-  def self.setup(new_config={})
+  def self.setup new_config={}
     @config ||= DEFAULT_CONFIG
     @config.merge! new_config
   end
+
+
+  def self.run argv=ARGV
+    unless File.file? USER_CONFIG_FILE
+      File.open(USER_CONFIG_FILE, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml}
+
+      puts "Missing config file was created for you: #{USER_CONFIG_FILE}"
+      puts DEFAULT_CONFIG.to_yaml
+
+      exit 1
+    end
+
+    command_name = find_command argv.first
+    unless command_name
+      parse_args(argv)
+      exit
+    end
+
+    argv.shift
+
+    require "commands/#{command_name}"
+    command = Sunshine.const_get("#{command_name.capitalize}Command")
+
+    config = load_config.merge command.parse_args(argv)
+    self.setup config
+
+    command.exec argv
+  end
+
+
+  def self.find_command name
+    commands = COMMANDS.select{|c| c =~ /^#{name}/}
+    commands.length == 1 && commands.first
+  end
+
+
+  ##
+  # Register an app with sunshine.
+  #   -r, --remote [USER@]SERVER   Run on a remote server
+  # The server can also be specified at the beginning of the path.
+  # Multiple servers can be used.
+  #   sunshine add [[user@]server:]/path/to/app/root [more paths...] [opts]
+  #   sunshine add /path/to/app/root [more paths...] -r server1,server2
+
+
+  ##
+  # Run a deploy script:
+  #   -e, --env ENV             Deploy enviroment
+  #   -l, --level LVL           Set trace level, defaults to info
+  #   sunshine deploy [deploy_script.rb] [opts]
+
+
+  ##
+  # List deployed sunshine apps and/or affect a list of deployed apps.
+  #   -i, --installed              Return true/false
+  #   -s, --status                 Get the current app status
+  #   -d, --details                Get details about the app's deploy
+  #   -h, --health [on/off]        Get or set the app's healthcheck
+  #   -r, --remote [USER@]SERVER   Run on a remote server
+  #   sunshine list [app names] [opts]
+
+
+  ##
+  # Restart one or more deployed sunshine apps.
+  #   -A, --all                    Affect all deployed apps
+  #   -r, --remote [USER@]SERVER   Run on a remote server
+  #   sunshine restart app [more apps]
+
+
+  ##
+  # Unregister an app with sunshine.
+  #   -D, --delete                 Removes the app directory as well
+  #   -r, --remote [USER@]SERVER   Run on a remote server
+  #   sunshine rm [[user@]server:]app [more apps...] [opts]
+  #   sunshine rm app [more apps...] -r server1,server2
+
+
+  ##
+  # Start one or more deployed sunshine apps.
+  #   -A, --all                    Affect all deployed apps
+  #   -f, --force                  Restart apps that are running
+  #   -r, --remote [USER@]SERVER   Run on a remote server
+  #   sunshine start app [more apps]
+
+
+  ##
+  # Stop one or more deployed sunshine apps.
+  #   -A, --all                    Affect all deployed apps
+  #   -r, --remote [USER@]SERVER   Run on a remote server
+  #   sunshine restart app [more apps]
+
 end
 
-Sunshine.run

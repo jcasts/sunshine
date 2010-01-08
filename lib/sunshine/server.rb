@@ -32,6 +32,8 @@ module Sunshine
         :stdout => (options[:stdout_log] || "#{log_path}/#{@name}_stdout.log")
       }
 
+      @start_cmd = @stop_cmd = @restart_cmd = nil
+
       @app.start_script << lambda{ self.start_cmd }
       @app.stop_script  << lambda{ self.stop_cmd }
     end

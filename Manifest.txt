@@ -3,6 +3,7 @@ Manifest.txt
 README.txt
 Rakefile
 bin/sunshine
+lib/commands/deploy.rb
 lib/settler.rb
 lib/settler/atti_tpkg.rb
 lib/settler/dependency.rb
@@ -15,6 +16,7 @@ lib/sunshine/crontab.rb
 lib/sunshine/dependencies.rb
 lib/sunshine/deploy_server.rb
 lib/sunshine/deploy_server_dispatcher.rb
+lib/sunshine/exceptions.rb
 lib/sunshine/healthcheck.rb
 lib/sunshine/output.rb
 lib/sunshine/repo.rb
@@ -28,6 +30,9 @@ templates/nginx/nginx.conf.erb
 templates/nginx/nginx_optimize.conf
 templates/nginx/nginx_proxy.conf
 templates/rainbows/rainbows.conf.erb
+templates/tasks/app.rake
+templates/tasks/common.rake
+templates/tasks/tpkg.rake
 templates/unicorn/unicorn.conf.erb
 test/envoy_deploy_test.rb
 test/fixtures/app_configs/test_app.yml
