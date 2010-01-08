@@ -38,7 +38,7 @@ Arguments:
         end
 
         opt.on('-e', '--env DEPLOY_ENV',
-               'Sets the deploy environment. Defaults to development.') do |value|
+               'Sets the deploy env. Defaults to development.') do |value|
           options['deploy_env'] = value
         end
 

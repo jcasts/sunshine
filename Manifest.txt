@@ -3,6 +3,8 @@ Manifest.txt
 README.txt
 Rakefile
 bin/sunshine
+lib/commands/add.rb
+lib/commands/default.rb
 lib/commands/deploy.rb
 lib/settler.rb
 lib/settler/atti_tpkg.rb
