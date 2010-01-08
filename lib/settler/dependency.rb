@@ -197,6 +197,14 @@ class Settler
     end
 
 
+    ##
+    # Alias for name
+
+    def to_s
+      @name
+    end
+
+
     private
 
     def run_command(command, options={})

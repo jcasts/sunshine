@@ -43,13 +43,13 @@ module Sunshine
       @health   = Healthcheck.new(self)
 
 
-      server_list = deploy_options[:deploy_servers].to_a
+      server_list = [*deploy_options[:deploy_servers]]
       server_list = server_list.map do |server_def|
         if Hash === server_def
           host = server_def.keys.first
           server_def = [host, {:roles => server_def[host].split(" ")}]
         end
-        DeployServer.new(*server_def.to_a)
+        DeployServer.new(*server_def)
       end
 
       @deploy_servers = DeployServerDispatcher.new(*server_list)
@@ -193,7 +193,41 @@ module Sunshine
 
 
     ##
-    # Install gem dependencies.
+    # Install dependencies defined as a Sunshine dependency object:
+    #   rake   = Sunshine::Dependencies.gem 'rake', :version => '~>0.8'
+    #   apache = Sunshine::Dependencies.yum 'apache'
+    #   app.install_deps rake, apache
+    #
+    # Deploy servers can also be specified as a dispatcher, array, or single
+    # deploy server, by passing the :servers option:
+    #   postgres = Sunshine::Dependencies.yum 'postgresql'
+    #   pgserver = Sunshine::Dependencies.yum 'postgresql-server'
+    #   app.install_deps postgres, pgserver,
+    #     :servers => app.deploy_servers.find(:role => 'db')
+    #
+    # If a dependency was already defined in the Sunshine dependency tree,
+    # the dependency name may be passed instead of the object:
+    #   app.install_deps 'nginx', 'ruby'
+
+    def install_deps(*deps)
+      options   = Hash === deps[-1] ? deps.delete_at(-1) : {}
+      d_servers = [*(options[:servers] || @deploy_servers)]
+
+      Sunshine.logger.info :app,
+        "Installing dependencies: #{deps.map{|d| d.to_s}.join(" ")}"
+
+      d_servers.each do |deploy_server|
+        deps.each do |d|
+          d = Sunshine::Dependencies[d] if String === d
+          d.install! :call => deploy_server
+        end
+      end
+    end
+
+
+    ##
+    # Install gem dependencies defined by the app's checked-in
+    # bundler or geminstaller config.
 
     def install_gems(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Installing gems" do
@@ -253,7 +287,7 @@ module Sunshine
     def rake(command, d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Running Rake task '#{command}'" do
         d_servers.each do |deploy_server|
-          Sunshine::Dependencies.install 'rake', :call => deploy_server
+          self.install_deps 'rake', :servers => deploy_server
           deploy_server.run "cd #{self.checkout_path}; rake #{command}"
         end
       end
@@ -294,8 +328,8 @@ module Sunshine
           " --state /dev/null --force #{@current_path}/config/logrotate.conf"
 
         d_servers.each do |deploy_server|
-          Sunshine::Dependencies.install 'logrotate', 'mogwai_logpush',
-            :call => deploy_server
+          self.install_deps 'logrotate', 'mogwai_logpush',
+            :servers => deploy_server
 
           logrotate_conf =
             build_erb("templates/logrotate/logrotate.conf.erb", binding)
@@ -361,7 +395,7 @@ module Sunshine
 
     def upload_tasks *files
       options   = Hash === files[-1] ? files.delete_at(-1) : {}
-      d_servers = (options[:servers] || @deploy_servers).to_a
+      d_servers = [*(options[:servers] || @deploy_servers)]
       path      = options[:path] || "#{self.checkout_path}/lib/tasks"
 
       files.map!{|f| "templates/tasks/#{f}.rake"}
@@ -391,13 +425,13 @@ module Sunshine
 
 
     def run_geminstaller(deploy_server)
-      Sunshine::Dependencies.install 'geminstaller', :call => deploy_server
+      self.install_deps 'geminstaller', :servers => deploy_server
       deploy_server.run "cd #{self.checkout_path} && geminstaller -e"
     end
 
 
     def run_bundler(deploy_server)
-      Sunshine::Dependencies.install 'bundler', :call => deploy_server
+       self.install_deps 'bundler', :servers => deploy_server
       deploy_server.run "cd #{self.checkout_path} && gem bundle"
     end
 

@@ -22,5 +22,7 @@ Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
 
   app.health.enable!
 
+  # app.install_dep Sunshine::Dependencies.yum('newthing')
+
 end
 

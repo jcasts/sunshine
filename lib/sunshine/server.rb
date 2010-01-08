@@ -45,7 +45,7 @@ module Sunshine
         @deploy_servers.each do |deploy_server|
 
           begin
-            Sunshine::Dependencies.install @name, :call => deploy_server
+            @app.install_deps @name, :server => deploy_server
           rescue => e
             raise DependencyError,
              "Failed installing dependency #{@name} => #{e.class}: #{e.message}"

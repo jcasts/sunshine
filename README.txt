@@ -2,7 +2,8 @@
 
 == Description
 
-Sunshine is a deployment gem that provides a light, consistant api for application deployment.
+Sunshine is a deployment gem that provides a light, consistant api for
+application deployment.
 
 
 == Setup
@@ -11,7 +12,8 @@ Installing sunshine:
 
   gem install sunshine
 
-You can either use sunshine by requiring the gem in your deploy script or by calling the sunshine command:
+You can either use sunshine by requiring the gem in your deploy script or
+by calling the sunshine command:
 
   sunshine my_deploy.rb -e qa
 
