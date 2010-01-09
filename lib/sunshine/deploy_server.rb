@@ -2,13 +2,10 @@ require 'tmpdir'
 
 module Sunshine
 
-  class DeployServer
+  class DeployServer < Console
 
     class ConnectionError < FatalDeployError; end
 
-    include Open4
-
-    SUDO_PROMPT = /^Password:/
     TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
 
     attr_reader :host, :user
@@ -16,6 +13,7 @@ module Sunshine
 
 
     def initialize host, options={}
+      super $stdout
       @user, @host = host.split("@")
 
       @user     ||= options[:user]
@@ -131,16 +129,6 @@ module Sunshine
 
 
     ##
-    # Prompt the user for a password
-
-    def prompt_for_password
-      @password = Sunshine.console.ask("#{@user}@#{@host} Password:") do |q|
-        q.echo = "•"
-      end
-    end
-
-
-    ##
     # Get the name of the remote OS
 
     def os_name
@@ -157,8 +145,6 @@ module Sunshine
         execute ssh_cmd(command_str, sudo)
       end
     end
-
-    alias call run
 
 
     ##
@@ -204,67 +190,6 @@ module Sunshine
       end
 
       ["ssh", @ssh_flags, @host, cmd].flatten.compact
-    end
-
-
-    def execute cmd
-      result = Hash.new{|h,k| h[k] = []}
-
-      pid, inn, out, err = popen4(*cmd.to_a)
-
-      inn.sync   = true
-      streams    = [out, err]
-
-      # Handle process termination ourselves
-      status = nil
-      Thread.start do
-        status = Process.waitpid2(pid).last
-      end
-
-      until streams.empty? do
-        # don't busy loop
-        selected, = select streams, nil, nil, 0.1
-
-        next if selected.nil? or selected.empty?
-
-        selected.each do |stream|
-          if stream.eof? then
-            streams.delete stream if status # we've quit, so no more writing
-            next
-          end
-
-          data = stream.readpartial(1024)
-
-          Sunshine.logger.debug ">>", data if stream == out
-          Sunshine.logger.error ">>", data if stream == err
-
-          if stream == err && data =~ SUDO_PROMPT then
-
-            unless Sunshine.interactive?
-              Process.kill "KILL", pid
-              Process.wait
-            end
-
-            inn.puts(@password || prompt_for_password)
-            data << "\n"
-            Sunshine.console << "\n"
-          end
-
-          result[stream] << data
-        end
-      end
-
-      unless status.success? then
-        raise CmdError,
-          "Execution failed with status #{status.exitstatus}: #{cmd.join ' '}"
-      end
-
-      result[out].join.chomp
-
-    ensure
-      inn.close rescue nil
-      out.close rescue nil
-      err.close rescue nil
     end
   end
 end
