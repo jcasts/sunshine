@@ -25,9 +25,9 @@ Sunshine is an object oriented deploy tool for rack applications.
 
   Examples:
     #{opt.program_name} deploy deploy_script.rb
-    #{opt.program_name} restart user@server.com:myapp
-    #{opt.program_name} list myapp myotherapp --health on -r user@server.com
-    #{opt.program_name} list user@server.com:myapp --status
+    #{opt.program_name} restart myapp -r user@server.com,user@host.com
+    #{opt.program_name} list myapp myotherapp --health -r user@server.com
+    #{opt.program_name} list myapp --status
 
   Commands:
     add       Register an app with #{opt.program_name}
