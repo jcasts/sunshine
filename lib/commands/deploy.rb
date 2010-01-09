@@ -2,7 +2,7 @@ module Sunshine
 
   module DeployCommand
 
-    def self.exec argv
+    def self.exec argv, config
       deploy_file = argv.first
       deploy_file = File.join(deploy_file, "Sunshine") if
         deploy_file && File.directory?(deploy_file)
@@ -15,7 +15,7 @@ module Sunshine
 
 
     def self.parse_args argv
-      options = {}
+      options = {'trace' => true}
 
       opts = OptionParser.new do |opt|
         opt.program_name = File.basename $0
@@ -45,6 +45,11 @@ Arguments:
         opt.on('-a', '--auto',
                'Non-interactive - automate or fail') do
           options['auto'] = true
+        end
+
+        opt.on('--no-trace',
+               "Don't trace any output") do
+          options['trace'] = false
         end
       end
 

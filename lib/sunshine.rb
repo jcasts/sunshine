@@ -58,6 +58,14 @@ module Sunshine
 
 
   ##
+  # Check if trace log should be output at all
+
+  def self.trace?
+    @config['trace']
+  end
+
+
+  ##
   # The default deploy environment to use. Set with the -e option.
   # See App#deploy_env for app specific deploy environments.
 
@@ -83,6 +91,9 @@ module Sunshine
     !@config['auto']
   end
 
+  APP_LIST_PATH = "~/.sunshine_list"
+  READ_LIST_CMD = "test -f #{Sunshine::APP_LIST_PATH} && "+
+      "cat #{APP_LIST_PATH} || echo ''"
 
   COMMANDS = %w{add deploy list restart rm start stop}
 
@@ -131,7 +142,7 @@ module Sunshine
     config = load_config.merge command.parse_args(argv)
     self.setup config
 
-    command.exec argv
+    command.exec argv, config
   end
 
 

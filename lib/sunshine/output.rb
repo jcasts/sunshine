@@ -69,6 +69,11 @@ module Sunshine
     # which all work similarly to the log method:
     # unknown, fatal, error, warn, info, debug
     def log(title, message, options={}, &block)
+      unless Sunshine.trace?
+        return block.call if block_given?
+        return
+      end
+
       options = {:indent => @indent}.merge(options)
       self.print(title, message, options)
       if block_given?

@@ -1,7 +1,8 @@
 module Sunshine
+
   module DefaultCommand
 
-    def self.exec(argv)
+    def self.exec argv, config
       exit 1
     end
 
