@@ -266,7 +266,7 @@ module Sunshine
       Sunshine.logger.info :app, "Creating VERSION file" do
         info = []
         info << "deployed_at: #{Time.now.to_i}"
-        info << "deployed_by: #{Sunshine.console.run("whoami")}"
+        info << "deployed_by: #{Sunshine.console.user}"
         info << "scm_url: #{@repo.url}"
         info << "scm_rev: #{@repo.revision}"
 

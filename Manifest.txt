@@ -8,6 +8,7 @@ lib/commands/default.rb
 lib/commands/deploy.rb
 lib/commands/list.rb
 lib/commands/rm.rb
+lib/commands/start.rb
 lib/settler.rb
 lib/settler/atti_tpkg.rb
 lib/settler/dependency.rb

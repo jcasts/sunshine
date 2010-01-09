@@ -37,6 +37,12 @@ module Sunshine
   require 'sunshine/deploy_server'
   require 'sunshine/app'
 
+  require 'commands/add'
+  require 'commands/default'
+  require 'commands/deploy'
+  require 'commands/list'
+  require 'commands/rm'
+  require 'commands/start'
 
 
   ##
@@ -136,7 +142,6 @@ module Sunshine
     argv.shift if command_name
     command_name ||= "default"
 
-    require "commands/#{command_name}"
     command = Sunshine.const_get("#{command_name.capitalize}Command")
 
     config = load_config.merge command.parse_args(argv)
