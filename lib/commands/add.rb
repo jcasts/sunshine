@@ -51,7 +51,6 @@ Arguments:
                   By default: name = File.basename app_path
         EOF
       end
-
     end
   end
 end

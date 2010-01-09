@@ -17,10 +17,7 @@ module Sunshine
     def self.parse_args argv
       options = {'trace' => true}
 
-      opts = OptionParser.new do |opt|
-        opt.program_name = File.basename $0
-        opt.version = Sunshine::VERSION
-        opt.release = nil
+      opts = DefaultCommand.opt_parser do |opt|
         opt.banner = <<-EOF
 
 Usage: #{opt.program_name} deploy [deploy_file] [options]
