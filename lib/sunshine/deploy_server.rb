@@ -54,12 +54,7 @@ module Sunshine
       @inn.sync = true
 
       data  = ""
-      ready = false
-
-      until ready || @out.eof? do
-        data << @out.readline
-        ready = data == "ready\n"
-      end
+      ready = @out.readline == "ready\n"
 
       unless ready
         disconnect
@@ -244,6 +239,12 @@ module Sunshine
           Sunshine.logger.error ">>", data if stream == err
 
           if stream == err && data =~ SUDO_PROMPT then
+
+            unless Sunshine.interactive?
+              Process.kill "KILL", pid
+              Process.wait
+            end
+
             inn.puts(@password || prompt_for_password)
             data << "\n"
             Sunshine.console << "\n"

@@ -43,12 +43,12 @@ Arguments:
         end
 
         opt.on('-a', '--auto',
-               'Non-interactive - automate or fail') do
+               'Non-interactive - automate or fail.') do
           options['auto'] = true
         end
 
         opt.on('--no-trace',
-               "Don't trace any output") do
+               "Don't trace any output.") do
           options['trace'] = false
         end
       end
