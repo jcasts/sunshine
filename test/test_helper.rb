@@ -22,4 +22,5 @@ def set_popen4_exitcode code
   Process.set_exitcode code
 end
 
+Sunshine.setup
 

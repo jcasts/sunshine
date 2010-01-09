@@ -68,7 +68,7 @@ class TestDeployServer < Test::Unit::TestCase
     ds_diff2 = Sunshine::DeployServer.new "some_other_host"
 
     assert_equal ds_equal, @deploy_server
-    assert ds_diff1 != @deploy_server
+    assert_equal ds_diff1, @deploy_server
     assert ds_diff2 != @deploy_server
   end
 
