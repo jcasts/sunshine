@@ -1,9 +1,9 @@
 module Sunshine
 
-  module AddCommand
+  module RmCommand
 
     def self.exec argv, config
-      app_paths = argv
+      app_names = argv
       servers = config['servers'] || [Sunshine.console]
 
       servers.each do |server|
@@ -16,18 +16,24 @@ module Sunshine
         apps = YAML.load server.run(Sunshine::READ_LIST_CMD)
         apps ||= {}
 
-        app_paths.each do |path|
-          app_name, path = path.split(":") if path.include?(":")
-          app_name ||= File.basename path
+        app_names.each do |app_name|
 
-          unless (server.run "test -d #{path}" rescue false)
-            puts "  #{path} is not a valid directory"
+          unless apps.has_key?(app_name)
+            puts "  #{app_name} is not a valid app name"
             next
           end
 
-          apps[app_name] = path
+          path = apps[app_name]
 
-          log_arr << "  add: #{app_name} -> #{path}"
+          if config['delete_dir']
+            cmd = "#{path}/stop && rm -rf #{path}"
+            cmd = "sudo #{cmd}" if config['delete_dir'] == :sudo
+            server.run cmd
+          end
+
+          apps.delete(app_name)
+
+          log_arr << "  rm: #{app_name} -> #{path}"
         end
 
         server.run "echo '#{apps.to_yaml}' > #{Sunshine::APP_LIST_PATH}"
@@ -47,16 +53,24 @@ module Sunshine
         opt.release = nil
         opt.banner = <<-EOF
 
-Usage: #{opt.program_name} add app_path [more paths...] [options]
+Usage: #{opt.program_name} rm app_name [more names...] [options]
 
 Arguments:
-    app_path      Path to the application to add.
-                  A name may be assigned to the app by specifying name:app_path.
-                  By default: name = File.basename app_path
+    app_name      Name of the application to remove.
         EOF
 
         opt.separator nil
         opt.separator "Options:"
+
+        opt.on('-D', '--sudo-delete',
+               'Delete the app directory using sudo.') do
+          options['delete_dir'] = :sudo
+        end
+
+        opt.on('-d', '--delete',
+               'Delete the app directory.') do
+          options['delete_dir'] = true
+        end
 
         opt.on('-u', '--user USER',
                'User to use for remote login. Use with -r.') do |value|
@@ -86,3 +100,4 @@ Arguments:
     end
   end
 end
+
