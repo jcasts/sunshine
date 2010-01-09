@@ -62,14 +62,14 @@ Arguments:
         opt.separator nil
         opt.separator "Options:"
 
-        opt.on('-D', '--sudo-delete',
-               'Delete the app directory using sudo.') do
-          options['delete_dir'] = :sudo
-        end
-
         opt.on('-d', '--delete',
                'Delete the app directory.') do
           options['delete_dir'] = true
+        end
+
+        opt.on('-D', '--sudo-delete',
+               'Delete the app directory using sudo.') do
+          options['delete_dir'] = :sudo
         end
 
         opt.on('-u', '--user USER',
