@@ -18,7 +18,7 @@ module Sunshine
     def initialize host, options={}
       @user, @host = host.split("@")
 
-      @user     = options[:user] if options.has_key?(:user)
+      @user     ||= options[:user]
       @roles    = options[:roles].to_a.map{|r| r.to_sym }
       @env      = options[:env] || {}
       @password = options[:password]
