@@ -39,12 +39,8 @@ module Sunshine
 
 
     def self.parse_args argv
-      options = {}
 
-      opts = OptionParser.new do |opt|
-        opt.program_name = File.basename $0
-        opt.version = Sunshine::VERSION
-        opt.release = nil
+      DefaultCommand.parse_remote_args(argv) do |opt|
         opt.banner = <<-EOF
 
 Usage: #{opt.program_name} add app_path [more paths...] [options]
@@ -54,35 +50,8 @@ Arguments:
                   A name may be assigned to the app by specifying name:app_path.
                   By default: name = File.basename app_path
         EOF
-
-        opt.separator nil
-        opt.separator "Options:"
-
-        opt.on('-u', '--user USER',
-               'User to use for remote login. Use with -r.') do |value|
-          options['user'] = value
-        end
-
-        opt.on('-r', '--remote server1,server2', Array,
-               'Run on one or more remote servers') do |servers|
-          options['servers'] = servers
-        end
-
-        opt.on('-v', '--verbose') do
-          options['verbose'] = true
-        end
       end
 
-      opts.parse! argv
-
-      if options['servers']
-        options['servers'].map! do |host|
-          DeployServer.new host, :user => options['user']
-        end
-        options['servers'] = DeployServerDispatcher.new(*options['servers'])
-      end
-
-      options
     end
   end
 end

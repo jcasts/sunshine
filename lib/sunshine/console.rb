@@ -23,19 +23,10 @@ module Sunshine
 
     ##
     # Prompt the user for input.
+
     def ask(*args, &block)
       @input.ask(*args, &block)
     end
-
-
-    ##
-    # Write string to stdout (by default).
-
-    def write(str)
-      @output.write(str)
-    end
-
-    alias << write
 
 
     ##
@@ -58,13 +49,22 @@ module Sunshine
 
     ##
     # Execute a command on the local system and return the output.
-    # Raises CmdError on stderr.
 
     def run cmd
       execute cmd
     end
 
     alias call run
+
+
+    ##
+    # Write string to stdout (by default).
+
+    def write(str)
+      @output.write(str)
+    end
+
+    alias << write
 
 
     def execute cmd

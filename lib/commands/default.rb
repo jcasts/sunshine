@@ -7,13 +7,24 @@ module Sunshine
     end
 
 
-    def self.parse_args argv
-      options = {}
+    ##
+    # Base option parser constructor used by all commands.
 
-      opts = OptionParser.new do |opt|
+    def self.opt_parser
+      OptionParser.new do |opt|
         opt.program_name = File.basename $0
         opt.version = Sunshine::VERSION
         opt.release = nil
+        yield opt if block_given?
+      end
+    end
+
+
+    ##
+    # Returns the main sunshine help when no arguments are passed.
+
+    def self.parse_args argv
+      opts = opt_parser do |opt|
         opt.banner = <<-EOF
 
 Sunshine is an object oriented deploy tool for rack applications. 
@@ -46,6 +57,47 @@ Sunshine is an object oriented deploy tool for rack applications.
       opts.parse! argv
       puts opts
       exit 1
+    end
+
+
+    ##
+    # Parse arguments for a command that acts remotely.
+
+    def self.parse_remote_args argv, &block
+      options = {}
+
+      opts = opt_parser do |opt|
+        opt.separator nil
+        opt.separator "Options:"
+
+        yield(opt) if block_given?
+
+        opt.on('-u', '--user USER',
+               'User to use for remote login. Use with -r.') do |value|
+          options['user'] = value
+        end
+
+        opt.on('-r', '--remote server1,server2', Array,
+               'Run on one or more remote servers') do |servers|
+          options['servers'] = servers
+        end
+
+        opt.on('-v', '--verbose',
+               'Run in verbose mode') do
+          options['verbose'] = true
+        end
+      end
+
+      opts.parse! argv
+
+      if options['servers']
+        options['servers'].map! do |host|
+          DeployServer.new host, :user => options['user']
+        end
+        options['servers'] = DeployServerDispatcher.new(*options['servers'])
+      end
+
+      options
     end
   end
 end
