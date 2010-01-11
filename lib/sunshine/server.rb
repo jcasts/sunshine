@@ -34,8 +34,9 @@ module Sunshine
 
       @start_cmd = @stop_cmd = @restart_cmd = nil
 
-      @app.start_script << lambda{ self.start_cmd }
-      @app.stop_script  << lambda{ self.stop_cmd }
+      @app.scripts[:start]   << lambda{ self.start_cmd }
+      @app.scripts[:stop]    << lambda{ self.stop_cmd }
+      @app.scripts[:status]  << lambda{ "test -f #{self.pid}" }
     end
 
     ##
