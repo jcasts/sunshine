@@ -70,7 +70,7 @@ Sunshine is an object oriented deploy tool for rack applications.
         opt.separator nil
         opt.separator "Options:"
 
-        yield(opt) if block_given?
+        yield(opt, options) if block_given?
 
         opt.on('-u', '--user USER',
                'User to use for remote login. Use with -r.') do |value|

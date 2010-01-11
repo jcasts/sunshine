@@ -22,7 +22,7 @@ module Sunshine
 
 
     def self.parse_args argv
-      DefaultCommand.parse_remote_args(argv) do |opt|
+      DefaultCommand.parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
 Usage: #{opt.program_name} start app_name [more names...] [options]
