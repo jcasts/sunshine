@@ -17,9 +17,10 @@ module Sunshine
 
           path = apps[app_name]
 
+          #TODO: remove crontab jobs or consider full uninstall
           if config['delete_dir']
-            #TODO: use StopCommand.exec argv, config
-            cmd = "#{path}/stop && rm -rf #{path}"
+            server.run File.join(path, "stop")
+            cmd = "rm -rf #{path}"
             cmd = "sudo #{cmd}" if config['delete_dir'] == :sudo
             server.run cmd
           end

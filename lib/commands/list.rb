@@ -3,6 +3,7 @@ module Sunshine
   module ListCommand
 
     def self.exec argv, config
+
     end
 
 
@@ -44,7 +45,7 @@ Arguments:
 
         opt.on('-i', '--installed',
                'Check if app is installed. See also "sunshine add/rm".') do
-          options['return'] = :bool
+          options['return'] = :installed
         end
 
         opt.on('-s', '--status',

@@ -4,10 +4,18 @@ module Sunshine
 
     def self.exec argv, config
       app_names = argv
-      ListCommand.each_server(config['servers']) do |apps, server|
+      ListCommand.each_server_list(config['servers']) do |apps, server|
         app_names.each do |name|
-          path = apps[name]
-          server.run File.join(app_path, "start")
+          app_path = apps[name]
+
+          running = server.run File.join(app_path, "status") rescue false
+
+          if running && config['force']
+            server.run File.join(app_path, "stop")
+            running = false
+          end
+
+          server.run File.join(app_path, "start") unless running
         end
       end
     end
@@ -24,7 +32,7 @@ Arguments:
         EOF
 
         opt.on('-f', '--force',
-               'Restart apps that are running.') do
+               'Stop apps that are running before starting them again.') do
           options['force'] = true
         end
       end
