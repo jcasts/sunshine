@@ -41,8 +41,10 @@ module Sunshine
   require 'commands/default'
   require 'commands/deploy'
   require 'commands/list'
+  require 'commands/restart'
   require 'commands/rm'
   require 'commands/start'
+  require 'commands/stop'
 
 
   ##

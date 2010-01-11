@@ -7,8 +7,10 @@ lib/commands/add.rb
 lib/commands/default.rb
 lib/commands/deploy.rb
 lib/commands/list.rb
+lib/commands/restart.rb
 lib/commands/rm.rb
 lib/commands/start.rb
+lib/commands/stop.rb
 lib/settler.rb
 lib/settler/atti_tpkg.rb
 lib/settler/dependency.rb
