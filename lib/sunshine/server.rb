@@ -34,9 +34,13 @@ module Sunshine
 
       @start_cmd = @stop_cmd = @restart_cmd = nil
 
+
       @app.scripts[:start]   << lambda{ self.start_cmd }
       @app.scripts[:stop]    << lambda{ self.stop_cmd }
       @app.scripts[:status]  << lambda{ "test -f #{self.pid}" }
+
+      @app.info[:ports] ||= []
+      @app.info[:ports] << lambda{|ds| "#{@name}:#{self.port}" }
     end
 
     ##

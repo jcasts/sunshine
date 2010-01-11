@@ -14,7 +14,7 @@ module Sunshine
 
     attr_reader :name, :repo, :health, :deploy_servers, :crontab
     attr_accessor :deploy_path, :current_path, :shared_path, :log_path
-    attr_accessor :deploy_env, :scripts
+    attr_accessor :deploy_env, :scripts, :info
 
 
     def initialize(*args)
@@ -38,6 +38,7 @@ module Sunshine
       repo_type = deploy_options[:repo][:type]
 
       @repo     = Sunshine::Repo.new_of_type repo_type, repo_url
+
       @crontab  = Crontab.new(self.name)
       @health   = Healthcheck.new(self)
 
@@ -63,6 +64,13 @@ module Sunshine
 
       @scripts = Hash.new{|h, k| h[k] = []}
 
+      @info = {
+        :deployed_at  => lambda{|ds| ds.run "date"},
+        :deployed_by  => Sunshine.console.user,
+        :scm_url      => @repo.url,
+        :scm_rev      => @repo.revision
+      }
+
       yield(self) if block_given?
     end
 
@@ -78,13 +86,13 @@ module Sunshine
 
       make_app_directory
       checkout_codebase
-      make_deploy_info_file
       symlink_current_dir
 
       yield(self) if block_given?
 
       setup_logrotate
       build_control_scripts
+      make_deploy_info_file
       register_as_deployed
       remove_old_deploys
 
@@ -261,24 +269,37 @@ module Sunshine
 
 
     ##
-    # Creates a VERSION file with deploy information.
+    # Creates an info file with deploy information.
 
     def make_deploy_info_file(d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Creating VERSION file" do
-        info = []
-        info << "deployed_at: #{Time.now.to_i}"
-        info << "deployed_by: #{Sunshine.console.user}"
-        info << "scm_url: #{@repo.url}"
-        info << "scm_rev: #{@repo.revision}"
+      Sunshine.logger.info :app, "Creating info file" do
+        d_servers.each do |deploy_server|
 
-        contents = info.join("\n")
+          contents = @info.map do |name, value|
 
-        d_servers.make_file "#{self.checkout_path}/VERSION", contents
+            value = if Array === value
+              value.map do |v|
+                v = v.call(deploy_server) if Proc === v
+                "\n  #{v}"
+              end.join
+
+            elsif Proc === value
+              value.call(deploy_server) if Proc === value
+
+            else
+              value
+            end
+
+            "#{name}: #{value}"
+          end.sort.join("\n")
+
+          deploy_server.make_file "#{@deploy_path}/info", contents
+        end
       end
 
     rescue => e
       Sunshine.logger.warn :app,
-        "#{e.class} (non-critical): #{e.message}. Failed creating VERSION file"
+        "#{e.class} (non-critical): #{e.message}. Failed creating info file"
     end
 
 

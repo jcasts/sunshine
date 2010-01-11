@@ -7,7 +7,7 @@ module Sunshine
 
     include Open4
 
-    LOCAL_USER = `whoami`
+    LOCAL_USER = `whoami`.chomp
     SUDO_PROMPT = /^Password:/
 
     attr_reader :user, :host, :password
