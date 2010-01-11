@@ -81,7 +81,8 @@ class Settler
       return if installed?(options)
 
       if options[:skip_parents]
-        if missing_parent?
+        missing = missing_parents?
+        if missing
           raise(InstallError, "Could not install #{@name}. "+
             "Missing dependencies #{missing.join(", ")}")
         end
