@@ -3,7 +3,20 @@ module Sunshine
   module ListCommand
 
     def self.exec argv, config
+      each_server_list(config['servers']) do |list, server|
+        puts server.host
+        puts "-" * server.host.length + "\n"
 
+        app_names = argv.empty? ? list.keys : argv
+        app_names.each do |name|
+          puts "#{name} -> #{list[name]}"
+          if config['return'] == :details
+            puts server.run("cat #{list[name]}/info") + "\n\n"
+          end
+        end
+
+        puts "\n"
+      end
     end
 
 
