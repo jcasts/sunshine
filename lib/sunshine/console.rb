@@ -68,7 +68,6 @@ module Sunshine
 
 
     def execute cmd
-      puts [cmd].flatten.join(" ")
       result = Hash.new{|h,k| h[k] = []}
 
       pid, inn, out, err = popen4(*cmd)

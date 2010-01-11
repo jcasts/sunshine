@@ -414,7 +414,7 @@ module Sunshine
         cmd = Proc === cmd ? cmd.call : cmd
         "(#{cmd})"
       end
-      cmds << " && echo true || echo false"
+      cmds << "echo true"
       "#!/bin/bash\n#{cmds.flatten.join(" && ")};"
     end
 
