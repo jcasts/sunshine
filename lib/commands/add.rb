@@ -4,17 +4,9 @@ module Sunshine
 
     def self.exec argv, config
       app_paths = argv
-      servers = config['servers'] || [Sunshine.console]
 
-      servers.each do |server|
-        host = server.host rescue "localhost"
+      ListCommand.each_server_list(config['servers']) do |apps, server|
         puts "Updating #{host}..." if config['verbose']
-        log_arr = []
-
-        server.connect if server.respond_to? :connect
-
-        apps = YAML.load server.run(Sunshine::READ_LIST_CMD)
-        apps ||= {}
 
         app_paths.each do |path|
           app_name, path = path.split(":") if path.include?(":")
@@ -27,13 +19,10 @@ module Sunshine
 
           apps[app_name] = path
 
-          log_arr << "  add: #{app_name} -> #{path}"
+          puts "  add: #{app_name} -> #{path}" if config['verbose']
         end
 
-        server.run "echo '#{apps.to_yaml}' > #{Sunshine::APP_LIST_PATH}"
-        server.disconnect if server.respond_to? :disconnect
-
-        puts "#{log_arr.join("\n")}" if config['verbose']
+        ListCommand.save_list apps, server
       end
     end
 

@@ -3,7 +3,13 @@ module Sunshine
   module StartCommand
 
     def self.exec argv, config
-      
+      app_names = argv
+      ListCommand.each_server(config['servers']) do |apps, server|
+        app_names.each do |name|
+          path = apps[name]
+          server.run File.join(app_path, "start")
+        end
+      end
     end
 
 

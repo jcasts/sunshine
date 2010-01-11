@@ -4,17 +4,9 @@ module Sunshine
 
     def self.exec argv, config
       app_names = argv
-      servers = config['servers'] || [Sunshine.console]
 
-      servers.each do |server|
-        host = server.host rescue "localhost"
+      ListCommand.each_server_list(config['servers']) do |apps, server|
         puts "Updating #{host}..." if config['verbose']
-        log_arr = []
-
-        server.connect if server.respond_to? :connect
-
-        apps = YAML.load server.run(Sunshine::READ_LIST_CMD)
-        apps ||= {}
 
         app_names.each do |app_name|
 
@@ -26,6 +18,7 @@ module Sunshine
           path = apps[app_name]
 
           if config['delete_dir']
+            #TODO: use StopCommand.exec argv, config
             cmd = "#{path}/stop && rm -rf #{path}"
             cmd = "sudo #{cmd}" if config['delete_dir'] == :sudo
             server.run cmd
@@ -33,13 +26,10 @@ module Sunshine
 
           apps.delete(app_name)
 
-          log_arr << "  rm: #{app_name} -> #{path}"
+          puts "  rm: #{app_name} -> #{path}" if config['verbose']
         end
 
-        server.run "echo '#{apps.to_yaml}' > #{Sunshine::APP_LIST_PATH}"
-        server.disconnect if server.respond_to? :disconnect
-
-        puts "#{log_arr.join("\n")}" if config['verbose']
+        ListCommand.save_list apps, server
       end
     end
 

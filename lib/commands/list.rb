@@ -6,6 +6,32 @@ module Sunshine
     end
 
 
+    def self.load_list server
+      YAML.load(server.run(Sunshine::READ_LIST_CMD)) || {}
+    end
+
+
+    def self.save_list list, server
+      server.run "echo '#{list.to_yaml}' > #{Sunshine::APP_LIST_PATH}"
+    end
+
+
+    def self.each_server_list servers
+      servers.each do |server|
+        host = server.host rescue "localhost"
+        log_arr = []
+
+        server.connect if server.respond_to? :connect
+
+        apps = ListCommand.load_list server
+
+        yield(apps, server) if block_given?
+
+        server.disconnect if server.respond_to? :disconnect
+      end
+    end
+
+
     def self.parse_args argv
       DefaultCommand.parse_remote_args(argv) do |opt|
         opt.banner = <<-EOF
