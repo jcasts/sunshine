@@ -85,6 +85,7 @@ module Sunshine
 
       setup_logrotate
       build_control_scripts
+      register_as_deployed
       remove_old_deploys
 
     rescue CriticalDeployError => e
@@ -284,6 +285,16 @@ module Sunshine
           self.install_deps 'rake', :servers => deploy_server
           deploy_server.run "cd #{self.checkout_path}; rake #{command}"
         end
+      end
+    end
+
+
+    ##
+    # Adds the app to the deploy servers deployed-apps list
+
+    def register_as_deployed(d_servers = @deploy_servers)
+      Sunshine.logger.info :app, "Registering app with deploy servers" do
+        AddCommand.exec @deploy_path, 'servers' => d_servers
       end
     end
 
