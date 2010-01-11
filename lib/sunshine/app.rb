@@ -141,6 +141,12 @@ module Sunshine
     def build_control_scripts(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Building control scripts" do
 
+        if @scripts[:restart].empty? &&
+          !@scripts[:start].empty? && !@scripts[:stop].empty?
+          @scripts[:restart] << "#{@deploy_path}/stop"
+          @scripts[:restart] << "#{@deploy_path}/start"
+        end
+
         @scripts.each do |name, cmds|
           Sunshine.logger.warn :app, "#{name} script is empty" if cmds.empty?
           bash = make_bash_script cmds
