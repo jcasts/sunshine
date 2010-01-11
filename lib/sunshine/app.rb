@@ -415,7 +415,7 @@ module Sunshine
         "(#{cmd})"
       end
       cmds << " && echo true || echo false"
-      "#!/bin/bash\n#{cmd_arr.flatten.join(" && ")};"
+      "#!/bin/bash\n#{cmds.flatten.join(" && ")};"
     end
 
 

@@ -14,7 +14,8 @@ module Sunshine
 
     def initialize host, options={}
       super $stdout
-      @user, @host = host.split("@")
+
+      @host, @user = host.split("@").reverse
 
       @user     ||= options[:user]
       @roles    = options[:roles].to_a.map{|r| r.to_sym }
@@ -145,6 +146,8 @@ module Sunshine
         execute ssh_cmd(command_str, sudo)
       end
     end
+
+    alias call run
 
 
     ##

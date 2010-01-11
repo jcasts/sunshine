@@ -68,9 +68,10 @@ module Sunshine
 
 
     def execute cmd
+      puts [cmd].flatten.join(" ")
       result = Hash.new{|h,k| h[k] = []}
 
-      pid, inn, out, err = popen4(*cmd.to_a)
+      pid, inn, out, err = popen4(*cmd)
 
       inn.sync   = true
       streams    = [out, err]
