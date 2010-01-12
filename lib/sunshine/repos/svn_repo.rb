@@ -11,11 +11,11 @@ module Sunshine
       @branch = @url.split("/").last
       true
     rescue => e
-      raise RepoError.new(e)
+      raise RepoError, e
     end
 
 
-    def checkout_to(deploy_server, path)
+    def checkout_to deploy_server, path
       Sunshine.logger.info :svn,
         "Checking out to #{deploy_server.host} #{path}" do
 

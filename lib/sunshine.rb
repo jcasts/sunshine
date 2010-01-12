@@ -99,7 +99,9 @@ module Sunshine
     !@config['auto']
   end
 
+
   APP_LIST_PATH = "~/.sunshine_list"
+
   READ_LIST_CMD = "test -f #{Sunshine::APP_LIST_PATH} && "+
       "cat #{APP_LIST_PATH} || echo ''"
 
@@ -115,11 +117,6 @@ module Sunshine
   }
 
 
-  def self.load_config(filepath=nil)
-    YAML.load_file(filepath || USER_CONFIG_FILE)
-  end
-
-
   ##
   # Setup sunshine with a custom config:
   #   Sunshine.setup 'level' => 'debug', 'deploy_env' => :production
@@ -129,6 +126,11 @@ module Sunshine
     @config.merge! new_config
   end
 
+
+  ##
+  # Run sunshine with the passed argv.
+  #   run "deploy my_script.rb -l debug"
+  #   run "list -d"
 
   def self.run argv=ARGV
     unless File.file? USER_CONFIG_FILE
@@ -146,12 +148,20 @@ module Sunshine
 
     command = Sunshine.const_get("#{command_name.capitalize}Command")
 
-    config = load_config.merge command.parse_args(argv)
+    config = YAML.load_file USER_CONFIG_FILE
+    config.merge! command.parse_args(argv)
+
     self.setup config
 
     command.exec argv, config
   end
 
+
+  ##
+  # Find the sunshine command to run based on the passed name.
+  # Handles partial command names if they can be uniquely mapped to a command.
+  #   find_command "dep" #=> "deploy"
+  #   find_command "zzz" #=> false
 
   def self.find_command name
     commands = COMMANDS.select{|c| c =~ /^#{name}/}
