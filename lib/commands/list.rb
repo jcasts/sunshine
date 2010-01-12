@@ -29,6 +29,7 @@ module Sunshine
           when :details
             server.run("cat #{list[name]}/info")
           when :health
+            
           when :status
             s = server.run("#{list[name]}/status") && "running" rescue "stopped"
             exit_with_value(false, errors) if s == "stopped" && boolean_output

@@ -26,7 +26,7 @@ module Sunshine
 
     def enable!
       Sunshine.logger.info :healthcheck, "Enabling healthcheck" do
-        @app.deploy_servers.run("rm -f #{@hc_disabled_file}")
+        @app.deploy_servers.run "rm -f #{@hc_disabled_file}"
         @app.deploy_servers.run "touch #{@hc_file}"
       end
     end
@@ -55,19 +55,11 @@ module Sunshine
       stat = {}
       @app.deploy_servers.each do |ds|
         stat[ds.host] = {}
-        stat[ds.host] = :disabled and next if
-          server_file_exists?(ds, @hc_disabled_file)
-        stat[ds.host] = :ok and next if server_file_exists? ds, @hc_file
+        stat[ds.host] = :disabled and next if ds.file? @hc_disabled_file
+        stat[ds.host] = :ok and next if ds.file? @hc_file
         stat[ds.host] = :down
       end
       stat
-    end
-
-
-    private
-
-    def server_file_exists?(deploy_server, file)
-      deploy_server.run("test -f #{file}") && true rescue false
     end
   end
 end
