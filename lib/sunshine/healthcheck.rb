@@ -4,19 +4,24 @@ module Sunshine
   #       instead of checking the existance of some random files... weird!
   class Healthcheck
 
-    def initialize(app)
-      @app = app
-      @hc_file = "#{@app.shared_path}/health.txt"
-      @hc_disabled_file = "#{@app.shared_path}/health.disabled"
+    attr_accessor :path, :deploy_servers
+
+    def initialize(path, deploy_servers)
+      @path = path
+      @deploy_servers = deploy_servers
+      @hc_file = "#{@path}/health.txt"
+      @hc_disabled_file = "#{@path}/health.disabled"
     end
 
 
     ##
     # Disables healthcheck - status: :disabled
 
-    def disable!
+    def disable
       Sunshine.logger.info :healthcheck, "Disabling healthcheck" do
-        @app.deploy_servers.run "touch #{@hc_disabled_file} && rm -f#{@hc_file}"
+        @deploy_servers.each do |deploy_server|
+          deploy_server.run "touch #{@hc_disabled_file} && rm -f #{@hc_file}"
+        end
       end
     end
 
@@ -24,10 +29,11 @@ module Sunshine
     ##
     # Enables healthcheck which should set status to :ok
 
-    def enable!
+    def enable
       Sunshine.logger.info :healthcheck, "Enabling healthcheck" do
-        @app.deploy_servers.run "rm -f #{@hc_disabled_file}"
-        @app.deploy_servers.run "touch #{@hc_file}"
+        @deploy_servers.each do |deploy_server|
+          deploy_server.run "rm -f #{@hc_disabled_file} && touch #{@hc_file}"
+        end
       end
     end
 
@@ -35,10 +41,11 @@ module Sunshine
     ##
     # Remove the healthcheck file - status: :down
 
-    def remove!
+    def remove
       Sunshine.logger.info :healthcheck, "Removing healthcheck" do
-        @app.deploy_servers.run \
-          "rm -f #{@hc_disabled_file} #{@hc_file}"
+        @deploy_servers.each do |deploy_server|
+          deploy_server.run "rm -f #{@hc_disabled_file} #{@hc_file}"
+        end
       end
     end
 
@@ -53,11 +60,15 @@ module Sunshine
 
     def status
       stat = {}
-      @app.deploy_servers.each do |ds|
+      @deploy_servers.each do |ds|
         stat[ds.host] = {}
-        stat[ds.host] = :disabled and next if ds.file? @hc_disabled_file
-        stat[ds.host] = :ok and next if ds.file? @hc_file
-        stat[ds.host] = :down
+        if ( ds.run "test -f #{@hc_disabled_file}" rescue false )
+          stat[ds.host] = :disabled
+        elsif ( ds.run "test -f #{@hc_file}" rescue false )
+          stat[ds.host] = :ok
+        else
+          stat[ds.host] = :down
+        end
       end
       stat
     end

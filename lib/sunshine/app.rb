@@ -12,8 +12,9 @@ module Sunshine
     end
 
 
-    attr_reader :name, :repo, :health, :deploy_servers, :crontab
-    attr_accessor :deploy_path, :current_path, :shared_path, :log_path
+    attr_reader :name, :repo, :deploy_servers, :crontab, :health
+    attr_reader :deploy_path, :checkout_path, :current_path
+    attr_reader :shared_path, :log_path
     attr_accessor :deploy_env, :scripts, :info
 
 
@@ -27,20 +28,19 @@ module Sunshine
 
       @name = deploy_options[:name]
 
-      @deploy_path  = deploy_options[:deploy_path]
-      @current_path = "#{@deploy_path}/current"
-      @deploys_path = "#{@deploy_path}/deploys"
-      @shared_path  = "#{@deploy_path}/shared"
-      @log_path     = "#{@shared_path}/log"
-
-
       repo_url  = deploy_options[:repo][:url]
       repo_type = deploy_options[:repo][:type]
-
       @repo     = Sunshine::Repo.new_of_type repo_type, repo_url
 
+      @deploy_path    = deploy_options[:deploy_path]
+      @current_path   = "#{@deploy_path}/current"
+      @deploys_path   = "#{@deploy_path}/deploys"
+      @shared_path    = "#{@deploy_path}/shared"
+      @log_path       = "#{@shared_path}/log"
+      @checkout_path  = "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
+
+
       @crontab  = Crontab.new(self.name)
-      @health   = Healthcheck.new(self)
 
 
       server_list = [*deploy_options[:deploy_servers]]
@@ -54,6 +54,8 @@ module Sunshine
 
       @deploy_servers = DeployServerDispatcher.new(*server_list)
 
+
+      @health = Healthcheck.new @shared_path, @deploy_servers
 
       @shell_env = {
         "RAKE_ENV"  => @deploy_env.to_s,
@@ -190,14 +192,6 @@ module Sunshine
 
     rescue => e
       raise CriticalDeployError, e
-    end
-
-
-    ##
-    # Determine and return a remote path to checkout code to.
-
-    def checkout_path
-      @checkout_path ||= "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
     end
 
 

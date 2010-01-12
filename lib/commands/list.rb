@@ -17,21 +17,30 @@ module Sunshine
         out.concat [separator, server.host, separator]
 
         app_names.each do |name|
-          out << "#{name} -> #{list[name] || '?'}"
+          app_path = list[name]
+          out << "#{name} -> #{app_path || '?'}"
 
-          unless list[name]
+          unless app_path
             errors = true
             exit_with_value(false, errors) if boolean_output
             next
           end
 
+
           out << case config['return']
+
           when :details
-            server.run("cat #{list[name]}/info")
+            server.run("cat #{app_path}/info")
+
           when :health
-            
+            health = Healthcheck.new "#{app_path}/shared", [server]
+            health.send config['health'] if config['health']
+            h = health.status.values.first
+            exit_with_value(false, errors) if h != :ok && boolean_output
+            h.to_s
+
           when :status
-            s = server.run("#{list[name]}/status") && "running" rescue "stopped"
+            s = server.run("#{app_path}/status") && "running" rescue "stopped"
             exit_with_value(false, errors) if s == "stopped" && boolean_output
             s
           end
@@ -107,8 +116,11 @@ Arguments:
           options['return'] = :details
         end
 
-        opt.on('-h', '--health [STATUS]', [:on, :off],
-               'Set or get the healthcheck status (on, off).') do |status|
+
+        vals = [:enable, :disable, :remove]
+        desc = "Set or get the healthcheck status (#{vals.join(", ")})"
+
+        opt.on('-h', '--health [STATUS]', vals, desc) do |status|
           options['health'] = status
           options['return'] = :health
         end
