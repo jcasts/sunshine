@@ -40,7 +40,7 @@ module Sunshine
       @app.scripts[:status]  << lambda{ "test -f #{self.pid}" }
 
       @app.info[:ports] ||= []
-      @app.info[:ports] << lambda{|ds| "#{@name}:#{self.port}" }
+      @app.info[:ports] << lambda{|ds| "#{@name}: #{self.port} (#{self.pid})" }
     end
 
     ##

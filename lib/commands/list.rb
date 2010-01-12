@@ -3,22 +3,57 @@ module Sunshine
   module ListCommand
 
     def self.exec argv, config
-      each_server_list(config['servers']) do |list, server|
-        puts server.host
-        puts "-" * server.host.length + "\n"
+      errors = false
+      out = []
+      boolean_output = config['return_type'] == :boolean
 
+      each_server_list(config['servers']) do |list, server|
         app_names = argv.empty? ? list.keys : argv
+
+        next if app_names.empty?
+
+        separator = "-" * server.host.length
+
+        out.concat [separator, server.host, separator]
+
         app_names.each do |name|
-          puts "#{name} -> #{list[name]}"
-          if config['return'] == :details
-            puts server.run("cat #{list[name]}/info") + "\n\n"
+          out << "#{name} -> #{list[name] || '?'}"
+
+          unless list[name]
+            errors = true
+            exit_with_value(false, errors) if boolean_output
+            next
           end
+
+          out << case config['return']
+          when :details
+            server.run("cat #{list[name]}/info")
+          when :health
+          when :status
+            s = server.run("#{list[name]}/status") && "running" rescue "stopped"
+            exit_with_value(false, errors) if s == "stopped" && boolean_output
+            s
+          end
+
+          out.last << "\n"
         end
 
-        puts "\n"
+        out.last << "\n"
       end
+
+      out = boolean_output ? !errors : out.join("\n")
+      exit_with_value out, errors
     end
 
+
+    def self.exit_with_value val, errors
+      output = errors ? $stderr : $stdout
+      exitcode = errors ? 1 : 0
+
+      output << "#{val}\n"
+
+      exit exitcode
+    end
 
     def self.load_list server
       YAML.load(server.run(Sunshine::READ_LIST_CMD)) || {}
@@ -56,9 +91,9 @@ Arguments:
     app_name      Name of an application to list.
         EOF
 
-        opt.on('-i', '--installed',
-               'Check if app is installed. See also "sunshine add/rm".') do
-          options['return'] = :installed
+        opt.on('-b', '--bool',
+               'Return a boolean when performing list action.') do
+          options['return_type'] = :boolean
         end
 
         opt.on('-s', '--status',
