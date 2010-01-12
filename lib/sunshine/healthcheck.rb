@@ -1,7 +1,5 @@
 module Sunshine
 
-  #TODO : Talk to app support about changing the way healthcheck is done,
-  #       instead of checking the existance of some random files... weird!
   class Healthcheck
 
     attr_accessor :path, :deploy_servers

@@ -20,7 +20,7 @@ Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
   rainbows.restart
   nginx.restart
 
-  app.health.enable!
+  app.health.enable
 
   # app.install_dep Sunshine::Dependencies.yum('newthing')
 

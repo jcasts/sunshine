@@ -32,15 +32,17 @@ module Sunshine
       repo_type = deploy_options[:repo][:type]
       @repo     = Sunshine::Repo.new_of_type repo_type, repo_url
 
-      @deploy_path    = deploy_options[:deploy_path]
-      @current_path   = "#{@deploy_path}/current"
-      @deploys_path   = "#{@deploy_path}/deploys"
-      @shared_path    = "#{@deploy_path}/shared"
-      @log_path       = "#{@shared_path}/log"
-      @checkout_path  = "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
+      @deploy_path   = deploy_options[:deploy_path]
+      @current_path  = "#{@deploy_path}/current"
+      @deploys_path  = "#{@deploy_path}/deploys"
+      @shared_path   = "#{@deploy_path}/shared"
+      @log_path      = "#{@shared_path}/log"
+      @checkout_path = "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
+
+      @post_user_lambdas = []
 
 
-      @crontab  = Crontab.new(self.name)
+      @crontab  = Crontab.new self.name
 
 
       server_list = [*deploy_options[:deploy_servers]]
@@ -67,10 +69,10 @@ module Sunshine
       @scripts = Hash.new{|h, k| h[k] = []}
 
       @info = {
-        :deployed_at  => lambda{|ds| ds.run "date"},
-        :deployed_by  => Sunshine.console.user,
-        :scm_url      => @repo.url,
-        :scm_rev      => @repo.revision
+        :deployed_at => Time.now,
+        :deployed_by => Sunshine.console.user,
+        :scm_url     => @repo.url,
+        :scm_rev     => @repo.revision
       }
 
       yield(self) if block_given?
@@ -92,6 +94,7 @@ module Sunshine
 
       yield(self) if block_given?
 
+      run_post_user_lambdas
       setup_logrotate
       build_control_scripts
       make_deploy_info_file
@@ -141,6 +144,17 @@ module Sunshine
           end
         end
       end
+    end
+
+
+    ##
+    # Define lambdas to run right after the user's yield.
+    #   app.after_user_script do |app|
+    #     ...
+    #   end
+
+    def after_user_script &block
+      @post_user_lambdas << block
     end
 
 
@@ -267,26 +281,9 @@ module Sunshine
 
     def make_deploy_info_file(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Creating info file" do
+        contents = @info.to_yaml
+
         d_servers.each do |deploy_server|
-
-          contents = @info.map do |name, value|
-
-            value = if Array === value
-              value.map do |v|
-                v = v.call(deploy_server) if Proc === v
-                "\n  #{v}"
-              end.join
-
-            elsif Proc === value
-              value.call(deploy_server) if Proc === value
-
-            else
-              value
-            end
-
-            "#{name}: #{value}"
-          end.sort.join("\n")
-
           deploy_server.make_file "#{@deploy_path}/info", contents
         end
       end
@@ -339,6 +336,15 @@ module Sunshine
           end
         end
       end
+    end
+
+
+    ##
+    # Run lambdas that were saved for after the user's script.
+    # See #after_user_script.
+
+    def run_post_user_lambdas
+      @post_user_lambdas.each{|l| l.call self}
     end
 
 
@@ -441,11 +447,16 @@ module Sunshine
 
     private
 
+    def load_config(config_file)
+      config_hash = YAML.load_file(config_file)
+      default_config = config_hash[:defaults] || {}
+      current_config = config_hash[@deploy_env] || {}
+      default_config.merge(current_config)
+    end
+
+
     def make_bash_script cmds
-      cmds = cmds.map do |cmd|
-        cmd = Proc === cmd ? cmd.call : cmd
-        "(#{cmd})"
-      end
+      cmds = cmds.map{|cmd| "(#{cmd})" }
       cmds << "echo true"
       "#!/bin/bash\n#{cmds.flatten.join(" && ")};"
     end
@@ -460,14 +471,6 @@ module Sunshine
     def run_bundler(deploy_server)
        self.install_deps 'bundler', :servers => deploy_server
       deploy_server.run "cd #{self.checkout_path} && gem bundle"
-    end
-
-
-    def load_config(config_file)
-      config_hash = YAML.load_file(config_file)
-      default_config = config_hash[:defaults] || {}
-      current_config = config_hash[@deploy_env] || {}
-      default_config.merge(current_config)
     end
   end
 end

@@ -34,13 +34,14 @@ module Sunshine
 
       @start_cmd = @stop_cmd = @restart_cmd = nil
 
+      @app.after_user_script do |app|
+        app.scripts[:start]  << self.start_cmd
+        app.scripts[:stop]   << self.stop_cmd
+        app.scripts[:status] << "test -f #{self.pid}"
 
-      @app.scripts[:start]   << lambda{ self.start_cmd }
-      @app.scripts[:stop]    << lambda{ self.stop_cmd }
-      @app.scripts[:status]  << lambda{ "test -f #{self.pid}" }
-
-      @app.info[:ports] ||= []
-      @app.info[:ports] << lambda{|ds| "#{@name}: #{self.port} (#{self.pid})" }
+        app.info[:ports] ||= {}
+        app.info[:ports][self.pid] = self.port
+      end
     end
 
     ##

@@ -37,13 +37,13 @@ module Sunshine
             health.send config['health'] if config['health']
             h = health.status.values.first
             exit_with_value(false, errors) if h != :ok && boolean_output
-            h.to_s
+            h
 
           when :status
             s = server.run("#{app_path}/status") && "running" rescue "stopped"
             exit_with_value(false, errors) if s == "stopped" && boolean_output
             s
-          end
+          end.to_s
 
           out.last << "\n"
         end
