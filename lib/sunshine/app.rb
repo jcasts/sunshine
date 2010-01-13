@@ -98,8 +98,8 @@ module Sunshine
       setup_logrotate
       build_control_scripts
       make_deploy_info_file
-      register_as_deployed
       remove_old_deploys
+      register_as_deployed
 
     rescue CriticalDeployError => e
       Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy" do

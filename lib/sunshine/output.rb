@@ -88,37 +88,37 @@ module Sunshine
     end
 
     ##
-    # Log an message of log level unknown.
+    # Log a message of log level unknown.
     def unknown(title, message, options={}, &block)
       self.log(title, message, options.merge(:level => Logger::UNKNOWN), &block)
     end
 
     ##
-    # Log an message of log level fatal.
+    # Log a message of log level fatal.
     def fatal(title, message, options={}, &block)
       self.log(title, message, options.merge(:level => Logger::FATAL), &block)
     end
 
     ##
-    # Log an message of log level error.
+    # Log a message of log level error.
     def error(title, message, options={}, &block)
       self.log(title, message, options.merge(:level => Logger::ERROR), &block)
     end
 
     ##
-    # Log an message of log level warn.
+    # Log a message of log level warn.
     def warn(title, message, options={}, &block)
       self.log(title, message, options.merge(:level => Logger::WARN), &block)
     end
 
     ##
-    # Log an message of log level info.
+    # Log a message of log level info.
     def info(title, message, options={}, &block)
       self.log(title, message, options.merge(:level => Logger::INFO), &block)
     end
 
     ##
-    # Log an message of log level debug.
+    # Log a message of log level debug.
     def debug(title, message, options={}, &block)
       self.log(title, message, options.merge(:level => Logger::DEBUG), &block)
     end
