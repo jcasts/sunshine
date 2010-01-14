@@ -8,6 +8,7 @@ module Sunshine
     include Open4
 
     LOCAL_USER = `whoami`.chomp
+    LOCAL_HOST = `hostname`.chomp
     SUDO_PROMPT = /^Password:/
 
     attr_reader :user, :host, :password
@@ -16,7 +17,7 @@ module Sunshine
       @output = output
       @input = HighLine.new
       @user = LOCAL_USER
-      @host = "localhost"
+      @host = LOCAL_HOST
       @password = nil
     end
 
