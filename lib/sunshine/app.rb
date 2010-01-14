@@ -105,7 +105,7 @@ module Sunshine
       Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy" do
         Sunshine.logger.error '>>', e.backtrace.join("\n")
         revert!
-        yield(self) if block_given?
+        StartCommand.exec [@name], 'servers' => @deploy_servers, 'force' => true
       end
 
     rescue FatalDeployError => e
