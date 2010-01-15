@@ -135,11 +135,14 @@ module Sunshine
             deploy_server.symlink \
               "#{@deploys_path}/#{last_deploy}", @current_path
 
-            StartCommand.exec [@name],
+            started = StartCommand.exec [@name],
               'servers' => @deploy_servers, 'force' => true
 
             Sunshine.logger.info :app,
               "#{deploy_server.host}: Reverted to #{last_deploy}"
+
+            Sunshine.logger.error :app, "Failed starting #{@name}" if !started
+
           else
             Sunshine.logger.info :app,
               "#{deploy_server.host}: No previous deploy to revert to."
