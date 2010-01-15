@@ -1,24 +1,30 @@
 === 0.0.2 / 2010-01-15
 
-* Ditched net/ssh and net/scp for ssh and rsync through Open4
-
 * Added Control Commands
 
   * add, deploy, list, restart, rm, start, stop
 
-* Fixed and updated dependencies to use Yum
+* Application support
 
-* Changed VERSION file to info and its format to yaml
+  * Changed VERSION file to info and its format to yaml
 
-* Deployed apps now have a start, stop and restart script
+  * Deployed apps now have a start, stop and restart script
 
-* Added Crontab and log rotation support
+  * Added Crontab and log rotation support
 
-* Support for sunshine user configuration in ~/.sunshine
+* Functional changes
 
-* Support to run the app's rake tasks
+  * Ditched net/ssh and net/scp for ssh and rsync through Open4
 
-* Built in default ATTi rake tasks
+  * Fixed and updated dependencies to use Yum
+
+  * Support for sunshine user configuration in ~/.sunshine
+
+* Rake tasks
+
+  * Support to run the app's rake tasks
+
+  * Built in default ATTi rake tasks
 
 
 === 0.0.1 / 2009-11-18
