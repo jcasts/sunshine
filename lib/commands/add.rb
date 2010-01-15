@@ -2,11 +2,21 @@ module Sunshine
 
   module AddCommand
 
-    def self.exec argv, config
-      app_paths = argv
+    ##
+    # Runs the command and returns:
+    #   true: success
+    #   false: failed
+    #   exitcode:
+    #     code == 0: success
+    #     code != 0: failed
+    # and optionally an accompanying message.
+
+    def self.exec app_paths, config
+      errors = false
+      verbose = config['verbose']
 
       ListCommand.each_server_list(config['servers']) do |apps, server|
-        puts "Updating #{host}..." if config['verbose']
+        puts "Updating #{host}..." if verbose
 
         app_paths.each do |path|
           app_name, path = path.split(":") if path.include?(":")
@@ -14,16 +24,19 @@ module Sunshine
 
           unless (server.run "test -d #{path}" rescue false)
             puts "  #{path} is not a valid directory"
+            errors = true
             next
           end
 
           apps[app_name] = path
 
-          puts "  add: #{app_name} -> #{path}" if config['verbose']
+          Sunshine.console << "  add: #{app_name} -> #{path}" if verbose
         end
 
         ListCommand.save_list apps, server
       end
+
+      return !errors
     end
 
 

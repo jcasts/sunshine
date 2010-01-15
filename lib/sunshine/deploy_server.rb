@@ -95,10 +95,10 @@ module Sunshine
     ##
     # Download a file via rsync
 
-    def download from_path, to_path, sudo=false
+    def download from_path, to_path, sudo=false, &block
       from_path = "#{@host}:#{from_path}"
       Sunshine.logger.info @host, "Downloading #{from_path} -> #{to_path}" do
-        execute rsync_cmd(from_path, to_path, sudo)
+        execute rsync_cmd(from_path, to_path, sudo), &block
       end
     end
 
@@ -141,9 +141,9 @@ module Sunshine
     # Runs a command via SSH. Optional block is passed the
     # stream(stderr, stdout) and string data
 
-    def run command_str, sudo=false
+    def run command_str, sudo=false, &block
       Sunshine.logger.info @host, "Running: #{command_str}" do
-        execute ssh_cmd(command_str, sudo)
+        execute ssh_cmd(command_str, sudo), &block
       end
     end
 
@@ -154,17 +154,17 @@ module Sunshine
     # Force symlinking a remote directory
 
     def symlink target, symlink_name
-      run "ln -sfT #{target} #{symlink_name}"
+      run "ln -sfT #{target} #{symlink_name}" rescue false
     end
 
 
     ##
     # Uploads a file via rsync
 
-    def upload from_path, to_path, sudo=false
+    def upload from_path, to_path, sudo=false, &block
       to_path = "#{@host}:#{to_path}"
       Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}" do
-        execute rsync_cmd(from_path, to_path, sudo)
+        execute rsync_cmd(from_path, to_path, sudo), &block
       end
     end
 

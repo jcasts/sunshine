@@ -74,6 +74,13 @@ module Sunshine
       call_each_method :connect, *args, &block
     end
 
+    def connected?
+      self.each do |deploy_server|
+        return false unless deploy_server.connected?
+      end
+      true
+    end
+
     def disconnect(*args, &block)
       call_each_method :disconnect, *args, &block
     end

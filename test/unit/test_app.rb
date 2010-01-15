@@ -15,61 +15,76 @@ class TestApp < Test::Unit::TestCase
   def teardown
   end
 
+
   def test_initialize_with_config_file
     app = Sunshine::App.new TEST_APP_CONFIG_FILE
     config = YAML.load_file(TEST_APP_CONFIG_FILE)[:defaults]
     assert_attributes_equal config, app
   end
 
+
   def test_initialize_with_options
     app = Sunshine::App.new @config
     assert_attributes_equal @config, app
   end
+
 
   def test_initialize_with_options_and_config_file
     app = Sunshine::App.new TEST_APP_CONFIG_FILE, @config
     assert_attributes_equal @config, app
   end
 
+
   def test_app_deploy
     yield_called = false
 
-    Sunshine::DeployServer.class_eval do
-      undef run
-      undef upload
+    app = Sunshine::App.deploy @config do |app|
+      assert app.deploy_servers.connected?
 
-      attr_reader :run_log
-      def run(cmd)
-        (@run_log ||= []) << cmd
-        "some random stdout"
-      end
-
-      attr_reader :upload_log
-      def upload(*args)
-        (@upload_log ||= []) << args
-      end
-    end
-
-    app = Sunshine::App.deploy @config do
       yield_called = true
     end
 
-    run_results = []
-    run_results << "mkdir -p #{app.deploy_path}"
-    run_results << "test -d #{app.checkout_path} && rm -rf #{app.checkout_path}"
-    run_results << "mkdir -p #{app.checkout_path} && svn checkout -r #{app.repo.revision} #{app.repo.url} #{app.checkout_path}"
-    run_results << "ln -sfT #{app.checkout_path} #{app.current_path}"
+    assert !app.deploy_servers.connected?
+
+    checkout_cmd = "mkdir -p #{app.checkout_path} && svn checkout -r " +
+        "#{app.repo.revision} #{app.repo.url} #{app.checkout_path}"
+
+    run_results = [
+      "mkdir -p #{app.deploy_path}",
+      "test -d #{app.checkout_path} && rm -rf #{app.checkout_path}",
+      checkout_cmd,
+      "ln -sfT #{app.checkout_path} #{app.current_path}"
+    ]
+
 
     app.deploy_servers.each do |server|
+      use_deploy_server server
+
       run_results.each_index do |i|
-        assert_equal run_results[i], server.run_log[i]
+        assert_ssh_call run_results[i]
       end
     end
-    assert yield_called
 
-  ensure
-    Sunshine.send(:remove_const, :DeployServer)
-    load 'sunshine/deploy_server.rb'
+    assert yield_called
+  end
+
+
+  class MockError < Exception; end
+
+  def test_app_deploy_error_handling
+    [ MockError,
+      Sunshine::CriticalDeployError,
+      Sunshine::FatalDeployError ].each do |error|
+
+      begin
+        app = Sunshine::App.deploy @config do |app|
+          raise error, "#{error} was not caught"
+        end
+
+      rescue MockError => e
+        assert_equal MockError, e.class
+      end
+    end
   end
 
 

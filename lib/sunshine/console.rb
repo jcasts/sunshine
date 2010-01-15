@@ -51,8 +51,8 @@ module Sunshine
     ##
     # Execute a command on the local system and return the output.
 
-    def run cmd
-      execute cmd
+    def run cmd, &block
+      execute cmd, &block
     end
 
     alias call run
@@ -61,8 +61,8 @@ module Sunshine
     ##
     # Write string to stdout (by default).
 
-    def write(str)
-      @output.write(str)
+    def write str
+      @output.write str
     end
 
     alias << write
@@ -89,6 +89,8 @@ module Sunshine
         next if selected.nil? or selected.empty?
 
         selected.each do |stream|
+          stream_name = stream == out ? :out : :err
+
           if stream.eof? then
             streams.delete stream if status # we've quit, so no more writing
             next
@@ -98,6 +100,8 @@ module Sunshine
 
           Sunshine.logger.debug ">>", data if stream == out
           Sunshine.logger.error ">>", data if stream == err
+
+          yield(stream_name, data) if block_given?
 
           if stream == err && data =~ SUDO_PROMPT then
 

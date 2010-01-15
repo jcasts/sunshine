@@ -2,8 +2,17 @@ module Sunshine
 
   module DefaultCommand
 
+    ##
+    # Runs the command and returns:
+    #   true: success
+    #   false: failed
+    #   exitcode:
+    #     code == 0: success
+    #     code != 0: failed
+    # and optionally an accompanying message.
+
     def self.exec argv, config
-      exit 1
+      return false
     end
 
 

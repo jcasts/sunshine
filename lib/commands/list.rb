@@ -2,13 +2,22 @@ module Sunshine
 
   module ListCommand
 
-    def self.exec argv, config
+    ##
+    # Runs the command and returns:
+    #   true: success
+    #   false: failed
+    #   exitcode:
+    #     code == 0: success
+    #     code != 0: failed
+    # and optionally an accompanying message.
+
+    def self.exec names, config
       errors = false
       out = []
       boolean_output = config['return_type'] == :boolean
 
       each_server_list(config['servers']) do |list, server|
-        app_names = argv.empty? ? list.keys : argv
+        app_names = names.empty? ? list.keys : names
 
         next if app_names.empty?
 
@@ -22,7 +31,7 @@ module Sunshine
 
           unless app_path
             errors = true
-            exit_with_value(false, errors) if boolean_output
+            return !errors, false if boolean_output
             next
           end
 
@@ -36,12 +45,12 @@ module Sunshine
             health = Healthcheck.new "#{app_path}/shared", [server]
             health.send config['health'] if config['health']
             h = health.status.values.first
-            exit_with_value(false, errors) if h != :ok && boolean_output
+            return !errors, false if h != :ok && boolean_output
             h
 
           when :status
             s = server.run("#{app_path}/status") && "running" rescue "stopped"
-            exit_with_value(false, errors) if s == "stopped" && boolean_output
+            return !errors, false if s == "stopped" && boolean_output
             s
           end.to_s
 
@@ -52,21 +61,14 @@ module Sunshine
       end
 
       out = boolean_output ? !errors : out.join("\n")
-      exit_with_value out, errors
+      return !errors, out
     end
 
-
-    def self.exit_with_value val, errors
-      output = errors ? $stderr : $stdout
-      exitcode = errors ? 1 : 0
-
-      output << "#{val}\n"
-
-      exit exitcode
-    end
 
     def self.load_list server
-      YAML.load(server.run(Sunshine::READ_LIST_CMD)) || {}
+      list = YAML.load(server.run(Sunshine::READ_LIST_CMD))
+      list = {} unless Hash === list
+      list
     end
 
 

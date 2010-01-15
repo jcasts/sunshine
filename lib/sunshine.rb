@@ -153,7 +153,8 @@ module Sunshine
 
     self.setup config
 
-    command.exec argv, config
+    result = command.exec argv, config
+    self.exit(*result)
   end
 
 
@@ -166,6 +167,35 @@ module Sunshine
   def self.find_command name
     commands = COMMANDS.select{|c| c =~ /^#{name}/}
     commands.length == 1 && commands.first
+  end
+
+
+  ##
+  # Exits sunshine process and returns the appropriate exit code
+  #   exit 0, "ok"
+  #   exit false, "ok"
+  #     # both output: stdout >> ok - exitcode 0
+  #   exit 1, "oh noes"
+  #   exit true, "oh noes"
+  #     # both output: stderr >> oh noes - exitcode 1
+
+  def self.exit status, msg=nil
+    status = case status
+    when true
+      0
+    when false
+      1
+    when Integer
+      status
+    else
+      status.to_i
+    end
+
+    output = status == 0 ? $stdout : $stderr
+
+    output << "#{msg}\n" if !msg.nil?
+
+    Kernel.exit status
   end
 end
 

@@ -2,8 +2,16 @@ module Sunshine
 
   module RmCommand
 
-    def self.exec argv, config
-      app_names = argv
+    ##
+    # Runs the command and returns:
+    #   true: success
+    #   false: failed
+    #   exitcode:
+    #     code == 0: success
+    #     code != 0: failed
+    # and optionally an accompanying message.
+
+    def self.exec app_names, config
 
       ListCommand.each_server_list(config['servers']) do |apps, server|
         puts "Updating #{host}..." if config['verbose']
@@ -32,6 +40,8 @@ module Sunshine
 
         ListCommand.save_list apps, server
       end
+
+      return true
     end
 
 

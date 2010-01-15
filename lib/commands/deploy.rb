@@ -2,8 +2,18 @@ module Sunshine
 
   module DeployCommand
 
-    def self.exec argv, config
-      deploy_file = argv.first
+    ##
+    # Runs the command and returns:
+    #   true: success
+    #   false: failed
+    #   exitcode:
+    #     code == 0: success
+    #     code != 0: failed
+    # and optionally an accompanying message.
+
+    def self.exec deploy_file, config
+      deploy_file = deploy_file.first if Array === deploy_file
+
       deploy_file = File.join(deploy_file, "Sunshine") if
         deploy_file && File.directory?(deploy_file)
 
@@ -11,6 +21,8 @@ module Sunshine
       puts "Running #{deploy_file}"
 
       require deploy_file
+
+      return true
     end
 
 

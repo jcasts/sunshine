@@ -105,7 +105,6 @@ module Sunshine
       Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy" do
         Sunshine.logger.error '>>', e.backtrace.join("\n")
         revert!
-        StartCommand.exec [@name], 'servers' => @deploy_servers, 'force' => true
       end
 
     rescue FatalDeployError => e
@@ -132,9 +131,12 @@ module Sunshine
           last_deploy =
             deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
 
-          if last_deploy
+          if last_deploy && !last_deploy.empty?
             deploy_server.symlink \
               "#{@deploys_path}/#{last_deploy}", @current_path
+
+            StartCommand.exec [@name],
+              'servers' => @deploy_servers, 'force' => true
 
             Sunshine.logger.info :app,
               "#{deploy_server.host}: Reverted to #{last_deploy}"

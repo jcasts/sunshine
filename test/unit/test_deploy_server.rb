@@ -4,10 +4,15 @@ class TestDeployServer < Test::Unit::TestCase
 
   def setup
     mock_deploy_server_popen4
-    @host = "jcastagna@jcast.np.wc1.yellowpages.com"
+
     @app = Sunshine::App.new TEST_APP_CONFIG_FILE
+
+    @host = "jcastagna@jcast.np.wc1.yellowpages.com"
+
     @deploy_server = Sunshine::DeployServer.new @host
     @deploy_server.connect
+
+    use_deploy_server @deploy_server
   end
 
   def teardown
@@ -80,31 +85,6 @@ class TestDeployServer < Test::Unit::TestCase
   def test_symlink
     @deploy_server.symlink "target_file", "sym_name"
     assert_ssh_call "ln -sfT target_file sym_name"
-  end
-
-
-  def assert_ssh_call(expected)
-    ds = @deploy_server
-    received = ds.cmd_log.last
-    expected = expected.gsub(/'/){|s| "'\\''"}
-    expected = "ssh #{ds.ssh_flags.join(" ")} #{ds.host} sh -c '#{expected}'"
-    assert_equal expected, received
-  end
-
-  def assert_rsync(from, to)
-    ds = @deploy_server
-    received = ds.cmd_log.last
-    rsync_cmd = "rsync -azP -e \"ssh #{ds.ssh_flags.join(' ')}\""
-    if Regexp === from
-      received_from = received.split(" ")[-2]
-      assert received_from =~ from,
-        "#{received_from} did not match #{from.inspect}"
-      assert_equal to, received.split(" ").last
-      assert_equal 0, received.index(rsync_cmd)
-    else
-      expected = "#{rsync_cmd} #{from} #{to}"
-      assert_equal expected, received
-    end
   end
 
 end

@@ -1,21 +1,9 @@
-class MockConsole
-
-  def initialize(*args)
-  end
-
-  def hidden_prompt(*args)
-  end
-
-  def prompt(*args)
-  end
+class MockConsole < Sunshine::Console
 
   def write(*args)
   end
 
   def <<(*args)
-  end
-
-  def close(*args)
   end
 
   def ask(*args, &block)
