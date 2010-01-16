@@ -1,5 +1,16 @@
 class Settler
 
+  ##
+  # The Gem dependency class supports most of rubygem's installation features:
+  #
+  #   class MyDeps < Settler
+  #     gem "rdoc", :version => '~>0.8',
+  #                 :source  => 'http://gemcutter.org',
+  #                 :opts    => '--use-lib blah' # Anything after --
+  #   end
+  #
+  # See the Dependency class for more info.
+
   class Gem < Dependency
 
     def initialize(dependency_lib, name, options={}, &block)

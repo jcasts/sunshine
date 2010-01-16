@@ -1,5 +1,39 @@
 require 'open4'
 
+##
+# Settler is a simple tool for building and handling depenedencies.
+# A dependency tree can be defined by inheriting the Settler class, and
+# dependencies can be defined through settler dependency instantiation methods:
+#
+#   class MyDependencies < Settler
+#
+#     yum 'ruby', :pkg => 'ruby-devel'
+#
+#     yum 'rubygems', :requires => 'ruby'
+#
+#     gem 'rdoc', :requires => 'rubygems'
+#
+#     gem 'ri', :requires => 'rubygems'
+#
+#   end
+#
+# Calling the install for rdoc will then check and install all of its parent
+# dependencies as well:
+#
+#   MyDependencies.install 'rdoc', 'ri'
+#
+# Dependencies may also be generic and/or have custom bash scripts
+# for installs, uninstalls, and presence checks:
+#
+#   dependency 'custom' do
+#     requires  'yum', 'ruby'
+#     install   'sudo yum install custom'
+#     uninstall 'sudo yum remove custom'
+#     check     'yum list installed custom'
+#   end
+#
+# See the Dependency class for more information.
+
 class Settler
 
   require 'settler/dependency'
@@ -18,7 +52,7 @@ class Settler
 
   ##
   # Returns a single dependency by name:
-  #   Settler['name'] #=> object
+  #   Settler['name'] #=> dependency object
 
   def self.[](key)
     (@dependencies ||= {})[key]
@@ -34,7 +68,11 @@ class Settler
 
 
   ##
-  # Install one or more dependencies
+  # Install one or more dependencies:
+  #
+  #   Dependencies.install 'dep1', 'dep2', options_hash
+  #
+  # See Dependency#install! for supported options.
 
   def self.install(*deps)
     options = Hash === deps.last ? deps.delete_at(deps.length - 1) : {}
@@ -43,7 +81,12 @@ class Settler
 
 
   ##
-  # Uninstall one or more dependencies
+  # Uninstall one or more dependencies:
+  #
+  #   Dependencies.uninstall 'dep1', 'dep2', options_hash
+  #
+  # See Dependency#uninstall! for supported options.
+
 
   def self.uninstall(*deps)
     options = Hash === deps.last ? deps.delete_at(deps.length - 1) : {}

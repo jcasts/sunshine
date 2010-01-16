@@ -5,6 +5,47 @@ class Settler
   class UninstallError < Exception; end
 
 
+  ##
+  # Dependency objects let you define how to install, check, and remove
+  # a described package, including parent dependency lookup and installation.
+  #
+  #   Dependency.new(Settler, "ruby") do
+  #     install    "sudo yum install ruby"
+  #     uninstall  "sudo yum remove ruby"
+  #     check_test "yum list installed ruby | grep -c ruby", "-ge 1"
+  #   end
+  #
+  # Dependencies are more commonly defined through a Settler class'
+  # constructor methods:
+  #
+  #   class MyDeps < Settler
+  #     dependency 'custom' do
+  #       requires  'yum', 'ruby'
+  #       install   'sudo yum install custom'
+  #       uninstall 'sudo yum remove custom'
+  #       check     'yum list installed custom'
+  #     end
+  #   end
+  #
+  # The Dependency class is simple to inherit and use as a built-in part of
+  # Settler (see the Yum implementation for more info):
+  #
+  #   class Yum < Dependency
+  #     def initialize(dep_lib, name, options={}, &block)
+  #       super(dep_lib, name, options) do
+  #         # Define install, check, and uninstall scripts specific to yum
+  #       end
+  #     end
+  #     ...
+  #   end
+  #
+  # Once a subclass is defined a constructor method is added automatically
+  # to the Settler class:
+  #
+  #   class MyDeps < Settler
+  #     yum "ruby", :version => '1.9'
+  #   end
+
   class Dependency
 
 
@@ -24,6 +65,8 @@ class Settler
       @children = []
 
       @cmd = method(:run_local).to_proc
+
+      requires(*options[:require]) if options[:require]
 
       instance_eval(&block) if block_given?
     end
@@ -46,8 +89,10 @@ class Settler
 
 
     ##
-    # Define the command that checks if the dependency is installed
-    # The check command must echo true or false
+    # Define the command that checks if the dependency is installed.
+    # The check command must have an appropriate exitcode:
+    #
+    #   dep.check "test -s 'yum list installed depname'"
 
     def check cmd_str=nil, &block
       @check = cmd_str || block
@@ -57,7 +102,9 @@ class Settler
 
 
     ##
-    # Define checking that the dependency is installed via unix's 'test'
+    # Define checking that the dependency is installed via unix's 'test':
+    #
+    #   dep.check_test "yum list installed depname | grep -c depname", "-ge 1"
 
     def check_test cmd_str, condition_str
       check "test \"$(#{cmd_str})\" #{condition_str}"
@@ -65,7 +112,9 @@ class Settler
 
 
     ##
-    # Define the install command for the dependency
+    # Define the install command for the dependency:
+    #
+    #   dep.install "yum install depname"
 
     def install cmd=nil, &block
       @install = cmd || block
@@ -74,8 +123,12 @@ class Settler
 
     ##
     # Run the install command for the dependency
-    # Allows option:
+    # Allows options:
+    # :call:: obj - an object that responds to call will be passed the bash cmd
     # :skip_parents:: true - install regardless of missing parent dependencies
+    #
+    #   runner = lambda{|str| system(str)}
+    #   dep.install! :call => runner
 
     def install! options={}
       return if installed?(options)
@@ -98,8 +151,11 @@ class Settler
 
     ##
     # Call install on direct parent dependencies
-    # Allows option:
-    # :skip_parents:: true - install regardless of missing parent dependencies
+    # Allows options:
+    # :call:: obj - an object that responds to call will be passed the bash cmd
+    #
+    #   runner = lambda{|str| system(str)}
+    #   dep.install_parents! :call => runner
 
     def install_parents! options={}
       @parents.each do |dep|
@@ -110,6 +166,11 @@ class Settler
 
     ##
     # Run the check command to verify that the dependency is installed
+    # Allows options:
+    # :call:: obj - an object that responds to call will be passed the bash cmd
+    #
+    #   runner = lambda{|str| system(str)}
+    #   dep.installed? :call => runner
 
     def installed? options={}
       run_command @check, options
@@ -120,6 +181,12 @@ class Settler
 
     ##
     # Checks if any parents dependencies are missing
+    # Allows options:
+    # :call:: obj - an object that responds to call will be passed the bash cmd
+    #
+    #   runner = lambda{|str| system(str)}
+    #   dep.missing_parents? :call => runner
+
 
     def missing_parents? options={}
       missing = []
@@ -144,7 +211,9 @@ class Settler
 
 
     ##
-    # Define which dependencies this dependency relies on
+    # Define which dependencies this dependency relies on:
+    #
+    #  dep.requires 'rubygems', 'rdoc'
 
     def requires *deps
       @parents.concat(deps).uniq!
@@ -155,7 +224,9 @@ class Settler
 
 
     ##
-    # Define the uninstall command for the dependency
+    # Define the uninstall command for the dependency:
+    #
+    #   dep.uninstall "yum remove depname"
 
     def uninstall cmd=nil, &block
       @uninstall = cmd || block
@@ -165,6 +236,7 @@ class Settler
     ##
     # Run the uninstall command for the dependency
     # Allows options:
+    # :call:: obj - an object that responds to call will be passed the bash cmd
     # :force:: true - uninstalls regardless of child dependencies
     # :remove_children:: true - removes direct child dependencies
     # :remove_children:: :recursive - removes children recursively
@@ -182,6 +254,7 @@ class Settler
     ##
     # Removes child dependencies
     # Allows options:
+    # :call:: obj - an object that responds to call will be passed the bash cmd
     # :force:: true - uninstalls regardless of child dependencies
     # :remove_children:: true - removes direct child dependencies
     # :remove_children:: :recursive - removes children recursively
