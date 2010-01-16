@@ -1,9 +1,24 @@
 module Sunshine
 
+  ##
+  # Registers a path as a sunshine application for control via sunshine.
+  #
+  # Usage: sunshine add app_path [more paths...] [options]
+  #
+  # Arguments:
+  #     app_path    Path to the application to add.
+  #                 A name may be assigned to the app by specifying name:path.
+  #                 By default: name = File.basename app_path
+  #
+  # Options:
+  #     -u, --user USER            User to use for remote login. Use with -r.
+  #     -r, --remote svr1,svr2     Run on one or more remote servers
+  #     -v, --verbose              Run in verbose mode
+
   module AddCommand
 
     ##
-    # Runs the command and returns:
+    # Takes an array and a hash, runs the command and returns:
     #   true: success
     #   false: failed
     #   exitcode:
@@ -39,6 +54,9 @@ module Sunshine
       return !errors
     end
 
+
+    ##
+    # Parses the argv passed to the command
 
     def self.parse_args argv
 

@@ -74,8 +74,6 @@ module Sunshine
         :scm_url     => @repo.url,
         :scm_rev     => @repo.revision
       }
-
-      yield(self) if block_given?
     end
 
 

@@ -15,7 +15,7 @@ Installing sunshine:
 You can either use sunshine by requiring the gem in your deploy script or
 by calling the sunshine command:
 
-  sunshine my_deploy.rb -e qa
+  sunshine deploy my_deploy.rb -e qa
 
 
 == Deploy Scripts

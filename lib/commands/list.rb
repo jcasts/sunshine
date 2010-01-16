@@ -1,9 +1,27 @@
 module Sunshine
 
+  ##
+  # List and perform simple state actions on lists of sunshine apps.
+  #
+  # Usage: sunshine list app_name [more names...] [options]
+  #
+  # Arguments:
+  #   app_name      Name of an application to list.
+  #
+  # Options:
+  #   -b, --bool               Return a boolean when performing list action.
+  #   -s, --status             Check if an app is running.
+  #   -d, --details            Get details about the deployed apps.
+  #   -h, --health [STATUS]    Set or get the healthcheck status
+  #                            (enable, disable, remove)
+  #   -u, --user USER          User to use for remote login. Use with -r.
+  #   -r, --remote svr1,svr2   Run on one or more remote servers
+  #   -v, --verbose            Run in verbose mode
+
   module ListCommand
 
     ##
-    # Runs the command and returns:
+    # Takes an array and a hash, runs the command and returns:
     #   true: success
     #   false: failed
     #   exitcode:
@@ -65,6 +83,9 @@ module Sunshine
     end
 
 
+    ##
+    # Load the app list yaml file from the server.
+
     def self.load_list server
       list = YAML.load(server.run(Sunshine::READ_LIST_CMD))
       list = {} unless Hash === list
@@ -72,10 +93,19 @@ module Sunshine
     end
 
 
+    ##
+    # Write the app list hash to the remote server.
+
     def self.save_list list, server
       server.run "echo '#{list.to_yaml}' > #{Sunshine::APP_LIST_PATH}"
     end
 
+
+    ##
+    # Do something which the installed apps list on each server.
+    #   each_server_list(deploy_servers) do |list, server|
+    #     list    #=> {app_name => app_path, ...}
+    #   end
 
     def self.each_server_list servers
       servers.each do |server|
@@ -92,6 +122,9 @@ module Sunshine
       end
     end
 
+
+    ##
+    # Parses the argv passed to the command
 
     def self.parse_args argv
       DefaultCommand.parse_remote_args(argv) do |opt, options|

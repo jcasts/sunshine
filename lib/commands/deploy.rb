@@ -1,9 +1,23 @@
 module Sunshine
 
+  ##
+  # Run a sunshine deploy script.
+  #
+  # Usage: sunshine deploy [deploy_file] [options]
+  #
+  # Arguments:
+  #     deploy_file     Load a deploy script or app path. Defaults to ./Sunshine
+  #
+  # Options:
+  #     -l, --level LEVEL         Set trace level. Defaults to info.
+  #     -e, --env DEPLOY_ENV      Sets the deploy env. Defaults to development.
+  #     -a, --auto                Non-interactive - automate or fail.
+  #         --no-trace            Don't trace any output.
+
   module DeployCommand
 
     ##
-    # Runs the command and returns:
+    # Takes an array and a hash, runs the command and returns:
     #   true: success
     #   false: failed
     #   exitcode:
@@ -25,6 +39,9 @@ module Sunshine
       return true
     end
 
+
+    ##
+    # Parses the argv passed to the command
 
     def self.parse_args argv
       options = {'trace' => true}

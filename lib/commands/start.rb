@@ -1,9 +1,23 @@
 module Sunshine
 
+  ##
+  # Runs the start script of all specified sunshine apps.
+  #
+  # Usage: sunshine start app_name [more names...] [options]
+  #
+  # Arguments:
+  #     app_name     Name of the application to start.
+  #
+  # Options:
+  #     -f, --force                Stop apps that are running, then start them.
+  #     -u, --user USER            User to use for remote login. Use with -r.
+  #     -r, --remote svr1,svr2     Run on one or more remote servers
+  #     -v, --verbose              Run in verbose mode
+
   module StartCommand
 
     ##
-    # Runs the command and returns:
+    # Takes an array and a hash, runs the command and returns:
     #   true: success
     #   false: failed
     #   exitcode:
@@ -36,6 +50,9 @@ module Sunshine
       return !errors
     end
 
+
+    ##
+    # Parses the argv passed to the command
 
     def self.parse_args argv
       DefaultCommand.parse_remote_args(argv) do |opt, options|

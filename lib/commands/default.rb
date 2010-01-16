@@ -1,9 +1,12 @@
 module Sunshine
 
+  ##
+  # Default sunshine behavior when no command is passed. Outputs help.
+
   module DefaultCommand
 
     ##
-    # Runs the command and returns:
+    # Takes an array and a hash, runs the command and returns:
     #   true: success
     #   false: failed
     #   exitcode:

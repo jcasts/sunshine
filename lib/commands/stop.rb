@@ -1,9 +1,22 @@
 module Sunshine
 
+  ##
+  # Runs the stop script of all specified sunshine apps.
+  #
+  # Usage: sunshine stop app_name [more names...] [options]
+  #
+  # Arguments:
+  #     app_name     Name of the application to stop.
+  #
+  # Options:
+  #     -u, --user USER            User to use for remote login. Use with -r.
+  #     -r, --remote svr1,svr2     Run on one or more remote servers
+  #     -v, --verbose              Run in verbose mode
+
   module StopCommand
 
     ##
-    # Runs the command and returns:
+    # Takes an array and a hash, runs the command and returns:
     #   true: success
     #   false: failed
     #   exitcode:
@@ -23,6 +36,9 @@ module Sunshine
       return true
     end
 
+
+    ##
+    # Parses the argv passed to the command
 
     def self.parse_args argv
       DefaultCommand.parse_remote_args(argv) do |opt, options|

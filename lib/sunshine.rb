@@ -10,6 +10,66 @@ require 'logger'
 require 'optparse'
 require 'time'
 
+##
+# Sunshine is an object oriented deploy tool for rack applications.
+#
+# Writing a Sunshine config script is easy:
+#
+#   options = {
+#     :name => 'myapp',
+#     :repo => {:type => :svn, :url => 'svn://blah...'},
+#     :deploy_path => '/usr/local/myapp',
+#     :deploy_servers => ['user@someserver.com']
+#   }
+#
+#   Sunshine::App.deploy(options) do |app|
+#     sqlite = Sunshine::Dependencies.yum 'sqlite3'
+#     sqlgem = Sunshine::Dependencies.gem 'sqlite3'
+#
+#     app.install_deps sqlite, sqlgem
+#
+#     app.install_gems    # Install gems defined by bundler or geminstaller conf
+#
+#     app.rake "db:migrate"
+#
+#     app_server = Sunshine::Rainbows.new(app)
+#     app_server.restart
+#
+#     Sunshine::Nginx.new(app, :point_to => app_server).restart
+#
+#   end
+#
+# The App::deploy and App::new methods also support passing
+# a path to a yaml file:
+#
+#   app = Sunshine::App.new("path/to/config.yml")
+#   app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
+#
+#
+# Command line execution:
+#
+#   Usage:
+#     sunshine -h/--help
+#     sunshine -v/--version
+#     sunshine command [arguments...] [options...]
+#
+#   Examples:
+#     sunshine deploy deploy_script.rb
+#     sunshine restart myapp -r user@server.com,user@host.com
+#     sunshine list myapp myotherapp --health -r user@server.com
+#     sunshine list myapp --status
+#
+#   Commands:
+#     add       Register an app with sunshine
+#     deploy    Run a deploy script
+#     list      Display deployed apps
+#     restart   Restart a deployed app
+#     rm        Unregister an app with sunshine
+#     start     Start a deployed app
+#     stop      Stop a deployed app
+#
+#    For more help on sunshine commands, use 'sunshine COMMAND --help'
+
 module Sunshine
 
   VERSION = '0.0.2'
@@ -48,7 +108,7 @@ module Sunshine
 
 
   ##
-  # Handles input/output to the shell
+  # Handles input/output to the shell. See Sunshine::Console.
 
   def self.console
     @console ||= Sunshine::Console.new
@@ -56,7 +116,7 @@ module Sunshine
 
 
   ##
-  # The logger for sunshine.
+  # The logger for sunshine. See Sunshine::Output.
 
   def self.logger
     log_level = Logger.const_get(@config['level'].upcase)
@@ -66,7 +126,7 @@ module Sunshine
 
 
   ##
-  # Check if trace log should be output at all
+  # Check if trace log should be output at all.
 
   def self.trace?
     @config['trace']
@@ -128,9 +188,9 @@ module Sunshine
 
 
   ##
-  # Run sunshine with the passed argv.
-  #   run "deploy my_script.rb -l debug"
-  #   run "list -d"
+  # Run sunshine with the passed argv and exits with appropriate exitcode.
+  #   run %w{deploy my_script.rb -l debug}
+  #   run %w{list -d}
 
   def self.run argv=ARGV
     unless File.file? USER_CONFIG_FILE

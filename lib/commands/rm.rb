@@ -1,9 +1,24 @@
 module Sunshine
 
+  ##
+  # Unregister a sunshine app.
+  #
+  # Usage: sunshine rm app_name [more names...] [options]
+  #
+  # Arguments:
+  #     app_name      Name of the application to remove.
+  #
+  # Options:
+  #     -d, --delete               Delete the app directory.
+  #     -D, --sudo-delete          Delete the app directory using sudo.
+  #     -u, --user USER            User to use for remote login. Use with -r.
+  #     -r, --remote svr1,svr2     Run on one or more remote servers
+  #     -v, --verbose              Run in verbose mode
+
   module RmCommand
 
     ##
-    # Runs the command and returns:
+    # Takes an array and a hash, runs the command and returns:
     #   true: success
     #   false: failed
     #   exitcode:
@@ -44,6 +59,9 @@ module Sunshine
       return true
     end
 
+
+    ##
+    # Parses the argv passed to the command
 
     def self.parse_args argv
       DefaultCommand.parse_remote_args(argv) do |opt, options|
