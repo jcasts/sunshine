@@ -1,11 +1,57 @@
 module Sunshine
 
+  ##
+  # An abstract class to wrap simple server software setup and start/stop.
+  #
+  # Child classes are expected to at least provide a start and stop bash script
+  # by either overloading the start_cmd and stop_cmd methods, or by setting
+  # @start_cmd and @stop_cmd. A restart_cmd method or @restart_cmd attribute
+  # may also be specified if restart requires more functionality than simply
+  # calling start_cmd && stop_cmd.
+  #
+
   class Server
 
     attr_reader :app, :name, :target
 
     attr_accessor :bin, :pid, :server_name, :port, :processes, :deploy_servers
     attr_accessor :config_template, :config_path, :config_file
+
+    # Server objects need only an App object to be instantiated but many options
+    # are available for customization:
+    #
+    # :point_to:: app|server - set the server target; any app or server object
+    #                          defaults to the app passed to the constructor
+    #
+    # :pid:: pid_path - set the pid; default: app.shared_path/pids/svr_name.pid
+    #                   defaults to app.shared_path/pids/svr_name.pid
+    #
+    # :bin:: bin_path - set the server app bin path (e.g. usr/local/nginx)
+    #                   defaults to svr_name
+    #
+    # :port:: port_num - the port to run the server on
+    #                    defaults to 80
+    #
+    # :processes:: prcss_num - number of processes server should run
+    #                          defaults to 1
+    #
+    # :server_name:: myserver.com - host name used by server
+    #                               defaults to nil
+    #
+    # :deploy_servers:: ds_arr - deploy servers to use
+    #                            defaults to app's :web role servers
+    #
+    # :config_template:: path - glob path to tempates to render and upload
+    #                           defaults to sunshine_path/templates/svr_name/*
+    #
+    # :config_path:: path - remote path server configs will be uploaded to
+    #                       defaults to app.current_path/server_configs/svr_name
+    #
+    # :config_file:: name - remote file name the server should load
+    #                       defaults to svr_name.conf
+    #
+    # :log_path:: path - path to where the log files should be output
+    #                    defaults to app.log_path
 
     def initialize(app, options={})
       @app    = app
@@ -28,28 +74,22 @@ module Sunshine
 
       log_path  = options[:log_path] || @app.log_path
       @log_files = {
-        :stderr => (options[:stderr_log] || "#{log_path}/#{@name}_stderr.log"),
-        :stdout => (options[:stdout_log] || "#{log_path}/#{@name}_stdout.log")
+        :stderr => "#{log_path}/#{@name}_stderr.log",
+        :stdout => "#{log_path}/#{@name}_stdout.log"
       }
 
       @start_cmd = @stop_cmd = @restart_cmd = nil
 
-      @app.after_user_script do |app|
-        app.scripts[:start]  << self.start_cmd
-        app.scripts[:stop]   << self.stop_cmd
-        app.scripts[:status] << "test -f #{@pid}"
-
-        app.info[:ports] ||= {}
-        app.info[:ports][@pid] = @port
-      end
+      register_after_user_script
     end
 
 
     ##
-    # Setup the server app, parse and upload config templates,
-    # and install dependencies.
+    # Setup the server app, parse and upload config templates.
+    # If a dependency with the server name exists in Sunshine::Dependencies,
+    # setup will attempt to install the dependency before uploading configs.
 
-    def setup(&block)
+    def setup
       Sunshine.logger.info @name, "Setting up #{@name} server" do
 
         @deploy_servers.each do |deploy_server|
@@ -80,7 +120,7 @@ module Sunshine
     ##
     # Start the server app after running setup.
 
-    def start(&block)
+    def start
       self.setup
       Sunshine.logger.info @name, "Starting #{@name} server" do
 
@@ -95,9 +135,11 @@ module Sunshine
       end
     end
 
+
     ##
     # Stop the server app.
-    def stop(&block)
+
+    def stop
       Sunshine.logger.info @name, "Stopping #{@name} server" do
 
         @deploy_servers.each do |deploy_server|
@@ -160,7 +202,7 @@ module Sunshine
 
 
     ##
-    # Append or override server log files:
+    # Append or override server log file paths:
     #   server.log_files :stderr => "/all_logs/stderr.log"
 
     def log_files(hash)
@@ -179,7 +221,7 @@ module Sunshine
 
 
     ##
-    # Get the file path to the server's config file
+    # Get the file path to the server's config file.
 
     def config_file_path
       "#{@config_path}/#{@config_file}"
@@ -206,6 +248,7 @@ module Sunshine
 
     ##
     # Get the array of local config template files needed by the server.
+
     def config_template_files
       @config_template_files ||= Dir[@config_template].select{|f| File.file?(f)}
     end
@@ -218,6 +261,17 @@ module Sunshine
       dirs.concat [@config_path, File.dirname(@pid)]
       dirs.delete_if{|d| d == "."}
       dirs
+    end
+
+    def register_after_user_script
+      @app.after_user_script do |app|
+        app.scripts[:start]  << self.start_cmd
+        app.scripts[:stop]   << self.stop_cmd
+        app.scripts[:status] << "test -f #{@pid}"
+
+        app.info[:ports] ||= {}
+        app.info[:ports][@pid] = @port
+      end
     end
   end
 end
