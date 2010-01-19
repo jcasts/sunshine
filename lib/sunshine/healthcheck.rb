@@ -1,5 +1,10 @@
 module Sunshine
 
+  ##
+  # Healthcheck objects handle enabling and disabling health checking for
+  # load balancers by touching health.txt and health.disabled files on
+  # an app's deploy servers
+
   class Healthcheck
 
     attr_accessor :path, :deploy_servers

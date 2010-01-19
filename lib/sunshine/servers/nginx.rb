@@ -1,5 +1,8 @@
 module Sunshine
 
+  ##
+  # Simple server wrapper for nginx setup and control.
+
   class Nginx < Server
 
     def start_cmd
@@ -25,7 +28,8 @@ module Sunshine
 
 
     ##
-    # Check if passenger is required to run the application
+    # Check if passenger is required to run the application.
+    # Returns true if the server's target is a Sunshine::App
 
     def use_passenger?
       @target.is_a?(Sunshine::App)

@@ -2,6 +2,17 @@ require 'tmpdir'
 
 module Sunshine
 
+  ##
+  # Keeps an SSH connection open to a server the app will be deployed to.
+  # Deploy servers use the ssh command and support any ssh feature.
+  # By default, deploy servers use the ControlMaster feature to share
+  # socket connections, with the ControlPath = ~/.ssh/sunshine-%r%h:%p
+  #
+  # Deploy servers can be assigned any number of roles for classification.
+  #
+  # Setting session-persistant environment variables is supported by
+  # accessing the @env attribute.
+
   class DeployServer < Console
 
     class ConnectionError < FatalDeployError; end
@@ -12,13 +23,25 @@ module Sunshine
     attr_accessor :roles, :env, :ssh_flags
 
 
+    ##
+    # Deploy servers essentially need a user and a host. Typical instantiation
+    # is done through either of these methods:
+    #   DeployServer.new "user@host"
+    #   DeployServer.new "host", :user => "user"
+    #
+    # The constructor also supports the following options:
+    # :roles:: sym|array - roles assigned (web, db, app, etc...)
+    # :env:: hash - hash of environment variables to set for the ssh session
+    # :password:: string - password for ssh login; if missing the deploy server
+    #                      will attempt to prompt the user for a password.
+
     def initialize host, options={}
       super $stdout
 
       @host, @user = host.split("@").reverse
 
       @user     ||= options[:user]
-      @roles    = options[:roles].to_a.map{|r| r.to_sym }
+      @roles    = [*options[:roles]].map{|r| r.to_sym }
       @env      = options[:env] || {}
       @password = options[:password]
 
@@ -42,7 +65,7 @@ module Sunshine
 
 
     ##
-    # Connect to host via SSH
+    # Connect to host via SSH and return process pid
 
     def connect
       return @pid if connected?
@@ -66,7 +89,7 @@ module Sunshine
 
 
     ##
-    # Check if SSH session is open
+    # Check if SSH session is open and returns process pid
 
     def connected?
       Process.kill(0, @pid) && @pid rescue false
@@ -130,7 +153,7 @@ module Sunshine
 
 
     ##
-    # Get the name of the remote OS
+    # Get the name of the OS
 
     def os_name
       @os_name ||= run("uname -s").strip.downcase

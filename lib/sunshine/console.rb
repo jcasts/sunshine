@@ -68,6 +68,19 @@ module Sunshine
     alias << write
 
 
+    ##
+    # Execute a command with open4 and loop until the process exits.
+    # The cmd argument may be a string or an array. If a block is passed,
+    # it will be called when data is received and passed the stream type
+    # and stream string value:
+    #   console.execute "test -s 'blah' && echo 'true'" do |stream, str|
+    #     stream    #=> :stdout
+    #     string    #=> 'true'
+    #   end
+    #
+    # The method returns the output from the stdout stream by default, and
+    # raises a CmdError if the exit status of the command is not zero.
+
     def execute cmd
       result = Hash.new{|h,k| h[k] = []}
 

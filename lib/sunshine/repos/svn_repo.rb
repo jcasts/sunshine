@@ -1,5 +1,8 @@
 module Sunshine
 
+  ##
+  # Simple scm wrapper for subversion control.
+
   class SvnRepo < Repo
 
     def update_repo_info

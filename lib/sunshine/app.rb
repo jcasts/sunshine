@@ -1,9 +1,44 @@
 module Sunshine
 
+  ##
+  # App objects are the core of sunshine deployment. The sunshine paradygm
+  # is to construct an app object, and run custom deploy code by passing
+  # a block to its deploy method:
+  #
+  #  options = {
+  #     :name => 'myapp',
+  #     :repo => {:type => :svn, :url => 'svn://blah...'},
+  #     :deploy_path => '/usr/local/myapp',
+  #     :deploy_servers => ['user@someserver.com']
+  #   }
+  #
+  #   app = Sunshine::App.new(options)
+  #
+  #   app.deploy! do |app|
+  #
+  #     app_server = Sunshine::Rainbows.new(app)
+  #     app_server.restart
+  #
+  #     Sunshine::Nginx.new(app, :point_to => app_server).restart
+  #
+  #   end
+  #
+  # Multiple apps can be defined, and deployed from a single deploy script.
+  # The constructor also supports passing a yaml file path:
+  #
+  #   Sunshine::App.new("path/to/config.yml")
+  #
+  # Deployment can be expressed more concisely by calling App::deploy:
+  #
+  #   App.deploy("path/to/config.yml") do |app|
+  #     Sunshine::Rainbows.new(app).restart
+  #   end
+
   class App
 
     ##
     # Initialize and deploy an application.
+    # Takes any arguments supported by the constructor.
 
     def self.deploy(*args, &block)
       app = new(*args)
@@ -163,7 +198,10 @@ module Sunshine
 
     ##
     # Creates and uploads a control script for the application with
-    # start/stop commands.
+    # start/stop/restart commands. To add to, or define a control script,
+    # use the app's script attribute:
+    #   app.script[:start] << "do this for app startup"
+    #   app.script[:custom] << "this is my own script"
 
     def build_control_scripts(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Building control scripts" do
@@ -280,7 +318,9 @@ module Sunshine
 
 
     ##
-    # Creates an info file with deploy information.
+    # Creates a yaml file with deploy information. To add custom information
+    # to the info file, use the app's info hash attribute:
+    #   app.info[:key] = "some value"
 
     def make_deploy_info_file(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Creating info file" do

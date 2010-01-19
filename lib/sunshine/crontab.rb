@@ -1,5 +1,9 @@
 module Sunshine
 
+  ##
+  # A simple namespaced grouping of cron jobs that can be written
+  # to a deploy server.
+
   class Crontab
 
     def initialize name
@@ -9,7 +13,8 @@ module Sunshine
 
 
     ##
-    # Add a cron command to a given namespace
+    # Add a cron command to a given namespace:
+    #   crontab.add "logrotote", "00 * * * * /usr/sbin/logrotate"
 
     def add namespace, cron_cmd
       @cron_jobs[namespace] << cron_cmd unless @cron_jobs.include?(cron_cmd)

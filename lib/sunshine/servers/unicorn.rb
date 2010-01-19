@@ -1,5 +1,8 @@
 module Sunshine
 
+  ##
+  # Simple server wrapper for Unicorn setup and control.
+
   class Unicorn < Server
 
     def start_cmd

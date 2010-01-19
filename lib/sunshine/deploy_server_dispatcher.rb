@@ -1,5 +1,9 @@
 module Sunshine
 
+  ##
+  # Allows performing actions on an array of deploy servers and run simple
+  # find queries.
+
   class DeployServerDispatcher < Array
 
     def initialize(*deploy_servers)
@@ -68,11 +72,15 @@ module Sunshine
 
 
     ##
-    # Forwarding methods to deploy servers
+    # Connect all deploy servers
 
     def connect(*args, &block)
       call_each_method :connect, *args, &block
     end
+
+    ##
+    # Check if all deploy servers are connected. Returns false if any one
+    # deploy server is not connected.
 
     def connected?
       self.each do |deploy_server|
@@ -81,21 +89,36 @@ module Sunshine
       true
     end
 
+    ##
+    # Disconnect all deploy servers
+
     def disconnect(*args, &block)
       call_each_method :disconnect, *args, &block
     end
+
+    ##
+    # Force a symlink on all deploy servers
 
     def symlink(*args, &block)
       call_each_method :symlink, *args, &block
     end
 
+    ##
+    # Upload a file to all deploy servers
+
     def upload(*args, &block)
       call_each_method :upload, *args, &block
     end
 
+    ##
+    # Create a file on all deploy servers
+
     def make_file(*args, &block)
       call_each_method :make_file, *args, &block
     end
+
+    ##
+    # Run a command on all deploy servers
 
     def run(*args, &block)
       call_each_method :run, *args, &block

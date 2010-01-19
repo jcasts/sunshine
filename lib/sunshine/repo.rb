@@ -2,6 +2,11 @@ module Sunshine
 
   class RepoError < Exception; end
 
+  ##
+  # An abstract class to wrap simple basic scm features. The primary function
+  # of repo objects is to get information about the scm branch that is being
+  # deployed and to check it out on remote deploy servers
+
   class Repo
 
     ##
@@ -66,7 +71,7 @@ module Sunshine
 
     ##
     # Checkout code to a deploy_server - Implemented by subclass
-    def checkout_to(server, path)
+    def checkout_to server, path
       raise RepoError,
         "The 'checkout_to' method must be implemented by child classes"
     end

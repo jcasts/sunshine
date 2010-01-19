@@ -3,6 +3,7 @@ module Sunshine
   ##
   # The Output class handles all of the logging to the shell
   # during the Sunshine runtime.
+
   class Output
 
     COLORS = {

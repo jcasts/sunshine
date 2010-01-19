@@ -8,7 +8,6 @@ module Sunshine
   # @start_cmd and @stop_cmd. A restart_cmd method or @restart_cmd attribute
   # may also be specified if restart requires more functionality than simply
   # calling start_cmd && stop_cmd.
-  #
 
   class Server
 
