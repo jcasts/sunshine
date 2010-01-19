@@ -35,7 +35,7 @@ class TestDeployServer < Test::Unit::TestCase
   end
 
   def test_run_with_stderr
-    set_popen4_exitcode 1
+    @deploy_server.set_mock_response 1, :err => 'this is an error'
     cmd = "echo 'this is an error'"
     @deploy_server.run cmd
     raise "Didn't raise CmdError on stderr"

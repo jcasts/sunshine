@@ -10,6 +10,8 @@ class TestApp < Test::Unit::TestCase
                :repo => {:type => "svn", :url => svn_url},
                :deploy_servers => ["jcastagna@jcast.np.wc1.yellowpages.com"],
                :deploy_path => "/usr/local/nextgen/parity"}
+
+    @app = Sunshine::App.new @config
   end
 
   def teardown
@@ -24,8 +26,7 @@ class TestApp < Test::Unit::TestCase
 
 
   def test_initialize_with_options
-    app = Sunshine::App.new @config
-    assert_attributes_equal @config, app
+    assert_attributes_equal @config, @app
   end
 
 
@@ -84,6 +85,25 @@ class TestApp < Test::Unit::TestCase
       rescue MockError => e
         assert_equal MockError, e.class
       end
+    end
+  end
+
+
+  def test_revert
+    set_mock_response_for @app, 0,
+      "ls -1 #{@app.deploys_dir}" => [:out, "last_deploy_dir"]
+
+    @app.revert!
+
+    @app.deploy_servers.each do |ds|
+      use_deploy_server ds
+
+      assert_ssh_call "rm -rf #{@app.checkout_path}"
+
+      assert_ssh_call "ls -1 #{@app.deploys_dir}"
+
+      last_deploy =  "#{@app.deploys_dir}/last_deploy_dir"
+      assert_ssh_call "ln -sfT #{last_deploy} #{@app.current_path}"
     end
   end
 

@@ -41,7 +41,7 @@ module Sunshine
       @host, @user = host.split("@").reverse
 
       @user     ||= options[:user]
-      @roles    = [*options[:roles]].map{|r| r.to_sym }
+      @roles    = [*options[:roles]].compact.map{|r| r.to_sym }
       @env      = options[:env] || {}
       @password = options[:password]
 

@@ -15,21 +15,24 @@ unless defined? TEST_APP_CONFIG_FILE
   TEST_APP_CONFIG_FILE = "test/fixtures/app_configs/test_app.yml"
 end
 
+
 def mock_deploy_server_popen4
   return if no_mocks
   Sunshine::DeployServer.class_eval{ include MockOpen4 }
 end
 
 
-def set_popen4_exitcode code
-  Process.set_exitcode code
+def set_mock_response_for obj, code, stream_vals={}
+  case obj
+  when Sunshine::App then
+    obj.deploy_servers.each{|ds| ds.set_mock_response code, stream_vals}
+  when Sunshine::DeployServer then
+    obj.set_mock_response code, stream_vals
+  end
 end
 
 
 def assert_ssh_call expected, ds=@deploy_server
-  #expected = expected.gsub(/'/){|s| "'\\''"}
-  #expected = "ssh #{ds.ssh_flags.join(" ")} #{ds.host} sh -c '#{expected}'"
-
   expected = ds.send(:ssh_cmd, expected).join(" ")
 
   error_msg = "No such command in deploy_server log [#{ds.host}]\n#{expected}"

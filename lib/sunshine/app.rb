@@ -49,7 +49,7 @@ module Sunshine
 
     attr_reader :name, :repo, :deploy_servers, :crontab, :health
     attr_reader :deploy_path, :checkout_path, :current_path
-    attr_reader :shared_path, :log_path
+    attr_reader :deploys_dir, :shared_path, :log_path
     attr_accessor :deploy_env, :scripts, :info
 
 
@@ -69,10 +69,10 @@ module Sunshine
 
       @deploy_path   = deploy_options[:deploy_path]
       @current_path  = "#{@deploy_path}/current"
-      @deploys_path  = "#{@deploy_path}/deploys"
+      @deploys_dir  = "#{@deploy_path}/deploys"
       @shared_path   = "#{@deploy_path}/shared"
       @log_path      = "#{@shared_path}/log"
-      @checkout_path = "#{@deploys_path}/#{Time.now.to_i}_#{@repo.revision}"
+      @checkout_path = "#{@deploys_dir}/#{Time.now.to_i}_#{@repo.revision}"
 
       @post_user_lambdas = []
 
@@ -162,11 +162,11 @@ module Sunshine
           deploy_server.run "rm -rf #{self.checkout_path}"
 
           last_deploy =
-            deploy_server.run("ls -1 #{@deploys_path}").split("\n").last
+            deploy_server.run("ls -1 #{@deploys_dir}").split("\n").last
 
           if last_deploy && !last_deploy.empty?
             deploy_server.symlink \
-              "#{@deploys_path}/#{last_deploy}", @current_path
+              "#{@deploys_dir}/#{last_deploy}", @current_path
 
             started = StartCommand.exec [@name],
               'servers' => @deploy_servers, 'force' => true
@@ -369,11 +369,11 @@ module Sunshine
         "Removing old deploys (max = #{Sunshine.max_deploy_versions})" do
 
         d_servers.each do |deploy_server|
-          deploys = deploy_server.run("ls -1 #{@deploys_path}").split("\n")
+          deploys = deploy_server.run("ls -1 #{@deploys_dir}").split("\n")
 
           if deploys.length > Sunshine.max_deploy_versions
             rm_deploys = deploys[0..-Sunshine.max_deploy_versions]
-            rm_deploys.map!{|d| "#{@deploys_path}/#{d}"}
+            rm_deploys.map!{|d| "#{@deploys_dir}/#{d}"}
 
             deploy_server.run("rm -rf #{rm_deploys.join(" ")}")
           end
