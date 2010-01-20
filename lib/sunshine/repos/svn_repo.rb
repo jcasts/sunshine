@@ -26,7 +26,7 @@ module Sunshine
 
         deploy_server.run "test -d #{path} && rm -rf #{path} || echo false"
         deploy_server.run \
-          "mkdir -p #{path} && svn checkout -r #{@revision} #{@url} #{path}"
+          "mkdir -p #{path} && svn checkout -r #{revision} #{url} #{path}"
       end
     end
   end

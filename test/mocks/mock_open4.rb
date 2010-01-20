@@ -45,7 +45,10 @@ module MockOpen4
       output = @mock_output[cmd]
       output ||= @mock_output[nil].shift if Array === @mock_output[nil]
       @mock_output.delete(cmd)
-      return output if output
+      if output
+        Process.set_exitcode output.delete(output.last)
+        return output
+      end
     end
 
     CMD_RETURN.each do |cmd_key, return_val|
@@ -55,26 +58,23 @@ module MockOpen4
   end
 
   def set_mock_response code, stream_vals={}
-    Process.set_exitcode code
     @mock_output ||= {}
     @mock_output[nil] ||= []
     if Sunshine::DeployServer === self
-      stream_vals = stream_vals.dup
+      new_stream_vals = {}
 
       stream_vals.each do |key, val|
         if Symbol === key
-          @mock_output[nil] << [key, val]
-          stream_vals.delete(key)
+          @mock_output[nil] << [key, val, code]
           next
         end
 
-        stream_vals.delete(key)
         key = ssh_cmd(key).join(" ")
 
-        stream_vals[key] = val
+        new_stream_vals[key] = (val.dup << code)
       end
     end
-    @mock_output.merge! stream_vals
+    @mock_output.merge! new_stream_vals
   end
 
 end

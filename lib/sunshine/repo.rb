@@ -18,7 +18,7 @@ module Sunshine
 
     attr_reader :url
 
-    def initialize(url)
+    def initialize url
       @url = url
       @revision = nil
       @committer = nil

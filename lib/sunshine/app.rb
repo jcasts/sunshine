@@ -344,7 +344,7 @@ module Sunshine
       Sunshine.logger.info :app, "Running Rake task '#{command}'" do
         d_servers.each do |deploy_server|
           self.install_deps 'rake', :servers => deploy_server
-          deploy_server.run "cd #{self.checkout_path}; rake #{command}"
+          deploy_server.run "cd #{self.checkout_path} && rake #{command}"
         end
       end
     end
@@ -372,7 +372,8 @@ module Sunshine
           deploys = deploy_server.run("ls -1 #{@deploys_dir}").split("\n")
 
           if deploys.length > Sunshine.max_deploy_versions
-            rm_deploys = deploys[0..-Sunshine.max_deploy_versions]
+            lim = Sunshine.max_deploy_versions + 1
+            rm_deploys = deploys[0..-lim]
             rm_deploys.map!{|d| "#{@deploys_dir}/#{d}"}
 
             deploy_server.run("rm -rf #{rm_deploys.join(" ")}")

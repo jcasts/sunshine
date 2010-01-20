@@ -6,6 +6,8 @@ module Sunshine
 
   class Crontab
 
+    attr_reader :cron_jobs
+
     def initialize name
       @name = name
       @cron_jobs = Hash.new{|hash, key| hash[key] = []}
@@ -22,11 +24,9 @@ module Sunshine
 
 
     ##
-    # Write the crontab on the given deploy_server
+    # Build the crontab by replacing preexisting cron jobs and adding new ones.
 
-    def write! deploy_server
-      crontab = deploy_server.run("crontab -l") rescue ""
-      crontab.strip!
+    def build crontab=""
       @cron_jobs.each do |namespace, cron_arr|
         start_id = "# sunshine #{@name}:#{namespace}:begin"
         end_id = "# sunshine #{@name}:#{namespace}:end"
@@ -37,7 +37,20 @@ module Sunshine
 
         crontab << cron_str
       end
+
+      crontab
+    end
+
+
+    ##
+    # Write the crontab on the given deploy_server
+
+    def write! deploy_server
+      crontab = deploy_server.run("crontab -l") rescue ""
+      crontab = build crontab.strip!
+
       deploy_server.run("echo '#{crontab.gsub(/'/){|s| "'\\''"}}' | crontab")
+
       crontab
     end
   end
