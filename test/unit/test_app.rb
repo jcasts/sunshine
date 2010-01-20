@@ -309,6 +309,67 @@ class TestApp < Test::Unit::TestCase
   end
 
 
+  def test_shell_env
+    new_env = {
+      "PATH"      => "/etc/lib:$PATH",
+      "RACK_ENV"  => "test",
+      "RAILS_ENV" => "test"
+    }
+
+    @app.shell_env new_env
+
+    assert_equal new_env, @app.shell_env
+  end
+
+
+  def test_symlink_current_dir
+    @app.symlink_current_dir
+
+    each_deploy_server do |ds|
+      assert_ssh_call "ln -sfT #{@app.checkout_path} #{@app.current_path}"
+    end
+  end
+
+
+  def test_upload_tasks
+    path = "/path/to/tasks"
+
+    @app.upload_tasks 'common', 'tpkg',
+      :servers => @app.deploy_servers,
+      :path    => path
+
+    each_deploy_server do |ds|
+      assert_ssh_call "mkdir -p /path/to/tasks"
+
+      %w{common tpkg}.each do |task|
+        from = "templates/tasks/#{task}.rake"
+        to   = "#{ds.host}:#{path}/#{task}.rake"
+
+        assert_rsync from, to
+      end
+    end
+  end
+
+
+  def test_upload_tasks_simple
+    @app.upload_tasks
+
+    tasks = Dir.glob("templates/tasks/*").map{|t| File.basename t}
+    path  = "#{@app.checkout_path}/lib/tasks"
+
+    each_deploy_server do |ds|
+      assert_ssh_call "mkdir -p #{path}"
+
+      tasks.each do |task|
+        from = "templates/tasks/#{task}"
+        to   = "#{ds.host}:#{path}/#{task}"
+
+        assert_rsync from, to
+      end
+    end
+  end
+
+
   private
 
   def each_deploy_server app=@app

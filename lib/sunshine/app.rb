@@ -95,7 +95,7 @@ module Sunshine
       @health = Healthcheck.new @shared_path, @deploy_servers
 
       @shell_env = {
-        "RAKE_ENV"  => @deploy_env.to_s,
+        "RACK_ENV"  => @deploy_env.to_s,
         "RAILS_ENV" => @deploy_env.to_s
       }
       self.shell_env deploy_options[:shell_env]
@@ -429,6 +429,7 @@ module Sunshine
 
     ##
     # Set and return the remote shell env variables.
+    # Also assigns shell environment to the app's deploy servers.
 
     def shell_env(env_hash=nil)
       env_hash ||= {}
