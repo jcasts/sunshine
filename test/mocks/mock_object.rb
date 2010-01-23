@@ -136,7 +136,7 @@ module MockObject
   def self.unhook_instance_methods base, instance=false
     eval_each_method_of(base, instance) do |m|
        new_m = escape_unholy_method_name "hooked_#{m}"
-       puts m + " -> " + new_m
+       #puts m + " -> " + new_m
       %{
         m = '#{new_m}'.to_sym
         defined = method_defined?(m) rescue self.class.method_defined?(m)
@@ -162,12 +162,11 @@ module MockObject
       [:class_eval, base.instance_methods]
     end
 
-    banned_methods = %w{method_log method_mocks method_mock_return mock_key_for}
+    banned_methods = %w{__id__ __send__ method_log method_mocks method_mock_return mock_key_for}
 
     affect_methods.sort.each do |m|
-      #next unless m =~ /^[a-z]/
       next if banned_methods.include?(m)
-      puts m
+      #puts m
       base.send eval_method, block.call(m)
     end
   end

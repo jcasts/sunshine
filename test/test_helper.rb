@@ -48,7 +48,7 @@ def assert_rsync from, to, ds=@deploy_server
   rsync_cmd = "rsync -azP -e \"ssh #{ds.ssh_flags.join(' ')}\""
 
   error_msg = "No such command in deploy_server log [#{ds.host}]\n#{rsync_cmd}"
-  error_msg << "#{from} #{to}"
+  error_msg << "#{from.inspect} #{to.inspect}"
   error_msg << "\n\n#{ds.cmd_log.select{|c| c =~ /^rsync/}.join("\n\n")}"
 
   if Regexp === from

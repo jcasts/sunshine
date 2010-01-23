@@ -58,7 +58,7 @@ class TestDeployServer < Test::Unit::TestCase
   def test_make_file
     @deploy_server.make_file("some_dir/sunshine_test_file", "test data")
     tmp_file = "#{Sunshine::DeployServer::TMP_DIR}/sunshine_test_file"
-    assert_rsync(/^#{tmp_file}_[0-9]+/,
+    assert_rsync(/^#{tmp_file.gsub("+",'\\\+')}_[0-9]+/,
       "#{@deploy_server.host}:some_dir/sunshine_test_file")
   end
 
