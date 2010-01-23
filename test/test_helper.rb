@@ -6,6 +6,7 @@ def no_mocks
 end
 
 unless no_mocks
+  require 'test/mocks/mock_object'
   require 'test/mocks/mock_open4'
   require 'test/mocks/mock_repo'
   require 'test/mocks/mock_console'

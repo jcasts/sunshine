@@ -287,6 +287,8 @@ class TestApp < Test::Unit::TestCase
 
 
   def test_setup_logrotate
+    @app.crontab.extend MockObject
+
     config_path = "#{@app.checkout_path}/config"
 
     cronjob = "00 * * * * /usr/sbin/logrotate"+
@@ -296,6 +298,9 @@ class TestApp < Test::Unit::TestCase
       'crontab -l' => [:out, " "]
 
     @app.setup_logrotate
+
+    assert @app.crontab.method_called?(:add, :args => "logrotate")
+    assert @app.crontab.method_called?(:write!, :exactly => 1)
 
     new_crontab = @app.crontab.build
 
