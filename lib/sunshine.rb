@@ -114,40 +114,12 @@ module Sunshine
     @console ||= Sunshine::Console.new
   end
 
-
-  ##
-  # The logger for sunshine. See Sunshine::Output.
-
-  def self.logger
-    log_level = Logger.const_get(@config['level'].upcase)
-    @logger ||= Sunshine::Output.new :level => log_level,
-      :output => self.console
-  end
-
-
-  ##
-  # Check if trace log should be output at all.
-
-  def self.trace?
-    @config['trace']
-  end
-
-
   ##
   # The default deploy environment to use. Set with the -e option.
   # See App#deploy_env for app specific deploy environments.
 
   def self.deploy_env
     @config['deploy_env']
-  end
-
-
-  ##
-  # Maximum number of deploys (history) to keep on the remote server,
-  # 5 by default. Overridden in the ~/.sunshine config file.
-
-  def self.max_deploy_versions
-    @config['max_deploy_versions']
   end
 
 
@@ -160,15 +132,55 @@ module Sunshine
   end
 
 
+  ##
+  # Handles all output for sunshine. See Sunshine::Output.
+
+  def self.output
+    log_level = Logger.const_get(@config['level'].upcase)
+    @logger ||= Sunshine::Output.new :level => log_level,
+      :output => self.console
+  end
+
+  def self.logger
+    self.output
+  end
+
+
+
+  ##
+  # Maximum number of deploys (history) to keep on the remote server,
+  # 5 by default. Overridden in the ~/.sunshine config file.
+
+  def self.max_deploy_versions
+    @config['max_deploy_versions']
+  end
+
+
+  ##
+  # Check if trace log should be output at all.
+
+  def self.trace?
+    @config['trace']
+  end
+
+
+  ##
+  # Path to the list of installed sunshine apps.
   APP_LIST_PATH = "~/.sunshine_list"
 
   READ_LIST_CMD = "test -f #{Sunshine::APP_LIST_PATH} && "+
       "cat #{APP_LIST_PATH} || echo ''"
 
+  ##
+  # Commands supported by Sunshine
   COMMANDS = %w{add deploy list restart rm start stop}
 
+  ##
+  # Default Sunshine config file
   USER_CONFIG_FILE = File.expand_path("~/.sunshine")
 
+  ##
+  # Default configuration
   DEFAULT_CONFIG = {
     'level'               => 'info',
     'deploy_env'          => :development,
@@ -181,9 +193,10 @@ module Sunshine
   # Setup sunshine with a custom config:
   #   Sunshine.setup 'level' => 'debug', 'deploy_env' => :production
 
-  def self.setup new_config={}
-    @config ||= DEFAULT_CONFIG
+  def self.setup new_config={}, reset=false
+    @config = DEFAULT_CONFIG.dup if !@config || reset
     @config.merge! new_config
+    @config
   end
 
 
@@ -196,10 +209,10 @@ module Sunshine
     unless File.file? USER_CONFIG_FILE
       File.open(USER_CONFIG_FILE, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml}
 
-      puts "Missing config file was created for you: #{USER_CONFIG_FILE}"
-      puts DEFAULT_CONFIG.to_yaml
+      msg = "Missing config file was created for you: #{USER_CONFIG_FILE}\n\n"
+      msg << DEFAULT_CONFIG.to_yaml
 
-      exit 1
+      self.exit 1, msg
     end
 
     command_name = find_command argv.first
@@ -211,7 +224,7 @@ module Sunshine
     config = YAML.load_file USER_CONFIG_FILE
     config.merge! command.parse_args(argv)
 
-    self.setup config
+    self.setup config, true
 
     result = command.exec argv, config
     self.exit(*result)

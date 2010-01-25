@@ -15,7 +15,7 @@ module MockObject
   # Get the value a mocked method was setup to return
 
   def method_mock_return mock_key
-    return_val = method_mocks[mock_key]
+    return_val = method_mocks[mock_key] rescue method_mocks[[mock_key.first]]
     Proc === return_val ? return_val.call : return_val
   end
 
@@ -126,7 +126,7 @@ module MockObject
           count = method_log[mock_key]
           method_log[mock_key] = count.next
           
-          method_mock_return(mock_key) rescue #{new_m}(#{m_def})
+          method_mock_return(mock_key) rescue self.send(:#{new_m}, #{m_def})
         end
       }
     end
@@ -162,7 +162,8 @@ module MockObject
       [:class_eval, base.instance_methods]
     end
 
-    banned_methods = %w{__id__ __send__ method_log method_mocks method_mock_return mock_key_for}
+    banned_methods = self.instance_methods
+    banned_methods.concat Object.instance_methods
 
     affect_methods.sort.each do |m|
       next if banned_methods.include?(m)

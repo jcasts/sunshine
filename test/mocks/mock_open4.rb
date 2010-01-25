@@ -93,7 +93,11 @@ Process.class_eval do
     @exit_code = code
   end
 
-  alias old_waitpid2 waitpid2
+
+  WAITPID2_METHOD = self.method(:waitpid2)
+  def self.old_waitpid2(*args)
+    WAITPID2_METHOD.call(*args)
+  end
 
   def self.waitpid2(*args)
     pid = args[0]

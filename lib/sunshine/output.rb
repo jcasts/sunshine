@@ -15,6 +15,8 @@ module Sunshine
       Logger::DEBUG   => :cyan,
     }
 
+    attr_reader :logger
+
     def initialize(options={})
       @logger = Logger.new options[:output] || $stdout
       @logger.formatter = lambda{|sev, time, progname, msg| msg}
