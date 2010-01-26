@@ -131,12 +131,15 @@ class TestSunshine < Test::Unit::TestCase
 
 
   def mock_sunshine_command cmd
-    cmd.class_eval do
-      def self.call_log
+    cmd.instance_eval do
+      undef exec
+      undef call_log if defined?(call_log)
+
+      def call_log
         @call_log ||= []
       end
 
-      def self.exec *args
+      def exec *args
         call_log << [:exec, args]
         true
       end
@@ -144,8 +147,10 @@ class TestSunshine < Test::Unit::TestCase
   end
 
   def mock_sunshine_exit
-    Sunshine.class_eval do
-      def self.exit *args
+    Sunshine.instance_eval do
+      undef exit
+
+      def exit *args
       end
     end
   end

@@ -20,40 +20,45 @@ module Sunshine
 
     def initialize url
       @url = url
+      @revision = nil
+      @committer = nil
+      @branch = nil
+      @date = nil
+      @message = nil
     end
 
     ##
     # Get the revision
     def revision
-      update_repo_info unless defined?(@revision)
+      update_repo_info unless @revision
       @revision
     end
 
     ##
     # Get the last committer
     def committer
-      update_repo_info unless defined?(@committer)
+      update_repo_info unless @committer
       @committer
     end
 
     ##
     # Get the current branch
     def branch
-      update_repo_info unless defined?(@branch)
+      update_repo_info unless @branch
       @branch
     end
 
     ##
     # Get the current date
     def date
-      update_repo_info unless defined?(@date)
+      update_repo_info unless @date
       @date
     end
 
     ##
     # Get the current message
     def message
-      update_repo_info unless defined?(@message)
+      update_repo_info unless @message
       @message
     end
 

@@ -11,7 +11,7 @@ module Sunshine
     LOCAL_HOST = `hostname`.chomp
     SUDO_PROMPT = /^Password:/
 
-    attr_reader :user, :host, :password
+    attr_reader :user, :host, :password, :input, :output
 
     def initialize output = $stdout
       @output = output
