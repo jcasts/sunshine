@@ -8,14 +8,11 @@ end
 unless no_mocks
   require 'test/mocks/mock_object'
   require 'test/mocks/mock_open4'
-  require 'test/mocks/mock_console'
 end
 
 unless defined? TEST_APP_CONFIG_FILE
   TEST_APP_CONFIG_FILE = "test/fixtures/app_configs/test_app.yml"
 end
-
-Sunshine.console.extend MockObject
 
 
 def mock_deploy_server host=nil
@@ -101,5 +98,11 @@ def use_deploy_server deploy_server
   @deploy_server = deploy_server
 end
 
+
+
 Sunshine.setup
+
+Sunshine.console.extend MockObject
+Sunshine.console.mock :<<, :return => nil
+Sunshine.console.mock :write, :return => nil
 

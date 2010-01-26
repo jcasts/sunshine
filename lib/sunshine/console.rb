@@ -82,6 +82,7 @@ module Sunshine
     # raises a CmdError if the exit status of the command is not zero.
 
     def execute cmd
+      cmd = [*cmd]
       result = Hash.new{|h,k| h[k] = []}
 
       pid, inn, out, err = popen4(*cmd)
@@ -102,7 +103,6 @@ module Sunshine
         next if selected.nil? or selected.empty?
 
         selected.each do |stream|
-          stream_name = stream == out ? :out : :err
 
           if stream.eof? then
             streams.delete stream if status # we've quit, so no more writing
@@ -114,6 +114,7 @@ module Sunshine
           Sunshine.logger.debug ">>", data if stream == out
           Sunshine.logger.error ">>", data if stream == err
 
+          stream_name = stream == out ? :out : :err
           yield(stream_name, data) if block_given?
 
           if stream == err && data =~ SUDO_PROMPT then

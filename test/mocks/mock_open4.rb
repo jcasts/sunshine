@@ -15,7 +15,7 @@ module MockOpen4
 
 
     pid = "test_pid"
-    inn_r, inn_w = IO.pipe
+    inn_w = StringIO.new
     out_r, out_w = IO.pipe
     err_r, err_w = IO.pipe
 
@@ -25,7 +25,6 @@ module MockOpen4
     out_w.write nil
     err_w.write nil
 
-    inn_r.close
     out_w.close
     err_w.close
 
@@ -60,19 +59,17 @@ module MockOpen4
   def set_mock_response code, stream_vals={}
     @mock_output ||= {}
     @mock_output[nil] ||= []
-    if Sunshine::DeployServer === self
-      new_stream_vals = {}
+    new_stream_vals = {}
 
-      stream_vals.each do |key, val|
-        if Symbol === key
-          @mock_output[nil] << [key, val, code]
-          next
-        end
-
-        key = ssh_cmd(key).join(" ")
-
-        new_stream_vals[key] = (val.dup << code)
+    stream_vals.each do |key, val|
+      if Symbol === key
+        @mock_output[nil] << [key, val, code]
+        next
       end
+
+      key = ssh_cmd(key).join(" ") if Sunshine::DeployServer === self
+
+      new_stream_vals[key] = (val.dup << code)
     end
     @mock_output.merge! new_stream_vals
   end
@@ -88,32 +85,32 @@ end
 
 
 Process.class_eval do
+  class << self
 
-  def self.set_exitcode(code)
-    @exit_code = code
-  end
-
-
-  WAITPID2_METHOD = self.method(:waitpid2)
-  def self.old_waitpid2(*args)
-    WAITPID2_METHOD.call(*args)
-  end
-
-  def self.waitpid2(*args)
-    pid = args[0]
-    if pid == "test_pid"
-      exitcode = @exit_code ||= 0
-      @exit_code = 0
-      return [StatusStruct.new(exitcode)]
-    else
-      return old_waitpid2(*args)
+    def set_exitcode(code)
+      @exit_code = code
     end
-  end
 
-  alias old_kill kill
+    alias old_waitpid2 waitpid2
+    undef waitpid2
 
-  def self.kill(type, pid)
-    return true if type == 0 && pid == "test_pid"
-    old_kill(type, pid)
+    def waitpid2(*args)
+      pid = args[0]
+      if pid == "test_pid"
+        exitcode = @exit_code ||= 0
+        @exit_code = 0
+        return [StatusStruct.new(exitcode)]
+      else
+        return old_waitpid2(*args)
+      end
+    end
+
+    alias old_kill kill
+    undef kill
+
+    def kill(type, pid)
+      return true if type == 0 && pid == "test_pid"
+      old_kill(type, pid)
+    end
   end
 end
