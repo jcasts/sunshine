@@ -309,7 +309,7 @@ class TestApp < Test::Unit::TestCase
     each_deploy_server do |ds|
       assert_ssh_call "echo '#{new_crontab}' | crontab"
       assert_ssh_call "mkdir -p #{config_path} #{@app.log_path}/rotate"
-      assert_rsync /logrotate/, "#{ds.host}:#{config_path}/logrotate.conf"
+      assert_rsync(/logrotate/, "#{ds.host}:#{config_path}/logrotate.conf")
     end
   end
 

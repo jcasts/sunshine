@@ -194,7 +194,7 @@ module Sunshine
   #   Sunshine.setup 'level' => 'debug', 'deploy_env' => :production
 
   def self.setup new_config={}, reset=false
-    @config = DEFAULT_CONFIG.dup if !@config || reset
+    @config = DEFAULT_CONFIG.dup if !defined?(@config) || reset
     @config.merge! new_config
     @config
   end

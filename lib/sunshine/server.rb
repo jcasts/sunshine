@@ -52,7 +52,7 @@ module Sunshine
     # :log_path:: path - path to where the log files should be output
     #                    defaults to app.log_path
 
-    def initialize(app, options={})
+    def initialize app, options={}
       @app    = app
       @target = options[:point_to] || @app
       @name   = self.class.to_s.split("::").last.downcase
