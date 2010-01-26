@@ -158,7 +158,7 @@ module Sunshine
     # If restart_cmd is not provided, calls stop and start.
 
     def restart
-      if @restart_cmd
+      if restart_cmd
         self.setup
         begin
           @deploy_servers.run(@restart_cmd)
@@ -178,7 +178,7 @@ module Sunshine
 
     def start_cmd
       return @start_cmd ||
-        raise(FatalDeployError, "@start_cmd is undefined. Can't start #{@name}")
+        raise(CriticalDeployError, "@start_cmd undefined. Can't start #{@name}")
     end
 
 
@@ -188,7 +188,7 @@ module Sunshine
 
     def stop_cmd
       return @stop_cmd ||
-        raise(FatalDeployError, "@stop_cmd is undefined. Can't stop #{@name}")
+        raise(CriticalDeployError, "@stop_cmd undefined. Can't stop #{@name}")
     end
 
 
@@ -231,7 +231,7 @@ module Sunshine
     # Upload config files and run them through erb with the provided
     # binding if necessary.
 
-    def upload_config_files(deploy_server, setup_binding)
+    def upload_config_files(deploy_server, setup_binding=binding)
       self.config_template_files.each do |config_file|
 
         if File.extname(config_file) == ".erb"

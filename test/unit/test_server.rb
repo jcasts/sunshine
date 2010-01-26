@@ -16,7 +16,7 @@ class TestServer < Test::Unit::TestCase
   def setup
     mock_deploy_server_popen4
     @app    = Sunshine::App.new(TEST_APP_CONFIG_FILE).extend MockObject
-    @deploy_server = @app.deploy_servers.first
+    @deploy_server = @app.deploy_servers.first.extend MockObject
     @server = Server.new @app
 
     @rainbows = Sunshine::Rainbows.new(@app).extend MockObject
@@ -116,6 +116,91 @@ class TestServer < Test::Unit::TestCase
   end
 
 
+  def test_missing_start_stop_cmd
+    server = Sunshine::Server.new @app
+
+    begin
+      server.start_cmd
+      raise "Should have thrown CriticalDeployError but didn't :("
+    rescue Sunshine::CriticalDeployError => e
+      assert_equal "@start_cmd undefined. Can't start server", e.message
+    end
+
+    begin
+      server.stop_cmd
+      raise "Should have thrown CriticalDeployError but didn't :("
+    rescue Sunshine::CriticalDeployError => e
+      assert_equal "@stop_cmd undefined. Can't stop server", e.message
+    end
+  end
+
+
+  def test_log_files
+    @server.log_files :test_log => "/path/test_log.log",
+                      :another_test => "/path/another_test.log"
+
+    assert_equal "/path/test_log.log", @server.log_file(:test_log)
+    assert_equal "/path/another_test.log", @server.log_file(:another_test)
+  end
+
+
+  def test_upload_config_files
+    server = @rainbows
+
+    server.mock :config_template_files,
+      :return => ["rainbows.conf.erb", "test/non_erb.conf"]
+
+    @app.mock :build_erb, :return => "test_config"
+
+    server.upload_config_files @deploy_server
+
+    args = ["#{server.config_path}/rainbows.conf", "test_config"]
+    assert @deploy_server.method_called?(:make_file, :args => args)
+
+    args = ["test/non_erb.conf", "#{server.config_path}/non_erb.conf"]
+    assert @deploy_server.method_called?(:upload, :args => args)
+  end
+
+
+  def test_config_template_files
+    files = Dir["templates/rainbows/*"].select{|f| File.file?(f)}
+    assert_equal files, @rainbows.config_template_files
+  end
+
+
+  def test_remote_dirs
+    server = @rainbows
+
+    dirs = server.send :remote_dirs
+
+    assert_dir_in dirs, server.pid
+    assert_dir_in dirs, server.config_file_path
+    assert_dir_in dirs, server.log_file(:stderr)
+    assert_dir_in dirs, server.log_file(:stdout)
+  end
+
+
+  def test_register_after_user_script
+    server = @rainbows
+
+    assert @app.method_called?(:after_user_script)
+
+    @app.run_post_user_lambdas
+
+    assert @app.scripts[:start].include?(server.start_cmd)
+    assert @app.scripts[:stop].include?(server.stop_cmd)
+    assert @app.scripts[:status].include?("test -f #{server.pid}")
+    assert_equal server.port, @app.info[:ports][server.pid]
+  end
+
+  ##
+  # Helper methods
+
+  def assert_dir_in arr, file
+    assert arr.include?(File.dirname(file))
+  end
+
+
   def assert_server_init server=@server, user_config={}
     config = {
       :app => @app,
@@ -153,5 +238,7 @@ class TestServer < Test::Unit::TestCase
 
     assert_equal config[:deploy_servers], server.deploy_servers
 
+    config_file_path = "#{config[:config_path]}/#{config[:config_file]}"
+    assert_equal config_file_path, server.config_file_path
   end
 end
