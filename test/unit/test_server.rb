@@ -183,13 +183,15 @@ class TestServer < Test::Unit::TestCase
   def test_register_after_user_script
     server = @rainbows
 
-    assert @app.method_called?(:after_user_script)
+    assert @app.method_called?(:after_user_script) # called on Server#init
 
     @app.run_post_user_lambdas
 
     assert @app.scripts[:start].include?(server.start_cmd)
     assert @app.scripts[:stop].include?(server.stop_cmd)
     assert @app.scripts[:status].include?("test -f #{server.pid}")
+    assert @app.scripts[:restart].include?(server.start_cmd)
+    assert @app.scripts[:restart].include?(server.stop_cmd)
     assert_equal server.port, @app.info[:ports][server.pid]
   end
 
