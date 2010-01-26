@@ -12,7 +12,7 @@ module Sunshine
     ##
     # Creates a new repo subclass object
     def self.new_of_type(repo_type, url)
-      repo = "#{repo_type.capitalize}Repo"
+      repo = "#{repo_type.to_s.capitalize}Repo"
       Sunshine.const_get(repo).new(url)
     end
 
@@ -20,45 +20,40 @@ module Sunshine
 
     def initialize url
       @url = url
-      @revision = nil
-      @committer = nil
-      @branch = nil
-      @date = nil
-      @message = nil
     end
 
     ##
     # Get the revision
     def revision
-      update_repo_info unless @revision
+      update_repo_info unless defined?(@revision)
       @revision
     end
 
     ##
     # Get the last committer
     def committer
-      update_repo_info unless @committer
+      update_repo_info unless defined?(@committer)
       @committer
     end
 
     ##
     # Get the current branch
     def branch
-      update_repo_info unless @branch
+      update_repo_info unless defined?(@branch)
       @branch
     end
 
     ##
     # Get the current date
     def date
-      update_repo_info unless @date
+      update_repo_info unless defined?(@date)
       @date
     end
 
     ##
     # Get the current message
     def message
-      update_repo_info unless @message
+      update_repo_info unless defined?(@message)
       @message
     end
 
