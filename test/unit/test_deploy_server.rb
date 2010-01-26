@@ -9,10 +9,7 @@ class TestDeployServer < Test::Unit::TestCase
 
     @host = "jcastagna@jcast.np.wc1.yellowpages.com"
 
-    @deploy_server = Sunshine::DeployServer.new @host
-    @deploy_server.connect
-
-    use_deploy_server @deploy_server
+    @deploy_server = mock_deploy_server @host
   end
 
   def teardown

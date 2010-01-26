@@ -14,6 +14,8 @@ class TestApp < Test::Unit::TestCase
     @app = Sunshine::App.new @config
 
     @tmpdir = File.join Dir.tmpdir, "test_sunshine_#{$$}"
+
+    mock_svn_response @app.repo
   end
 
   def teardown

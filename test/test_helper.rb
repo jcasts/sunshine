@@ -8,12 +8,42 @@ end
 unless no_mocks
   require 'test/mocks/mock_object'
   require 'test/mocks/mock_open4'
-  require 'test/mocks/mock_repo'
   require 'test/mocks/mock_console'
 end
 
 unless defined? TEST_APP_CONFIG_FILE
   TEST_APP_CONFIG_FILE = "test/fixtures/app_configs/test_app.yml"
+end
+
+Sunshine.console.extend MockObject
+
+
+def mock_deploy_server host=nil
+    host ||= "jcastagna@jcast.np.wc1.yellowpages.com"
+    deploy_server = Sunshine::DeployServer.new host
+
+    use_deploy_server deploy_server
+
+    deploy_server.connect
+    deploy_server
+end
+
+
+def mock_svn_response repo
+  svn_response = <<-STR
+    <?xml version="1.0"?>
+    <log>
+    <logentry
+      revision="786">
+    <author>jcastagna</author>
+    <date>2010-01-26T01:49:17.372152Z</date>
+    <msg>finished testing server.rb</msg>
+    </logentry>
+    </log>
+  STR
+
+  Sunshine.console.mock :run, :args => "svn log #{repo.url} --limit 1 --xml",
+                              :return => svn_response
 end
 
 
