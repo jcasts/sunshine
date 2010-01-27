@@ -103,7 +103,7 @@ module Sunshine
           # Pass server_name to binding
           server_name = @server_name || deploy_server.host
 
-          deploy_server.run "mkdir -p #{remote_dirs.join(" ")}"
+          deploy_server.call "mkdir -p #{remote_dirs.join(" ")}"
 
           yield(deploy_server) if block_given?
 
@@ -125,7 +125,7 @@ module Sunshine
 
         @deploy_servers.each do |deploy_server|
           begin
-            deploy_server.run(start_cmd)
+            deploy_server.call(start_cmd)
             yield(deploy_server) if block_given?
           rescue => e
             raise FatalDeployError.new(e, "Could not start #{@name}")
@@ -143,7 +143,7 @@ module Sunshine
 
         @deploy_servers.each do |deploy_server|
           begin
-            deploy_server.run(stop_cmd)
+            deploy_server.call(stop_cmd)
             yield(deploy_server) if block_given?
           rescue => e
             raise FatalDeployError.new(e, "Could not stop #{@name}")
@@ -161,7 +161,7 @@ module Sunshine
       if restart_cmd
         self.setup
         begin
-          @deploy_servers.run(@restart_cmd)
+          @deploy_servers.call(@restart_cmd)
         rescue => e
           raise FatalDeployError.new(e, "Could not stop #{@name}")
         end

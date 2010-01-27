@@ -26,15 +26,15 @@ class TestDeployServer < Test::Unit::TestCase
     assert !@deploy_server.connected?
   end
 
-  def test_run
-    @deploy_server.run "echo 'line1'; echo 'line2'"
+  def test_call
+    @deploy_server.call "echo 'line1'; echo 'line2'"
     assert_ssh_call "echo 'line1'; echo 'line2'"
   end
 
-  def test_run_with_stderr
+  def test_call_with_stderr
     @deploy_server.set_mock_response 1, :err => 'this is an error'
     cmd = "echo 'this is an error'"
-    @deploy_server.run cmd
+    @deploy_server.call cmd
     raise "Didn't raise CmdError on stderr"
   rescue Sunshine::CmdError => e
     ssh_cmd = @deploy_server.send(:ssh_cmd, cmd).join(" ")

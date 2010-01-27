@@ -46,10 +46,10 @@ module Sunshine
     # Write the crontab on the given deploy_server
 
     def write! deploy_server
-      crontab = deploy_server.run("crontab -l") rescue ""
+      crontab = deploy_server.call("crontab -l") rescue ""
       crontab = build crontab.strip!
 
-      deploy_server.run("echo '#{crontab.gsub(/'/){|s| "'\\''"}}' | crontab")
+      deploy_server.call("echo '#{crontab.gsub(/'/){|s| "'\\''"}}' | crontab")
 
       crontab
     end

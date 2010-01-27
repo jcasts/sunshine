@@ -6,7 +6,7 @@ module Sunshine
   class SvnRepo < Repo
 
     def update_repo_info
-      response   = Sunshine.console.run("svn log #{@url} --limit 1 --xml")
+      response   = Sunshine.console.call("svn log #{@url} --limit 1 --xml")
       @revision  = response.match(/revision="(.*)">/)[1]
       @committer = response.match(/<author>(.*)<\/author>/)[1]
       @date      = Time.parse response.match(/<date>(.*)<\/date>/)[1]
@@ -24,8 +24,8 @@ module Sunshine
 
         Sunshine::Dependencies.install 'subversion', :call => deploy_server
 
-        deploy_server.run "test -d #{path} && rm -rf #{path} || echo false"
-        deploy_server.run \
+        deploy_server.call "test -d #{path} && rm -rf #{path} || echo false"
+        deploy_server.call \
           "mkdir -p #{path} && svn checkout -r #{revision} #{url} #{path}"
       end
     end

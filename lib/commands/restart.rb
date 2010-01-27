@@ -30,7 +30,7 @@ module Sunshine
       ListCommand.each_server_list(config['servers']) do |apps, server|
         app_names.each do |name|
           app_path = apps[name]
-          server.run File.join(app_path, "restart")
+          server.call File.join(app_path, "restart")
         end
       end
 

@@ -23,7 +23,7 @@ module Sunshine
     def disable
       Sunshine.logger.info :healthcheck, "Disabling healthcheck" do
         @deploy_servers.each do |deploy_server|
-          deploy_server.run "touch #{@hc_disabled_file} && rm -f #{@hc_file}"
+          deploy_server.call "touch #{@hc_disabled_file} && rm -f #{@hc_file}"
         end
       end
     end
@@ -35,7 +35,7 @@ module Sunshine
     def enable
       Sunshine.logger.info :healthcheck, "Enabling healthcheck" do
         @deploy_servers.each do |deploy_server|
-          deploy_server.run "rm -f #{@hc_disabled_file} && touch #{@hc_file}"
+          deploy_server.call "rm -f #{@hc_disabled_file} && touch #{@hc_file}"
         end
       end
     end
@@ -47,7 +47,7 @@ module Sunshine
     def remove
       Sunshine.logger.info :healthcheck, "Removing healthcheck" do
         @deploy_servers.each do |deploy_server|
-          deploy_server.run "rm -f #{@hc_disabled_file} #{@hc_file}"
+          deploy_server.call "rm -f #{@hc_disabled_file} #{@hc_file}"
         end
       end
     end
@@ -65,9 +65,9 @@ module Sunshine
       stat = {}
       @deploy_servers.each do |ds|
         stat[ds.host] = {}
-        if ( ds.run "test -f #{@hc_disabled_file}" rescue false )
+        if ( ds.call "test -f #{@hc_disabled_file}" rescue false )
           stat[ds.host] = :disabled
-        elsif ( ds.run "test -f #{@hc_file}" rescue false )
+        elsif ( ds.call "test -f #{@hc_file}" rescue false )
           stat[ds.host] = :ok
         else
           stat[ds.host] = :down

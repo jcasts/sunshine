@@ -37,7 +37,7 @@ module Sunshine
           app_name, path = path.split(":") if path.include?(":")
           app_name ||= File.basename path
 
-          unless (server.run "test -d #{path}" rescue false)
+          unless (server.call "test -d #{path}" rescue false)
             puts "  #{path} is not a valid directory"
             errors = true
             next

@@ -36,14 +36,14 @@ module Sunshine
             next
           end
 
-          running = server.run File.join(app_path, "status") rescue false
+          running = server.call File.join(app_path, "status") rescue false
 
           if running && config['force']
-            server.run File.join(app_path, "stop")
+            server.call File.join(app_path, "stop")
             running = false
           end
 
-          server.run File.join(app_path, "start") unless running
+          server.call File.join(app_path, "start") unless running
         end
       end
 

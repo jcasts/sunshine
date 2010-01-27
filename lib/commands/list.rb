@@ -57,7 +57,7 @@ module Sunshine
           out << case config['return']
 
           when :details
-            server.run("cat #{app_path}/info")
+            server.call("cat #{app_path}/info")
 
           when :health
             health = Healthcheck.new "#{app_path}/shared", [server]
@@ -67,7 +67,7 @@ module Sunshine
             h
 
           when :status
-            s = server.run("#{app_path}/status") && "running" rescue "stopped"
+            s = server.call("#{app_path}/status") && "running" rescue "stopped"
             return !errors, false if s == "stopped" && boolean_output
             s
           end.to_s
@@ -87,7 +87,7 @@ module Sunshine
     # Load the app list yaml file from the server.
 
     def self.load_list server
-      list = YAML.load(server.run(Sunshine::READ_LIST_CMD))
+      list = YAML.load(server.call(Sunshine::READ_LIST_CMD))
       list = {} unless Hash === list
       list
     end
@@ -97,7 +97,7 @@ module Sunshine
     # Write the app list hash to the remote server.
 
     def self.save_list list, server
-      server.run "echo '#{list.to_yaml}' > #{Sunshine::APP_LIST_PATH}"
+      server.call "echo '#{list.to_yaml}' > #{Sunshine::APP_LIST_PATH}"
     end
 
 

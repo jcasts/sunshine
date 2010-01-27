@@ -51,11 +51,9 @@ module Sunshine
     ##
     # Execute a command on the local system and return the output.
 
-    def run cmd, &block
+    def call cmd, &block
       execute cmd, &block
     end
-
-    alias call run
 
 
     ##

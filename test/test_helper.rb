@@ -41,6 +41,8 @@ def mock_svn_response repo
 
   Sunshine.console.mock :run, :args => "svn log #{repo.url} --limit 1 --xml",
                               :return => svn_response
+  Sunshine.console.mock :call, :args => "svn log #{repo.url} --limit 1 --xml",
+                               :return => svn_response
 end
 
 

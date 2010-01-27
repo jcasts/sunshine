@@ -159,10 +159,10 @@ module Sunshine
     def revert!
       Sunshine.logger.info :app, "Reverting to previous deploy..." do
         deploy_servers.each do |deploy_server|
-          deploy_server.run "rm -rf #{self.checkout_path}"
+          deploy_server.call "rm -rf #{self.checkout_path}"
 
           last_deploy =
-            deploy_server.run("ls -1 #{@deploys_dir}").split("\n").last
+            deploy_server.call("ls -1 #{@deploys_dir}").split("\n").last
 
           if last_deploy && !last_deploy.empty?
             deploy_server.symlink \
@@ -218,7 +218,7 @@ module Sunshine
 
           d_servers.each do |deploy_server|
             deploy_server.make_file "#{@deploy_path}/#{name}", bash
-            deploy_server.run "chmod 0755 #{@deploy_path}/#{name}"
+            deploy_server.call "chmod 0755 #{@deploy_path}/#{name}"
           end
         end
       end
@@ -309,7 +309,7 @@ module Sunshine
 
     def make_app_directory(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Creating #{@name} base directory" do
-        d_servers.run "mkdir -p #{@deploy_path}"
+        d_servers.call "mkdir -p #{@deploy_path}"
       end
 
     rescue => e
@@ -344,7 +344,7 @@ module Sunshine
       Sunshine.logger.info :app, "Running Rake task '#{command}'" do
         d_servers.each do |deploy_server|
           self.install_deps 'rake', :servers => deploy_server
-          deploy_server.run "cd #{self.checkout_path} && rake #{command}"
+          deploy_server.call "cd #{self.checkout_path} && rake #{command}"
         end
       end
     end
@@ -369,14 +369,14 @@ module Sunshine
         "Removing old deploys (max = #{Sunshine.max_deploy_versions})" do
 
         d_servers.each do |deploy_server|
-          deploys = deploy_server.run("ls -1 #{@deploys_dir}").split("\n")
+          deploys = deploy_server.call("ls -1 #{@deploys_dir}").split("\n")
 
           if deploys.length > Sunshine.max_deploy_versions
             lim = Sunshine.max_deploy_versions + 1
             rm_deploys = deploys[0..-lim]
             rm_deploys.map!{|d| "#{@deploys_dir}/#{d}"}
 
-            deploy_server.run("rm -rf #{rm_deploys.join(" ")}")
+            deploy_server.call("rm -rf #{rm_deploys.join(" ")}")
           end
         end
       end
@@ -413,7 +413,7 @@ module Sunshine
           config_path    = "#{self.checkout_path}/config"
           logrotate_path = "#{config_path}/logrotate.conf"
 
-          deploy_server.run "mkdir -p #{config_path} #{@log_path}/rotate"
+          deploy_server.call "mkdir -p #{config_path} #{@log_path}/rotate"
           deploy_server.make_file logrotate_path, logrotate_conf
 
           @crontab.write! deploy_server
@@ -482,7 +482,7 @@ module Sunshine
         files.each do |f|
           remote = File.join(path, File.basename(f))
           d_servers.each do |deploy_server|
-            deploy_server.run "mkdir -p #{path}"
+            deploy_server.call "mkdir -p #{path}"
             deploy_server.upload f, remote
           end
         end
@@ -509,13 +509,13 @@ module Sunshine
 
     def run_geminstaller(deploy_server)
       self.install_deps 'geminstaller', :servers => deploy_server
-      deploy_server.run "cd #{self.checkout_path} && geminstaller -e"
+      deploy_server.call "cd #{self.checkout_path} && geminstaller -e"
     end
 
 
     def run_bundler(deploy_server)
        self.install_deps 'bundler', :servers => deploy_server
-      deploy_server.run "cd #{self.checkout_path} && gem bundle"
+      deploy_server.call "cd #{self.checkout_path} && gem bundle"
     end
   end
 end

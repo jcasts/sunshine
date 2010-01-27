@@ -118,11 +118,9 @@ module Sunshine
     ##
     # Run a command on all deploy servers
 
-    def run(*args, &block)
+    def call(*args, &block)
       call_each_method :call, *args, &block
     end
-
-    alias call run
 
 
     private

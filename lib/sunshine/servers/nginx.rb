@@ -40,7 +40,7 @@ module Sunshine
 
     def setup_passenger(deploy_server)
       Dependencies.install 'passenger', :call => deploy_server
-      str = deploy_server.run "gem list passenger -d"
+      str = deploy_server.call "gem list passenger -d"
       version = str.match(/passenger\s\((.*)\)$/)[1]
       gempath = str.match(/Installed\sat:\s(.*)$/)[1]
       File.join(gempath, "gems/passenger-#{version}")

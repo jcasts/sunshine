@@ -130,7 +130,7 @@ module Sunshine
     # Checks if the given file exists
 
     def file? filepath
-      run("test -f #{filepath}") && true rescue false
+      call("test -f #{filepath}") && true rescue false
     end
 
 
@@ -156,7 +156,7 @@ module Sunshine
     # Get the name of the OS
 
     def os_name
-      @os_name ||= run("uname -s").strip.downcase
+      @os_name ||= call("uname -s").strip.downcase
     end
 
 
@@ -164,20 +164,18 @@ module Sunshine
     # Runs a command via SSH. Optional block is passed the
     # stream(stderr, stdout) and string data
 
-    def run command_str, sudo=false, &block
+    def call command_str, sudo=false, &block
       Sunshine.logger.info @host, "Running: #{command_str}" do
         execute ssh_cmd(command_str, sudo), &block
       end
     end
-
-    alias call run
 
 
     ##
     # Force symlinking a remote directory
 
     def symlink target, symlink_name
-      run "ln -sfT #{target} #{symlink_name}" rescue false
+      call "ln -sfT #{target} #{symlink_name}" rescue false
     end
 
 

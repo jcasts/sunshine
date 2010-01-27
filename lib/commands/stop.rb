@@ -29,7 +29,7 @@ module Sunshine
       ListCommand.each_server_list(config['servers']) do |apps, server|
         app_names.each do |name|
           app_path = apps[name]
-          server.run File.join(app_path, "stop")
+          server.call File.join(app_path, "stop")
         end
       end
 
