@@ -7,13 +7,12 @@ module Sunshine
 
   class Healthcheck
 
-    attr_accessor :path, :deploy_servers
+    attr_reader :deploy_servers, :enabled_file, :disabled_file
 
-    def initialize(path, deploy_servers)
-      @path = path
-      @deploy_servers = deploy_servers
-      @hc_file = "#{@path}/health.txt"
-      @hc_disabled_file = "#{@path}/health.disabled"
+    def initialize path, deploy_servers
+      @deploy_servers = [*deploy_servers]
+      @enabled_file = "#{path}/health.txt"
+      @disabled_file = "#{path}/health.disabled"
     end
 
 
@@ -23,7 +22,7 @@ module Sunshine
     def disable
       Sunshine.logger.info :healthcheck, "Disabling healthcheck" do
         @deploy_servers.each do |deploy_server|
-          deploy_server.call "touch #{@hc_disabled_file} && rm -f #{@hc_file}"
+          deploy_server.call "touch #{@disabled_file} && rm -f #{@enabled_file}"
         end
       end
     end
@@ -35,7 +34,7 @@ module Sunshine
     def enable
       Sunshine.logger.info :healthcheck, "Enabling healthcheck" do
         @deploy_servers.each do |deploy_server|
-          deploy_server.call "rm -f #{@hc_disabled_file} && touch #{@hc_file}"
+          deploy_server.call "rm -f #{@disabled_file} && touch #{@enabled_file}"
         end
       end
     end
@@ -47,7 +46,7 @@ module Sunshine
     def remove
       Sunshine.logger.info :healthcheck, "Removing healthcheck" do
         @deploy_servers.each do |deploy_server|
-          deploy_server.call "rm -f #{@hc_disabled_file} #{@hc_file}"
+          deploy_server.call "rm -f #{@disabled_file} #{@enabled_file}"
         end
       end
     end
@@ -61,13 +60,13 @@ module Sunshine
     #   :disabled:  healthcheck was explicitely turned off
     #   :down:      um, something may be wrong
 
-    def status
+    def status d_servers=@deploy_servers
       stat = {}
-      @deploy_servers.each do |ds|
+      [*d_servers].each do |ds|
         stat[ds.host] = {}
-        if ( ds.call "test -f #{@hc_disabled_file}" rescue false )
+        if ( ds.call "test -f #{@disabled_file}" rescue false )
           stat[ds.host] = :disabled
-        elsif ( ds.call "test -f #{@hc_file}" rescue false )
+        elsif ( ds.call "test -f #{@enabled_file}" rescue false )
           stat[ds.host] = :ok
         else
           stat[ds.host] = :down
