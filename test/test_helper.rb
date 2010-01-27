@@ -19,6 +19,8 @@ def mock_deploy_server host=nil
     host ||= "jcastagna@jcast.np.wc1.yellowpages.com"
     deploy_server = Sunshine::DeployServer.new host
 
+    deploy_server.extend MockOpen4
+
     use_deploy_server deploy_server
 
     deploy_server.connect

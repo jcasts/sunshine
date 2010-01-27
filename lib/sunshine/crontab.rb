@@ -6,11 +6,11 @@ module Sunshine
 
   class Crontab
 
-    attr_reader :cron_jobs
+    attr_reader :jobs
 
     def initialize name
       @name = name
-      @cron_jobs = Hash.new{|hash, key| hash[key] = []}
+      @jobs = Hash.new{|hash, key| hash[key] = []}
     end
 
 
@@ -19,7 +19,7 @@ module Sunshine
     #   crontab.add "logrotote", "00 * * * * /usr/sbin/logrotate"
 
     def add namespace, cron_cmd
-      @cron_jobs[namespace] << cron_cmd unless @cron_jobs.include?(cron_cmd)
+      @jobs[namespace] << cron_cmd unless @jobs[namespace].include?(cron_cmd)
     end
 
 
@@ -27,7 +27,9 @@ module Sunshine
     # Build the crontab by replacing preexisting cron jobs and adding new ones.
 
     def build crontab=""
-      @cron_jobs.each do |namespace, cron_arr|
+      crontab.strip!
+
+      @jobs.each do |namespace, cron_arr|
         start_id = "# sunshine #{@name}:#{namespace}:begin"
         end_id = "# sunshine #{@name}:#{namespace}:end"
 
@@ -47,7 +49,8 @@ module Sunshine
 
     def write! deploy_server
       crontab = deploy_server.call("crontab -l") rescue ""
-      crontab = build crontab.strip!
+
+      crontab = build crontab
 
       deploy_server.call("echo '#{crontab.gsub(/'/){|s| "'\\''"}}' | crontab")
 

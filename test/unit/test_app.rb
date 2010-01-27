@@ -306,7 +306,7 @@ class TestApp < Test::Unit::TestCase
 
     new_crontab = @app.crontab.build
 
-    assert_equal [cronjob], @app.crontab.cron_jobs["logrotate"]
+    assert_equal [cronjob], @app.crontab.jobs["logrotate"]
 
     each_deploy_server do |ds|
       assert_ssh_call "echo '#{new_crontab}' | crontab"

@@ -21,6 +21,7 @@ module MockOpen4
 
     ios = {:inn => inn_w, :out => out_w, :err => err_w}
     stream, string = output_for cmd
+
     ios[stream].write string
     out_w.write nil
     err_w.write nil
