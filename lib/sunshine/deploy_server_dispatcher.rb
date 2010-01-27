@@ -36,11 +36,9 @@ module Sunshine
     ##
     # Iterate over all deploy servers
 
-    alias old_each each
-
     def each(&block)
       warn_if_empty
-      self.old_each(&block)
+      super(&block)
     end
 
 
@@ -121,7 +119,7 @@ module Sunshine
     # Run a command on all deploy servers
 
     def run(*args, &block)
-      call_each_method :run, *args, &block
+      call_each_method :call, *args, &block
     end
 
     alias call run
