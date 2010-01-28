@@ -15,9 +15,9 @@ module Sunshine
     # :connections:: int - the number of worker connections to use.
     # :timeout:: int - the keepalive timeout. zero disables keepalives.
 
-    def use_concurrency(options={})
+    def use_concurrency options=nil
       @concurrency ||= {:model => :ThreadSpawn}
-      @concurrency.merge!(options)
+      @concurrency.merge! options
     end
 
 
