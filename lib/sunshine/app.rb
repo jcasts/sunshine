@@ -55,53 +55,37 @@ module Sunshine
 
     def initialize(*args)
       config_file    = args.shift if String === args.first
-      deploy_options = args.empty? ? {} : args.first
-      @deploy_env    = deploy_options[:deploy_env] || Sunshine.deploy_env
+      deploy_options = args.empty? ? {} : args.first.dup
+      deploy_options[:deploy_env] ||= Sunshine.deploy_env
 
-      deploy_options.merge!(load_config(config_file)) if config_file
-
-
-      @name = deploy_options[:name]
-
-      repo_url  = deploy_options[:repo][:url]
-      repo_type = deploy_options[:repo][:type]
-      @repo     = Sunshine::Repo.new_of_type repo_type, repo_url
-
-      @deploy_path   = deploy_options[:deploy_path]
-      @current_path  = "#{@deploy_path}/current"
-      @deploys_dir  = "#{@deploy_path}/deploys"
-      @shared_path   = "#{@deploy_path}/shared"
-      @log_path      = "#{@shared_path}/log"
-      @checkout_path = "#{@deploys_dir}/#{Time.now.to_i}_#{@repo.revision}"
-
-      @post_user_lambdas = []
-
-
-      @crontab  = Crontab.new self.name
-
-
-      server_list = [*deploy_options[:deploy_servers]]
-      server_list = server_list.map do |server_def|
-        if Hash === server_def
-          host = server_def.keys.first
-          server_def = [host, {:roles => server_def[host].split(" ")}]
-        end
-        DeployServer.new(*server_def)
+      if config_file
+        env = deploy_options[:deploy_env]
+        config_file_options = load_config_for env, config_file
+        deploy_options = config_file_options.merge deploy_options
       end
 
-      @deploy_servers = DeployServerDispatcher.new(*server_list)
 
+      set_deploy_paths deploy_options[:deploy_path]
+
+      @name       = deploy_options[:name]
+      @crontab    = Crontab.new @name
+      @deploy_env = deploy_options[:deploy_env]
+
+      set_repo deploy_options[:repo]
+
+      set_deploy_servers deploy_options[:deploy_servers]
 
       @health = Healthcheck.new @shared_path, @deploy_servers
 
-      @shell_env = {
+      deploy_options[:shell_env] ||= {
         "RACK_ENV"  => @deploy_env.to_s,
         "RAILS_ENV" => @deploy_env.to_s
       }
-      self.shell_env deploy_options[:shell_env]
-
+      shell_env deploy_options[:shell_env]
 
       @scripts = Hash.new{|h, k| h[k] = []}
+
+      @post_user_lambdas = []
 
       @info = {
         :deployed_at => Time.now,
@@ -431,8 +415,9 @@ module Sunshine
     # Set and return the remote shell env variables.
     # Also assigns shell environment to the app's deploy servers.
 
-    def shell_env(env_hash=nil)
+    def shell_env env_hash=nil
       env_hash ||= {}
+      @shell_env ||= {}
 
       @shell_env.merge!(env_hash)
 
@@ -492,13 +477,70 @@ module Sunshine
 
     private
 
-    def load_config(config_file)
-      config_hash = YAML.load_file(config_file)
+    ##
+    # Set all the app paths based on the root deploy path.
+
+    def set_deploy_paths path
+      @deploy_path   = path
+      @current_path  = "#{@deploy_path}/current"
+      @deploys_dir   = "#{@deploy_path}/deploys"
+      @shared_path   = "#{@deploy_path}/shared"
+      @log_path      = "#{@shared_path}/log"
+      @checkout_path = "#{@deploys_dir}/#{Time.now.to_i}"
+      #@checkout_path = "#{@deploys_dir}/#{Time.now.to_i}_#{@repo.revision}"
+    end
+
+
+    ##
+    # Set the app's deploy servers:
+    #   set_deploy_servers DeployServerDispatcher.new("svr1", "svr2", "svr3")
+    #
+    #   d_servers = [{"svr1" => "web db app"}, "svr2", "svr3"]
+    #   set_deploy_servers d_servers
+
+    def set_deploy_servers d_servers
+      server_list = [*d_servers]
+      server_list = server_list.map do |server_def|
+        if Hash === server_def
+          host = server_def.keys.first
+          server_def = [host, {:roles => server_def[host].split(" ")}]
+        end
+        DeployServer.new(*server_def)
+      end
+
+      @deploy_servers = DeployServerDispatcher.new(*server_list)
+    end
+
+
+    ##
+    # Set the app's repo:
+    #   set_repo SvnRepo.new("myurl")
+    #   set_repo :type => :svn, :url => "myurl"
+
+    def set_repo repo_def
+      @repo = if Sunshine::Repo === repo_def
+        repo_def
+      else
+        Sunshine::Repo.new_of_type repo_def[:type], repo_def[:url]
+      end
+    end
+
+
+    ##
+    # Loads an app yml config file, gets the default config
+    # and the current deploy env and returns a merged config hash.
+
+    def load_config_for deploy_env, config_file
+      config_hash = YAML.load_file config_file
       default_config = config_hash[:defaults] || {}
-      current_config = config_hash[@deploy_env] || {}
+      current_config = config_hash[deploy_env] || {}
       default_config.merge(current_config)
     end
 
+
+    ##
+    # Makes an array of bash commands into a script that
+    # echoes 'true' on success
 
     def make_bash_script cmds
       cmds = cmds.map{|cmd| "(#{cmd})" }
@@ -507,13 +549,19 @@ module Sunshine
     end
 
 
-    def run_geminstaller(deploy_server)
+    ##
+    # Run geminstaller on a given deploy server.
+
+    def run_geminstaller deploy_server
       self.install_deps 'geminstaller', :servers => deploy_server
       deploy_server.call "cd #{self.checkout_path} && geminstaller -e"
     end
 
 
-    def run_bundler(deploy_server)
+    ##
+    # Run bundler on a given deploy server.
+
+    def run_bundler deploy_server
        self.install_deps 'bundler', :servers => deploy_server
       deploy_server.call "cd #{self.checkout_path} && gem bundle"
     end
