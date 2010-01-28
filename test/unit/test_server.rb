@@ -54,7 +54,7 @@ class TestServer < Test::Unit::TestCase
   def test_setup
     server = @rainbows
 
-    server.setup do |ds|
+    server.setup do |ds, binder|
       assert_equal @deploy_server, ds
     end
 
