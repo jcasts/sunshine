@@ -111,7 +111,8 @@ module Sunshine
           # Pass server_name to binding
           binder = Binder.new self
           binder.forward(*BINDER_METHODS)
-          binder.set :server_name, (@server_name || deploy_server.host)
+          binder.set :deploy_server, deploy_server
+          binder.set :server_name,   (@server_name || deploy_server.host)
 
           deploy_server.call "mkdir -p #{remote_dirs.join(" ")}"
 

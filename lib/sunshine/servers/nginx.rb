@@ -40,6 +40,13 @@ module Sunshine
     end
 
 
+    ##
+    # Check if Nginx should run with sudo.
+
+    def run_sudo?
+      @port < 1024
+    end
+
     private
 
     def setup_passenger deploy_server
@@ -48,10 +55,6 @@ module Sunshine
       version = str.match(/passenger\s\((.*)\)$/)[1]
       gempath = str.match(/Installed\sat:\s(.*)$/)[1]
       File.join(gempath, "gems/passenger-#{version}")
-    end
-
-    def run_sudo?
-      @port < 1024
     end
   end
 end
