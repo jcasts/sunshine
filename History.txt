@@ -1,3 +1,14 @@
+=== 0.0.3 / 2010-01-29
+
+* Many small bugfixes
+
+* Tests, tests, and more tests
+
+* Changed DeployServer api
+
+  * DeployServer#run is not longer supported, use DeployServer#call
+
+
 === 0.0.2 / 2010-01-15
 
 * Added Control Commands
