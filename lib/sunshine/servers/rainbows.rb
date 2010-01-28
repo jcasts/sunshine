@@ -11,9 +11,9 @@ module Sunshine
     # Assign and/or use a concurrency model. Supports all Rainbows concurrency
     # models; defaults to :ThreadSpawn
     # Allows options:
-    # :model:: :ConcurrModel - the concurrency model rainbows should use.
+    # :model:: :ConcurrModel - concurrency model. Defaults to ThreadSpawn
     # :connections:: int - the number of worker connections to use.
-    # :timeout:: int - the keepalive timeout. zero disables keepalives.
+    # :timeout:: seconds - the keepalive timeout. zero disables keepalives.
 
     def use_concurrency options=nil
       @concurrency ||= {:model => :ThreadSpawn}
