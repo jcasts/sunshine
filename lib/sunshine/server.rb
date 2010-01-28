@@ -11,6 +11,11 @@ module Sunshine
 
   class Server
 
+    BINDER_METHODS = [
+      :app, :name, :target, :bin, :pid, :server_name, :port,
+      :processes, :config_path, :log_file
+    ]
+
     attr_reader :app, :name, :target
 
     attr_accessor :bin, :pid, :server_name, :port, :processes, :deploy_servers
@@ -87,6 +92,9 @@ module Sunshine
     # Setup the server app, parse and upload config templates.
     # If a dependency with the server name exists in Sunshine::Dependencies,
     # setup will attempt to install the dependency before uploading configs.
+    # If a block is given it will be passed each deploy_server and binder object
+    # which will be used for the building erb config templates.
+    # See the ConfigBinding class for more information.
 
     def setup
       Sunshine.logger.info @name, "Setting up #{@name} server" do
@@ -101,13 +109,15 @@ module Sunshine
           end if Sunshine::Dependencies.exist?(@name)
 
           # Pass server_name to binding
-          server_name = @server_name || deploy_server.host
+          binder = Binder.new self
+          binder.forward(*BINDER_METHODS)
+          binder.set :server_name, (@server_name || deploy_server.host)
 
           deploy_server.call "mkdir -p #{remote_dirs.join(" ")}"
 
-          yield(deploy_server) if block_given?
+          yield(deploy_server, binder) if block_given?
 
-          self.upload_config_files(deploy_server, binding)
+          self.upload_config_files(deploy_server, binder.get_binding)
         end
       end
 

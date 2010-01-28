@@ -18,6 +18,7 @@ lib/settler/gem.rb
 lib/settler/yum.rb
 lib/sunshine.rb
 lib/sunshine/app.rb
+lib/sunshine/binder.rb
 lib/sunshine/console.rb
 lib/sunshine/crontab.rb
 lib/sunshine/dependencies.rb
@@ -49,8 +50,11 @@ test/mocks/mock_open4.rb
 test/test_helper.rb
 test/unit/test_app.rb
 test/unit/test_console.rb
+test/unit/test_crontab.rb
 test/unit/test_deploy_server.rb
 test/unit/test_deploy_server_dispatcher.rb
+test/unit/test_healthcheck.rb
+test/unit/test_nginx.rb
 test/unit/test_repo.rb
 test/unit/test_server.rb
 test/unit/test_sunshine.rb

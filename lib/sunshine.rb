@@ -79,6 +79,8 @@ module Sunshine
   require 'sunshine/console'
   require 'sunshine/output'
 
+  require 'sunshine/binder'
+
   require 'sunshine/dependencies'
 
   require 'sunshine/repo'

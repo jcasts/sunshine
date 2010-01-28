@@ -19,5 +19,17 @@ module Sunshine
       @concurrency ||= {:model => :ThreadSpawn}
       @concurrency.merge!(options)
     end
+
+
+    ##
+    # Setup Rainbows specific bindings before building its config.
+
+    def setup
+      super do |deploy_server, binder|
+        binder.forward :concurrency
+
+        yield(deploy_server, binder) if block_given?
+      end
+    end
   end
 end
