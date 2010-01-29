@@ -36,6 +36,13 @@ class TestDeployServerDispatcher < Test::Unit::TestCase
   end
 
 
+  def test_add_nil
+    assert_equal 2, @dsd.length
+    @dsd.add nil, nil
+    assert_equal 2, @dsd.length
+  end
+
+
   def test_each
     servers = %w{svr1.com svr2.com}
     @dsd.each do |ds|

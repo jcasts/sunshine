@@ -27,7 +27,7 @@ module Sunshine
     # and DeployServer objects
 
     def add(*arr)
-      arr.each do |ds|
+      arr.compact.each do |ds|
         self << ds
       end
     end
