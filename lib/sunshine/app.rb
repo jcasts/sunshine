@@ -527,7 +527,7 @@ module Sunshine
 
     def load_config_for deploy_env, config_file
       config_hash = YAML.load_file config_file
-      default_config = config_hash[:defaults] || {}
+      default_config = config_hash[:default] || {}
       current_config = config_hash[deploy_env] || {}
       default_config.merge(current_config)
     end

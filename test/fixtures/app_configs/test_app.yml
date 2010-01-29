@@ -1,4 +1,4 @@
-:defaults:
+:default:
   :name: envoy
   :repo:
     :type: svn

@@ -25,9 +25,15 @@ Writing a Sunshine config script is easy:
   options = {
     :name => 'myapp',
     :repo => {:type => :svn, :url => 'svn://blah...'},
-    :deploy_path => '/usr/local/myapp',
-    :deploy_servers => ['user@someserver.com']
+    :deploy_path => '/usr/local/myapp'
   }
+
+  options[:deploy_servers] = case Sunshine.deploy_env
+  when 'qa'
+    ['qa1.svr.com', 'qa2.svr.com']
+  else
+    'localhost'
+  end
 
   Sunshine::App.deploy(options) do |app|
 
@@ -44,6 +50,29 @@ a path to a yaml file:
 
   app = Sunshine::App.new("path/to/config.yml")
   app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
+
+
+Yaml files are read on a deploy-environment basis so its format reflects this:
+
+  ---
+  # Default is applied to all environments
+  :default:
+    :name: app_name
+    :repo:
+      :type: svn
+      :url:  svn://subversion/app_name/tags/release_0001
+
+    :deploy_path: /usr/local/app_name
+
+    :deploy_servers:
+      - - localhost
+        - :roles: web db app
+
+  # Setup for qa environment
+  :qa:
+    :deploy_servers:
+      - qa1.servers.com
+      - qa2.servers.com
 
 
 == Deployed Application Control
