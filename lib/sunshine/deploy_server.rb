@@ -53,7 +53,7 @@ module Sunshine
         "-o ControlPath=~/.ssh/sunshine-%r@%h:%p"
       ]
       @ssh_flags.concat ["-l", @user] if @user
-      @ssh_flags.concat options[:ssh_flags].to_a
+      @ssh_flags.concat [*options[:ssh_flags]]
 
       @pid, @inn, @out, @err = nil
     end

@@ -8,6 +8,19 @@
 
   * DeployServer#run is not longer supported, use DeployServer#call
 
+  * Constructor supports a spaced delimited list for roles:
+      DeployServer.new "myhost.com", :roles => "web db other"
+
+  * Changed how deploy server yaml is parsed. Should parse to be valid on:
+      DeployServer.new *parsed_yaml
+    Example Given:
+      :deploy_servers:
+        - server1.com
+        - - server2.com
+        - - server3.com
+          - :roles: web
+            :ssh_clags: '-o ControlMaster=auto'
+
 
 === 0.0.2 / 2010-01-15
 
