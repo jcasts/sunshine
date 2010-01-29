@@ -495,20 +495,15 @@ module Sunshine
     # Set the app's deploy servers:
     #   set_deploy_servers DeployServerDispatcher.new("svr1", "svr2", "svr3")
     #
-    #   d_servers = [{"svr1" => "web db app"}, "svr2", "svr3"]
+    #   d_servers = [["svr1", {:roles => "web db app"}], "svr2", "svr3"]
     #   set_deploy_servers d_servers
 
     def set_deploy_servers d_servers
-      server_list = [*d_servers]
-      server_list = server_list.map do |server_def|
-        if Hash === server_def
-          host = server_def.keys.first
-          server_def = [host, {:roles => server_def[host].split(" ")}]
-        end
-        DeployServer.new(*server_def)
+      @deploy_servers = if DeployServerDispatcher === d_servers
+        d_servers
+      else
+        DeployServerDispatcher.new(*d_servers)
       end
-
-      @deploy_servers = DeployServerDispatcher.new(*server_list)
     end
 
 

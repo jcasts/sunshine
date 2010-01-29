@@ -7,4 +7,5 @@
   :deploy_path: /usr/local/nextgen/envoy
 
   :deploy_servers:
-    - "jcastagna@jcast.np.wc1.yellowpages.com": web db app
+    - - "jcastagna@jcast.np.wc1.yellowpages.com"
+      - :roles: web db app

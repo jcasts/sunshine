@@ -15,7 +15,7 @@ module Sunshine
     # Append a deploy server
 
     def <<(deploy_server)
-      deploy_server = DeployServer.new(deploy_server) unless
+      deploy_server = DeployServer.new(*deploy_server) unless
         DeployServer === deploy_server
       self.push(deploy_server) unless self.exist?(deploy_server)
       self

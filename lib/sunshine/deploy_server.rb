@@ -41,9 +41,12 @@ module Sunshine
       @host, @user = host.split("@").reverse
 
       @user     ||= options[:user]
-      @roles    = [*options[:roles]].compact.map{|r| r.to_sym }
       @env      = options[:env] || {}
       @password = options[:password]
+
+      @roles = options[:roles] || []
+      @roles = @roles.split(" ") if String === @roles
+      @roles = [*@roles].compact.map{|r| r.to_sym }
 
       @ssh_flags = [
         "-o ControlMaster=auto",

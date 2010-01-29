@@ -392,7 +392,7 @@ class TestApp < Test::Unit::TestCase
     assert_equal attr_hash[:deploy_path], app.deploy_path
 
     attr_hash[:deploy_servers].each_with_index do |server_def, i|
-      server_def = server_def.keys.first if Hash === server_def
+      server_def = server_def.first if Array === server_def
       user, host = server_def.split("@")
       assert_equal host, app.deploy_servers[i].host
       assert_equal user, app.deploy_servers[i].user
