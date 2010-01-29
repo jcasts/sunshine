@@ -19,6 +19,7 @@ module Sunshine
     attr_reader :url
 
     def initialize url
+      @name = self.class.name.split("::").last.sub('Repo', '').downcase
       @url = url
       @revision = nil
       @committer = nil
@@ -70,10 +71,25 @@ module Sunshine
     end
 
     ##
-    # Checkout code to a deploy_server - Implemented by subclass
-    def checkout_to server, path
+    # Checkout code to a deploy_server
+    def checkout_to deploy_server, path
+      Sunshine.logger.info @name,
+        "Checking out to #{deploy_server.host} #{path}" do
+
+        dependency = Sunshine::Dependencies[@name]
+        dependency.install! :call => deploy_server if dependency
+
+        deploy_server.call "test -d #{path} && rm -rf #{path} || echo false"
+        deploy_server.call "mkdir -p #{path} && #{checkout_cmd(path)}"
+      end
+    end
+
+
+    ##
+    # Command to run to checkout the repo - implemented by subclass
+    def checkout_cmd path
       raise RepoError,
-        "The 'checkout_to' method must be implemented by child classes"
+        "The 'checkout_cmd' method must be implemented by child classes"
     end
   end
 end

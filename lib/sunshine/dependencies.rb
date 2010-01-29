@@ -5,7 +5,9 @@ require "settler"
 
 class Sunshine::Dependencies < Settler
 
-  yum 'subversion'
+  yum 'svn', :pkg => 'subversion'
+
+  yum 'git'
 
   yum 'nginx'
 

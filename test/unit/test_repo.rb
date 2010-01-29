@@ -40,10 +40,10 @@ class TestRepo < Test::Unit::TestCase
 
   def test_checkout_to
     begin
-      Sunshine::Repo.new("repourl").checkout_to "server_obj", "somepath"
-      raise "Didn't raise RepoError on checkout_to"
+      Sunshine::Repo.new("repourl").checkout_to mock_deploy_server, "somepath"
+      raise "Didn't raise RepoError on checkout_cmd"
     rescue Sunshine::RepoError => e
-      msg = "The 'checkout_to' method must be implemented by child classes"
+      msg = "The 'checkout_cmd' method must be implemented by child classes"
       assert_equal msg, e.message
     end
   end
