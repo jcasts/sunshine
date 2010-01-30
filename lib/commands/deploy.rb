@@ -47,9 +47,7 @@ module Sunshine
       data_marker = "__END__\n"
       line = nil
 
-      #DATA = File.open(deploy_file, 'r')
       Sunshine.const_set("DATA", File.open(deploy_file, 'r'))
-      #global_const_set "DATA", File.open(deploy_file, 'r')
 
       until line == data_marker || Sunshine::DATA.eof?
         line = Sunshine::DATA.gets
