@@ -1,6 +1,7 @@
 #require 'sunshine'
 
-Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
+#Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
+Sunshine::App.deploy DATA do |app|
 
   app.shell_env "RAKE_ENV" => "integration"
 
@@ -26,3 +27,17 @@ Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
 
 end
 
+
+__END__
+
+:default:
+  :name: envoy
+  :repo:
+    :type: svn
+    :url:  svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/tags/200912.2-WAT-235-release
+
+  :deploy_path: /usr/local/nextgen/envoy
+
+  :deploy_servers:
+    - - jcastagna@jcast.np.wc1.yellowpages.com
+      - :roles: web db app

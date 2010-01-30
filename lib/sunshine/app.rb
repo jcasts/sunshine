@@ -54,15 +54,11 @@ module Sunshine
 
 
     def initialize(*args)
-      config_file    = args.shift if String === args.first
+      config_file    = args.shift unless Hash === args.first
       deploy_options = args.empty? ? {} : args.first.dup
       deploy_options[:deploy_env] ||= Sunshine.deploy_env
 
-      if config_file
-        env = deploy_options[:deploy_env]
-        config_file_options = load_config_for env, config_file
-        deploy_options = config_file_options.merge deploy_options
-      end
+      deploy_options = merge_config_file config_file, deploy_options
 
 
       set_deploy_paths deploy_options[:deploy_path]
@@ -521,12 +517,25 @@ module Sunshine
     end
 
 
+    def merge_config_file config_file, deploy_options
+      return deploy_options unless config_file
+      env = deploy_options[:deploy_env]
+      load_config_for(env, config_file).merge deploy_options
+    end
+
+
     ##
     # Loads an app yml config file, gets the default config
     # and the current deploy env and returns a merged config hash.
 
     def load_config_for deploy_env, config_file
-      config_hash = YAML.load_file config_file
+      config_hash = case config_file
+      when File   then YAML.load config_file
+      when String then YAML.load_file config_file
+      end
+
+      return {} unless config_hash
+
       default_config = config_hash[:default] || {}
       current_config = config_hash[deploy_env] || {}
       default_config.merge(current_config)

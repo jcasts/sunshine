@@ -52,6 +52,18 @@ a path to a yaml file:
   app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
 
 
+The yaml file can also be any IO stream whos output will parse to yaml.
+This can be ueful for passing the file's DATA and keep all the deploy
+information in one place:
+
+    app = Sunshine::App.new DATA
+    app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
+
+    __END__
+
+    # yaml for app goes here...
+
+
 Yaml files are read on a deploy-environment basis so its format reflects this:
 
   ---

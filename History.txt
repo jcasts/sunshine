@@ -1,3 +1,12 @@
+=== 0.0.4 / 2010-02-12
+
+* App supports passing a (yml) file object to the constructor.
+  Useful for passing file DATA if desired:
+    app = Sunshine::App.new DATA
+    app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
+    __END__
+    #yaml for app goes here...
+
 === 0.0.3 / 2010-01-29
 
 * Many small bugfixes
