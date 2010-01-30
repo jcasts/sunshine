@@ -25,7 +25,7 @@ class TestApp < Test::Unit::TestCase
 
   def test_initialize_with_config_file
     app = Sunshine::App.new TEST_APP_CONFIG_FILE
-    config = YAML.load_file(TEST_APP_CONFIG_FILE)[:defaults]
+    config = YAML.load_file(TEST_APP_CONFIG_FILE)[:default]
     assert_attributes_equal config, app
   end
 
