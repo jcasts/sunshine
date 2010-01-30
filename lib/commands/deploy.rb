@@ -34,9 +34,26 @@ module Sunshine
       deploy_file ||= "Sunshine"
       puts "Running #{deploy_file}"
 
+      get_file_data deploy_file
+
       require deploy_file
 
       return true
+    end
+
+
+    def self.get_file_data deploy_file
+      return if defined?(Sunshine::DATA)
+      data_marker = "__END__\n"
+      line = nil
+
+      #DATA = File.open(deploy_file, 'r')
+      Sunshine.const_set("DATA", File.open(deploy_file, 'r'))
+      #global_const_set "DATA", File.open(deploy_file, 'r')
+
+      until line == data_marker || Sunshine::DATA.eof?
+        line = Sunshine::DATA.gets
+      end
     end
 
 

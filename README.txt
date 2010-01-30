@@ -56,7 +56,10 @@ The yaml file can also be any IO stream whos output will parse to yaml.
 This can be ueful for passing the file's DATA and keep all the deploy
 information in one place:
 
-    app = Sunshine::App.new DATA
+    # The following two lines are equivalent:
+    app = Sunshine::App.new
+    app = Sunshine::App.new Sunshine::DATA
+
     app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
 
     __END__

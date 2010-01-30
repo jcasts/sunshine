@@ -1,7 +1,7 @@
 #require 'sunshine'
 
 #Sunshine::App.deploy "test/fixtures/app_configs/test_app.yml" do |app|
-Sunshine::App.deploy DATA do |app|
+Sunshine::App.deploy do |app|
 
   app.shell_env "RAKE_ENV" => "integration"
 

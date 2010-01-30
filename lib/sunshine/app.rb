@@ -55,6 +55,8 @@ module Sunshine
 
     def initialize(*args)
       config_file    = args.shift unless Hash === args.first
+      config_file  ||= Sunshine::DATA if defined?(Sunshine::DATA)
+
       deploy_options = args.empty? ? {} : args.first.dup
       deploy_options[:deploy_env] ||= Sunshine.deploy_env
 
