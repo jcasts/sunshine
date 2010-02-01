@@ -148,7 +148,6 @@ module Sunshine
   end
 
 
-
   ##
   # Maximum number of deploys (history) to keep on the remote server,
   # 5 by default. Overridden in the ~/.sunshine config file.
@@ -160,9 +159,22 @@ module Sunshine
 
   ##
   # Check if trace log should be output at all.
+  # This value can be assigned by default in ~/.sunshine
+  # or switched off with the deploy command's --no-trace option.
+  # Defaults to true.
 
   def self.trace?
     @config['trace']
+  end
+
+
+  ##
+  # Global value of sudo to use. Returns true, nil, or a username.
+  # This value can be assigned by default in ~/.sunshine
+  # or with the --sudo [username] option. Defaults to nil.
+
+  def self.sudo
+    @config['sudo']
   end
 
 

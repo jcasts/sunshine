@@ -22,12 +22,18 @@ module Sunshine
     ##
     # Base option parser constructor used by all commands.
 
-    def self.opt_parser
+    def self.opt_parser options=nil
       OptionParser.new do |opt|
         opt.program_name = File.basename $0
         opt.version = Sunshine::VERSION
         opt.release = nil
+
         yield opt if block_given?
+
+        opt.on('-S', '--sudo [USER]',
+               'Run remote commands using sudo or sudo -u USER.') do |value|
+          options['sudo'] = value || true
+        end if options
       end
     end
 
@@ -78,14 +84,14 @@ Sunshine is an object oriented deploy tool for rack applications.
     def self.parse_remote_args argv, &block
       options = {}
 
-      opts = opt_parser do |opt|
+      opts = opt_parser(options) do |opt|
         opt.separator nil
         opt.separator "Options:"
 
         yield(opt, options) if block_given?
 
         opt.on('-u', '--user USER',
-               'User to use for remote login. Use with -r.') do |value|
+               'User to use for ssh login. Use with -r.') do |value|
           options['user'] = value
         end
 

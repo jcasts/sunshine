@@ -1,11 +1,21 @@
 === 0.0.4 / 2010-02-12
 
+* Added sudo functionality:
+
+  * Support for --sudo and --sudo=user on all Sunshine commands
+
+  * Support for :sudo option on Sunshine::App, Sunshine::Server, and
+    Sunshine::DeployServer constructors
+
 * App supports passing a (yml) file object to the constructor.
   Useful for passing file DATA if desired:
     app = Sunshine::App.new Sunshine::DATA
     app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
     __END__
     #yaml for app goes here...
+
+* Changed the format of the App#checkout_path directory
+
 
 === 0.0.3 / 2010-01-29
 

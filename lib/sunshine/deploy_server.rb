@@ -20,7 +20,7 @@ module Sunshine
     TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
 
     attr_reader :host, :user
-    attr_accessor :roles, :env, :ssh_flags
+    attr_accessor :sudo, :roles, :env, :ssh_flags
 
 
     ##
@@ -40,7 +40,9 @@ module Sunshine
 
       @host, @user = host.split("@").reverse
 
-      @user     ||= options[:user]
+      @user   ||= options[:user]
+
+      @sudo     = options[:sudo]
       @env      = options[:env] || {}
       @password = options[:password]
 
@@ -73,7 +75,7 @@ module Sunshine
     def connect
       return @pid if connected?
 
-      cmd = ssh_cmd "echo ready; for (( ; ; )); do sleep 100; done"
+      cmd = ssh_cmd "echo ready; for (( ; ; )); do sleep 100; done", false
 
       @pid, @inn, @out, @err = popen4(*cmd)
       @inn.sync = true
@@ -121,7 +123,7 @@ module Sunshine
     ##
     # Download a file via rsync
 
-    def download from_path, to_path, sudo=false, &block
+    def download from_path, to_path, sudo=@sudo, &block
       from_path = "#{@host}:#{from_path}"
       Sunshine.logger.info @host, "Downloading #{from_path} -> #{to_path}" do
         execute rsync_cmd(from_path, to_path, sudo), &block
@@ -140,7 +142,7 @@ module Sunshine
     ##
     # Create a file remotely
 
-    def make_file filepath, content, sudo=false
+    def make_file filepath, content, sudo=@sudo
       FileUtils.mkdir_p TMP_DIR
 
       temp_filepath =
@@ -167,7 +169,7 @@ module Sunshine
     # Runs a command via SSH. Optional block is passed the
     # stream(stderr, stdout) and string data
 
-    def call command_str, sudo=false, &block
+    def call command_str, sudo=@sudo, &block
       Sunshine.logger.info @host, "Running: #{command_str}" do
         execute ssh_cmd(command_str, sudo), &block
       end
@@ -185,7 +187,7 @@ module Sunshine
     ##
     # Uploads a file via rsync
 
-    def upload from_path, to_path, sudo=false, &block
+    def upload from_path, to_path, sudo=@sudo, &block
       to_path = "#{@host}:#{to_path}"
       Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}" do
         execute rsync_cmd(from_path, to_path, sudo), &block
@@ -195,21 +197,27 @@ module Sunshine
 
     private
 
-    def rsync_cmd from_path, to_path, sudo=false
+    def rsync_cmd from_path, to_path, sudo=@sudo
       ssh  = ["-e", "\"ssh #{@ssh_flags.join(' ')}\""] if @ssh_flags
-      sudo = sudo ? "--rsync-path='sudo rsync'" : nil
 
-      cmd  = ["rsync", "-azP", sudo, ssh, from_path, to_path]
+      rsync_path = if sudo
+        path = sudo_cmd(sudo, 'rsync').join(' ')
+        "--rsync-path='#{ path }'"
+      end
+
+      cmd  = ["rsync", "-azP", rsync_path, ssh, from_path, to_path]
       cmd.flatten.compact.join(" ")
     end
 
 
-    def ssh_cmd string, sudo=false
+    def ssh_cmd string, sudo=@sudo
       string = string.gsub(/'/){|s| "'\\''"}
       string = "'#{string}'"
 
       cmd = ["sh", "-c", string]
-      cmd.unshift "sudo" if sudo
+
+      cmd = sudo_cmd(sudo, cmd) if sudo
+      #cmd.unshift "sudo" if sudo
 
       if @env && !@env.empty?
         env_vars = @env.to_a.map{|e| e.join("=")}
@@ -217,6 +225,18 @@ module Sunshine
       end
 
       ["ssh", @ssh_flags, @host, cmd].flatten.compact
+    end
+
+
+    def sudo_cmd sudo, cmd
+      case sudo
+      when true
+        ["sudo", cmd].flatten
+      when String
+        ["sudo", "-u", sudo, cmd].flatten
+      else
+        cmd
+      end
     end
   end
 end

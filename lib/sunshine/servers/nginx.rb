@@ -5,15 +5,19 @@ module Sunshine
 
   class Nginx < Server
 
+    def initialize app, options={}
+      super
+      @sudo = @port < 1024
+    end
+
+
     def start_cmd
-      sudo = run_sudo? ? "sudo " : ""
-      "#{sudo}#{@bin} -c #{self.config_file_path}"
+      "#{@bin} -c #{self.config_file_path}"
     end
 
 
     def stop_cmd
-      sudo = run_sudo? ? "sudo " : ""
-      cmd = "test -f #{@pid} && #{sudo}kill -QUIT $(cat #{@pid})"+
+      cmd = "test -f #{@pid} && kill -QUIT $(cat #{@pid})"+
         " || echo 'No #{@name} process to stop for #{@app.name}';"
       cmd << "sleep 2 ; rm -f #{@pid};"
     end
@@ -24,7 +28,7 @@ module Sunshine
         passenger_root = setup_passenger(deploy_server) if use_passenger?
 
         binder.set :passenger_root, passenger_root
-        binder.forward :use_passenger?, :run_sudo?
+        binder.forward :use_passenger?
 
         yield(deploy_server, binder) if block_given?
       end
@@ -39,13 +43,6 @@ module Sunshine
       @target.is_a?(Sunshine::App)
     end
 
-
-    ##
-    # Check if Nginx should run with sudo.
-
-    def run_sudo?
-      @port < 1024
-    end
 
     private
 

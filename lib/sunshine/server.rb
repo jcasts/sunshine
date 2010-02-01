@@ -13,12 +13,12 @@ module Sunshine
 
     BINDER_METHODS = [
       :app, :name, :target, :bin, :pid, :server_name, :port,
-      :processes, :config_path, :log_file
+      :processes, :config_path, :log_file, :sudo
     ]
 
-    attr_reader :app, :name, :target
+    attr_reader :app, :name, :target, :server_name
 
-    attr_accessor :bin, :pid, :server_name, :port, :processes, :deploy_servers
+    attr_accessor :bin, :pid, :port, :processes, :sudo, :deploy_servers
     attr_accessor :config_template, :config_path, :config_file
 
     # Server objects need only an App object to be instantiated but many options
@@ -35,6 +35,8 @@ module Sunshine
     #
     # :port:: port_num - the port to run the server on
     #                    defaults to 80
+    #
+    # :sudo:: bool|str - define if sudo should be used and with what user
     #
     # :processes:: prcss_num - number of processes server should run
     #                          defaults to 1
@@ -65,6 +67,7 @@ module Sunshine
       @pid         = options[:pid] || "#{@app.shared_path}/pids/#{@name}.pid"
       @bin         = options[:bin] || @name
       @port        = options[:port] || 80
+      @sudo        = options[:sudo]
       @processes   = options[:processes] || 1
       @server_name = options[:server_name]
 
@@ -113,6 +116,7 @@ module Sunshine
           binder.forward(*BINDER_METHODS)
           binder.set :deploy_server, deploy_server
           binder.set :server_name,   (@server_name || deploy_server.host)
+          binder.set :sudo, pick_sudo(deploy_server)
 
           deploy_server.call "mkdir -p #{remote_dirs.join(" ")}"
 
@@ -136,7 +140,8 @@ module Sunshine
 
         @deploy_servers.each do |deploy_server|
           begin
-            deploy_server.call(start_cmd)
+            deploy_server.call start_cmd, pick_sudo(deploy_server)
+
             yield(deploy_server) if block_given?
           rescue => e
             raise FatalDeployError.new(e, "Could not start #{@name}")
@@ -154,7 +159,8 @@ module Sunshine
 
         @deploy_servers.each do |deploy_server|
           begin
-            deploy_server.call(stop_cmd)
+            deploy_server.call stop_cmd, pick_sudo(deploy_server)
+
             yield(deploy_server) if block_given?
           rescue => e
             raise FatalDeployError.new(e, "Could not stop #{@name}")
@@ -172,7 +178,7 @@ module Sunshine
       if restart_cmd
         self.setup
         begin
-          @deploy_servers.call(@restart_cmd)
+          @deploy_servers.call @restart_cmd
         rescue => e
           raise FatalDeployError.new(e, "Could not stop #{@name}")
         end
@@ -265,6 +271,17 @@ module Sunshine
 
 
     private
+
+    def pick_sudo deploy_server
+      case deploy_server.sudo
+      when true
+        self.sudo || deploy_server.sudo
+      when String
+        String === self.sudo ? self.sudo : deploy_server.sudo
+      else
+        self.sudo
+      end
+    end
 
     def remote_dirs
       dirs = @log_files.values.map{|f| File.dirname(f)}

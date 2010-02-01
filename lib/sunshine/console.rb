@@ -9,6 +9,7 @@ module Sunshine
 
     LOCAL_USER = `whoami`.chomp
     LOCAL_HOST = `hostname`.chomp
+
     SUDO_PROMPT = /^Password:/
 
     attr_reader :user, :host, :password, :input, :output
@@ -122,7 +123,8 @@ module Sunshine
               Process.wait
             end
 
-            inn.puts(@password || prompt_for_password)
+            inn.puts @password || prompt_for_password
+
             data << "\n"
             Sunshine.console << "\n"
           end

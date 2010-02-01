@@ -1,6 +1,6 @@
 <% darwin = deploy_server.os_name =~ /^darwin$/i %>
 
-<% if port < 1024 %>
+<% if sudo %>
 user nobody nobody;
 <% end %>
 worker_processes  <%= processes %>;

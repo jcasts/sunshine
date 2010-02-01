@@ -47,7 +47,7 @@ module Sunshine
     end
 
 
-    attr_reader :name, :repo, :deploy_servers, :crontab, :health
+    attr_reader :name, :repo, :deploy_servers, :crontab, :health, :sudo
     attr_reader :deploy_path, :checkout_path, :current_path
     attr_reader :deploys_dir, :shared_path, :log_path
     attr_accessor :deploy_env, :scripts, :info
@@ -72,6 +72,8 @@ module Sunshine
       set_repo deploy_options[:repo]
 
       set_deploy_servers deploy_options[:deploy_servers]
+
+      self.sudo = deploy_options[:sudo] || Sunshine.sudo
 
       @health = Healthcheck.new @shared_path, @deploy_servers
 
@@ -425,6 +427,18 @@ module Sunshine
 
       Sunshine.logger.info :app, "Shell env: #{@shell_env.inspect}"
       @shell_env.dup
+    end
+
+
+    ##
+    # Use sudo on deploy servers. Set to true/false, or
+    # a username to use 'sudo -u'.
+
+    def sudo=(value)
+      @deploy_servers.each do |deploy_server|
+        deploy_server.sudo = value
+      end
+      Sunshine.logger.info :app, "Using sudo = #{value.inspect}"
     end
 
 
