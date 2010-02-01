@@ -12,12 +12,21 @@ this job should stay
 this job should be replaced
 # sunshine crontest:job2:end
 
+# sunshine otherapp:blah:begin
+otherapp blah job
+# sunshine otherapp:blah:end
+
 # sunshine crontest:job2:begin
 this job should be removed
 # sunshine crontest:job2:end
+
+# sunshine otherapp:job1:begin
+job for otherapp
+# sunshine otherapp:job1:end
     STR
 
     @cron = Sunshine::Crontab.new "crontest"
+    @othercron = Sunshine::Crontab.new "otherapp"
   end
 
   def test_add
@@ -41,8 +50,29 @@ this job should be removed
     assert_cronjob "job2", "new job2"
     assert_cronjob "job3", "new job3"
 
+    assert_cronjob "blah", "otherapp blah job", @othercron
+    assert_cronjob "job1", "job for otherapp", @othercron
+
     assert !@crontab_str.include?("this job should be replaced")
     assert !@crontab_str.include?("this job should be removed")
+  end
+
+
+  def test_delete!
+    ds = mock_deploy_server
+    ds.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
+
+    assert_cronjob "blah", "otherapp blah job", @othercron
+    assert_cronjob "job1", "job for otherapp", @othercron
+
+    @crontab_str = @othercron.delete! ds
+
+    assert !@crontab_str.include?("job for otherapp")
+    assert !@crontab_str.include?("otherapp blah job")
+
+    assert_cronjob "job1", "this job should stay"
+    assert_cronjob "job2", "this job should be replaced"
+    assert_cronjob "job2", "this job should be removed"
   end
 
 
@@ -59,22 +89,25 @@ this job should be removed
     assert_cronjob "job2", "new job2"
     assert_cronjob "job3", "new job3"
 
+    assert_cronjob "blah", "otherapp blah job", @othercron
+    assert_cronjob "job1", "job for otherapp", @othercron
+
     cmd = "echo '#{@crontab_str.gsub(/'/){|s| "'\\''"}}' | crontab"
 
     assert_ssh_call cmd
   end
 
 
-  def assert_cronjob namespace, job
-    assert @crontab_str.include?(cronjob(namespace, job))
+  def assert_cronjob namespace, job, crontab=@cron
+    assert @crontab_str.include?(cronjob(namespace, job, crontab))
   end
 
 
-  def cronjob namespace, job
+  def cronjob namespace, job, crontab
 <<-STR
-# sunshine crontest:#{namespace}:begin
+# sunshine #{crontab.name}:#{namespace}:begin
 #{job}
-# sunshine crontest:#{namespace}:end
+# sunshine #{crontab.name}:#{namespace}:end
 STR
   end
 end
