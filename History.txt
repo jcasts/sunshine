@@ -16,12 +16,23 @@
 
 * Changed the format of the App#checkout_path directory
 
+* Control scripts generated on the remote server now keep deploy-time
+  shell_env variables:
+
+  * Run commands with the --no-env option to run without
+    deploy shell_env variables.
+
+  * Run any script with the app's env variables using:
+      /path/to/app/env some_command
+      /path/to/app/env EXTRA_VAR=some_value some_command
+    Supports all options the env command supports.
+
 * DeployServers now support passing custom flags for ssh and rsync:
     deploy_server.call "some_command",
       :sudo => "user", :flags => '-C'
 
     deploy_server.upload "from", "to",
-      :sudo => "user", :flags => ['--chmod=0755', '-b']
+      :sudo => "user", :flags => ['--chmod=ugo=rwX', '-b']
 
     deploy_server.download "from", "to",
       :flags => '--ignore-existing'

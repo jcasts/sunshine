@@ -190,6 +190,11 @@ module Sunshine
     def build_control_scripts(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Building control scripts" do
 
+        chmod = '--chmod=ugo=rwx'
+
+        bash = make_env_bash_script
+        d_servers.make_file "#{@deploy_path}/env", bash, :flags => chmod
+
         if @scripts[:restart].empty? &&
           !@scripts[:start].empty? && !@scripts[:stop].empty?
           @scripts[:restart] << "#{@deploy_path}/stop"
@@ -198,12 +203,9 @@ module Sunshine
 
         @scripts.each do |name, cmds|
           Sunshine.logger.warn :app, "#{name} script is empty" if cmds.empty?
-          bash = make_bash_script cmds
+          bash = make_bash_script name, cmds
 
-          d_servers.each do |deploy_server|
-            deploy_server.make_file "#{@deploy_path}/#{name}", bash
-            deploy_server.call "chmod 0755 #{@deploy_path}/#{name}"
-          end
+          d_servers.make_file "#{@deploy_path}/#{name}", bash, :flags => chmod
         end
       end
     end
@@ -562,12 +564,29 @@ module Sunshine
 
     ##
     # Makes an array of bash commands into a script that
-    # echoes 'true' on success
+    # echoes 'true' on success.
 
-    def make_bash_script cmds
+    def make_bash_script name, cmds
       cmds = cmds.map{|cmd| "(#{cmd})" }
       cmds << "echo true"
-      "#!/bin/bash\n#{cmds.flatten.join(" && ")};"
+      bash = <<-STR
+#!/bin/bash
+if [ "$1" == "--no-env" ]; then
+  #{cmds.flatten.join(" && ")}
+else
+  #{@deploy_path}/env #{@deploy_path}/#{name} --no-env
+fi
+      STR
+    end
+
+
+    ##
+    # Creates the one-off env script that will be used by other scripts
+    # to correctly set their env variables.
+
+    def make_env_bash_script
+      env_str = @shell_env.map{|e| e.join("=")}.join(" ")
+      "#!/bin/bash\nenv #{env_str} \"$@\""
     end
 
 
