@@ -57,6 +57,7 @@ passenger (2.2.4)
     @passenger.start
     @passenger.stop
 
+    assert_equal true, @passenger.sudo
     assert_ssh_call start_cmd(@passenger), ds, true
     assert_ssh_call stop_cmd(@passenger), ds, true
   end

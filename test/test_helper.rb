@@ -74,9 +74,15 @@ def assert_ssh_call expected, ds=@deploy_server, sudo=false
 end
 
 
-def assert_rsync from, to, ds=@deploy_server
+def assert_rsync from, to, ds=@deploy_server, sudo=false
   received = ds.cmd_log.last
-  rsync_cmd = "rsync -azP -e \"ssh #{ds.ssh_flags.join(' ')}\""
+
+  rsync_path = if sudo
+    path = ds.send(:sudo_cmd, sudo, 'rsync').join(' ')
+    "--rsync-path='#{ path }' "
+  end
+
+  rsync_cmd = "rsync -azP #{rsync_path}-e \"ssh #{ds.ssh_flags.join(' ')}\""
 
   error_msg = "No such command in deploy_server log [#{ds.host}]\n#{rsync_cmd}"
   error_msg << "#{from.inspect} #{to.inspect}"

@@ -385,6 +385,15 @@ class TestApp < Test::Unit::TestCase
   end
 
 
+  def test_sudo_assignment
+    @app.sudo = "someuser"
+
+    @app.deploy_servers.each do |ds|
+      assert_equal "someuser", ds.sudo
+    end
+  end
+
+
   private
 
   def each_deploy_server app=@app

@@ -29,6 +29,10 @@ class TestDeployServer < Test::Unit::TestCase
   def test_call
     @deploy_server.call "echo 'line1'; echo 'line2'"
     assert_ssh_call "echo 'line1'; echo 'line2'"
+
+    @deploy_server.sudo = "sudouser"
+    @deploy_server.call "sudocall"
+    assert_ssh_call "sudocall", @deploy_server, "sudouser"
   end
 
   def test_call_with_stderr
@@ -45,11 +49,20 @@ class TestDeployServer < Test::Unit::TestCase
     @deploy_server.upload "test/fixtures/sunshine_test", "sunshine_test"
     assert_rsync "test/fixtures/sunshine_test",
       "#{@deploy_server.host}:sunshine_test"
+
+    @deploy_server.sudo = "blah"
+    @deploy_server.upload "test/fixtures/sunshine_test", "sunshine_test"
+    assert_rsync "test/fixtures/sunshine_test",
+      "#{@deploy_server.host}:sunshine_test", @deploy_server, "blah"
   end
 
   def test_download
     @deploy_server.download "sunshine_test", "."
     assert_rsync "#{@deploy_server.host}:sunshine_test", "."
+
+    @deploy_server.download "sunshine_test", ".", "sudouser"
+    assert_rsync "#{@deploy_server.host}:sunshine_test", ".",
+      @deploy_server, "sudouser"
   end
 
   def test_make_file

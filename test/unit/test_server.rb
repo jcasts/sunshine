@@ -38,7 +38,8 @@ class TestServer < Test::Unit::TestCase
       :config_template => "template.erb",
       :config_path => "path/to/config",
       :config_file => "conf_filename.conf",
-      :log_path => "path/to/logs"
+      :log_path => "path/to/logs",
+      :sudo     => "sudouser"
     }
 
     svr = Server.new @app, config
@@ -56,6 +57,10 @@ class TestServer < Test::Unit::TestCase
 
     server.setup do |ds, binder|
       assert_equal @deploy_server, ds
+
+      assert_equal ds,      binder.deploy_server
+      assert_equal ds.host, binder.server_name
+      assert_equal @rainbows.send(:pick_sudo, ds), binder.sudo
     end
 
     args = ["rainbows", {:server => @deploy_server}]
@@ -193,6 +198,26 @@ class TestServer < Test::Unit::TestCase
     assert @app.scripts[:restart].include?(server.start_cmd)
     assert @app.scripts[:restart].include?(server.stop_cmd)
     assert_equal server.port, @app.info[:ports][server.pid]
+  end
+
+
+  def test_pick_sudo
+    ds = @rainbows.deploy_servers.first
+    assert_equal nil, @rainbows.send(:pick_sudo, ds)
+
+    @rainbows.sudo = true
+    assert_equal true, @rainbows.send(:pick_sudo, ds)
+
+    ds.sudo = true
+    @rainbows.sudo = false
+    assert_equal true, @rainbows.send(:pick_sudo, ds)
+
+    ds.sudo = "blah"
+    @rainbows.sudo = true
+    assert_equal "blah", @rainbows.send(:pick_sudo, ds)
+
+    @rainbows.sudo = "local"
+    assert_equal "local", @rainbows.send(:pick_sudo, ds)
   end
 
   ##
