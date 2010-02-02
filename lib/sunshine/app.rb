@@ -308,10 +308,12 @@ module Sunshine
 
     def make_deploy_info_file(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Creating info file" do
-        contents = @info.to_yaml
+        contents = @info.dup
 
         d_servers.each do |deploy_server|
-          deploy_server.make_file "#{@deploy_path}/info", contents
+          contents[:deployed_as] ||= deploy_server.call "whoami"
+
+          deploy_server.make_file "#{@deploy_path}/info", contents.to_yaml
         end
       end
 
