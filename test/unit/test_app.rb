@@ -134,7 +134,6 @@ class TestApp < Test::Unit::TestCase
 
       %w{start stop restart custom}.each do |script|
         assert_rsync(/#{script}/, "#{ds.host}:#{@app.deploy_path}/#{script}")
-        assert_ssh_call "chmod 0755 #{@app.deploy_path}/#{script}"
       end
     end
   end
