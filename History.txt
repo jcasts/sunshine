@@ -5,7 +5,7 @@
   * Support for --sudo and --sudo=user on all Sunshine commands
 
   * Support for :sudo option on Sunshine::App, Sunshine::Server, and
-    Sunshine::DeployServer constructors
+    Sunshine::DeployServer constructors, and attr_accessor :sudo
 
 * App supports passing a (yml) file object to the constructor.
   Useful for passing file DATA if desired:
@@ -15,6 +15,16 @@
     #yaml for app goes here...
 
 * Changed the format of the App#checkout_path directory
+
+* DeployServers now support passing custom flags for ssh and rsync:
+    deploy_server.call "some_command",
+      :sudo => "user", :flags => '-C'
+
+    deploy_server.upload "from", "to",
+      :sudo => "user", :flags => ['--chmod=0755', '-b']
+
+    deploy_server.download "from", "to",
+      :flags => '--ignore-existing'
 
 
 === 0.0.3 / 2010-01-29

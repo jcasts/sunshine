@@ -64,8 +64,8 @@ def set_mock_response_for obj, code, stream_vals={}
 end
 
 
-def assert_ssh_call expected, ds=@deploy_server, sudo=false
-  expected = ds.send(:ssh_cmd, expected, sudo).join(" ")
+def assert_ssh_call expected, ds=@deploy_server, options={}
+  expected = ds.send(:ssh_cmd, expected, options).join(" ")
 
   error_msg = "No such command in deploy_server log [#{ds.host}]\n#{expected}"
   error_msg << "\n\n#{ds.cmd_log.select{|c| c =~ /^ssh/}.join("\n\n")}"

@@ -116,9 +116,12 @@ module Sunshine
           binder.forward(*BINDER_METHODS)
           binder.set :deploy_server, deploy_server
           binder.set :server_name,   (@server_name || deploy_server.host)
-          binder.set :sudo, pick_sudo(deploy_server)
 
-          deploy_server.call "mkdir -p #{remote_dirs.join(" ")}"
+          binder_sudo = pick_sudo(deploy_server)
+          binder.set :sudo, binder_sudo
+
+          deploy_server.call "mkdir -p #{remote_dirs.join(" ")}",
+            :sudo => binder_sudo
 
           yield(deploy_server, binder) if block_given?
 
@@ -140,7 +143,7 @@ module Sunshine
 
         @deploy_servers.each do |deploy_server|
           begin
-            deploy_server.call start_cmd, pick_sudo(deploy_server)
+            deploy_server.call start_cmd, :sudo => pick_sudo(deploy_server)
 
             yield(deploy_server) if block_given?
           rescue => e
@@ -159,7 +162,7 @@ module Sunshine
 
         @deploy_servers.each do |deploy_server|
           begin
-            deploy_server.call stop_cmd, pick_sudo(deploy_server)
+            deploy_server.call stop_cmd, :sudo => pick_sudo(deploy_server)
 
             yield(deploy_server) if block_given?
           rescue => e
@@ -177,11 +180,18 @@ module Sunshine
     def restart
       if restart_cmd
         self.setup
-        begin
-          @deploy_servers.call @restart_cmd
-        rescue => e
-          raise FatalDeployError.new(e, "Could not stop #{@name}")
+
+        Sunshine.logger.info @name, "Starting #{@name} server" do
+          begin
+            @deploy_servers.each do |deploy_server|
+              deploy_server.call @restart_cmd, :sudo => pick_sudo(deploy_server)
+            end
+
+          rescue => e
+            raise FatalDeployError.new(e, "Could not restart #{@name}")
+          end
         end
+
       else
         self.stop
         self.start

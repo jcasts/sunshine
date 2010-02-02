@@ -32,7 +32,7 @@ class TestDeployServer < Test::Unit::TestCase
 
     @deploy_server.sudo = "sudouser"
     @deploy_server.call "sudocall"
-    assert_ssh_call "sudocall", @deploy_server, "sudouser"
+    assert_ssh_call "sudocall", @deploy_server, :sudo => "sudouser"
   end
 
   def test_call_with_stderr
@@ -60,7 +60,7 @@ class TestDeployServer < Test::Unit::TestCase
     @deploy_server.download "sunshine_test", "."
     assert_rsync "#{@deploy_server.host}:sunshine_test", "."
 
-    @deploy_server.download "sunshine_test", ".", "sudouser"
+    @deploy_server.download "sunshine_test", ".", :sudo => "sudouser"
     assert_rsync "#{@deploy_server.host}:sunshine_test", ".",
       @deploy_server, "sudouser"
   end

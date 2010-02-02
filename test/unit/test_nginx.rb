@@ -45,8 +45,8 @@ passenger (2.2.4)
     @nginx.start
     @nginx.stop
 
-    assert_ssh_call start_cmd(@passenger), ds, @nginx.sudo
-    assert_ssh_call stop_cmd(@passenger), ds, @nginx.sudo
+    assert_ssh_call start_cmd(@passenger), ds, :sudo => @nginx.sudo
+    assert_ssh_call stop_cmd(@passenger), ds, :sudo => @nginx.sudo
   end
 
 
@@ -58,8 +58,8 @@ passenger (2.2.4)
     @passenger.stop
 
     assert_equal true, @passenger.sudo
-    assert_ssh_call start_cmd(@passenger), ds, true
-    assert_ssh_call stop_cmd(@passenger), ds, true
+    assert_ssh_call start_cmd(@passenger), ds, :sudo => true
+    assert_ssh_call stop_cmd(@passenger), ds, :sudo => true
   end
 
 

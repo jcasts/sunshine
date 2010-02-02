@@ -17,10 +17,12 @@ module Sunshine
 
     class ConnectionError < FatalDeployError; end
 
+    LOGIN_LOOP = "echo ready; for (( ; ; )); do sleep 100; done"
+
     TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
 
     attr_reader :host, :user
-    attr_accessor :sudo, :roles, :env, :ssh_flags
+    attr_accessor :sudo, :roles, :env, :ssh_flags, :rsync_flags
 
 
     ##
@@ -50,12 +52,15 @@ module Sunshine
       @roles = @roles.split(" ") if String === @roles
       @roles = [*@roles].compact.map{|r| r.to_sym }
 
+      @rsync_flags = ["-azP"]
+      @rsync_flags.concat [*options[:rsync_flags]] if options[:rsync_flags]
+
       @ssh_flags = [
         "-o ControlMaster=auto",
         "-o ControlPath=~/.ssh/sunshine-%r@%h:%p"
       ]
       @ssh_flags.concat ["-l", @user] if @user
-      @ssh_flags.concat [*options[:ssh_flags]]
+      @ssh_flags.concat [*options[:ssh_flags]] if options[:ssh_flags]
 
       @pid, @inn, @out, @err = nil
     end
@@ -75,7 +80,7 @@ module Sunshine
     def connect
       return @pid if connected?
 
-      cmd = ssh_cmd "echo ready; for (( ; ; )); do sleep 100; done", false
+      cmd = ssh_cmd LOGIN_LOOP, :sudo => false
 
       @pid, @inn, @out, @err = popen4(*cmd)
       @inn.sync = true
@@ -123,10 +128,10 @@ module Sunshine
     ##
     # Download a file via rsync
 
-    def download from_path, to_path, sudo=@sudo, &block
+    def download from_path, to_path, options={}, &block
       from_path = "#{@host}:#{from_path}"
       Sunshine.logger.info @host, "Downloading #{from_path} -> #{to_path}" do
-        execute rsync_cmd(from_path, to_path, sudo), &block
+        execute rsync_cmd(from_path, to_path, options), &block
       end
     end
 
@@ -142,7 +147,7 @@ module Sunshine
     ##
     # Create a file remotely
 
-    def make_file filepath, content, sudo=@sudo
+    def make_file filepath, content, options={}
       FileUtils.mkdir_p TMP_DIR
 
       temp_filepath =
@@ -150,7 +155,7 @@ module Sunshine
 
       File.open(temp_filepath, "w+"){|f| f.write(content)}
 
-      self.upload(temp_filepath, filepath, sudo)
+      self.upload temp_filepath, filepath, options
 
       File.delete(temp_filepath)
       FileUtils.rm_rf TMP_DIR if Dir.glob("#{TMP_DIR}/*").empty?
@@ -169,9 +174,9 @@ module Sunshine
     # Runs a command via SSH. Optional block is passed the
     # stream(stderr, stdout) and string data
 
-    def call command_str, sudo=@sudo, &block
+    def call command_str, options={}, &block
       Sunshine.logger.info @host, "Running: #{command_str}" do
-        execute ssh_cmd(command_str, sudo), &block
+        execute ssh_cmd(command_str, options), &block
       end
     end
 
@@ -187,44 +192,61 @@ module Sunshine
     ##
     # Uploads a file via rsync
 
-    def upload from_path, to_path, sudo=@sudo, &block
+    def upload from_path, to_path, options={}, &block
       to_path = "#{@host}:#{to_path}"
       Sunshine.logger.info @host, "Uploading #{from_path} -> #{to_path}" do
-        execute rsync_cmd(from_path, to_path, sudo), &block
+        execute rsync_cmd(from_path, to_path, options), &block
       end
     end
 
 
     private
 
-    def rsync_cmd from_path, to_path, sudo=@sudo
-      ssh  = ["-e", "\"ssh #{@ssh_flags.join(' ')}\""] if @ssh_flags
 
-      rsync_path = if sudo
+    def build_rsync_flags options
+      flags   = @rsync_flags.dup
+
+      sudo = @sudo
+      sudo = options[:sudo] if options.has_key?(:sudo)
+
+      if sudo
         path = sudo_cmd(sudo, 'rsync').join(' ')
-        "--rsync-path='#{ path }'"
+        flags << "--rsync-path='#{ path }'"
       end
 
-      cmd  = ["rsync", "-azP", rsync_path, ssh, from_path, to_path]
+      flags << "-e \"ssh #{@ssh_flags.join(' ')}\"" if @ssh_flags
+
+      flags.concat [*options[:flags]] if options[:flags]
+
+      flags
+    end
+
+
+    def rsync_cmd from_path, to_path, options={}
+      cmd  = ["rsync", build_rsync_flags(options), from_path, to_path]
       cmd.flatten.compact.join(" ")
     end
 
 
-    def ssh_cmd string, sudo=@sudo
+    def ssh_cmd string, options={}
+      sudo = @sudo
+      sudo = options[:sudo] if options.has_key?(:sudo)
+
       string = string.gsub(/'/){|s| "'\\''"}
       string = "'#{string}'"
 
       cmd = ["sh", "-c", string]
 
       cmd = sudo_cmd(sudo, cmd) if sudo
-      #cmd.unshift "sudo" if sudo
 
       if @env && !@env.empty?
-        env_vars = @env.to_a.map{|e| e.join("=")}
+        env_vars = @env.map{|e| e.join("=")}
         cmd      = ["env", env_vars, cmd]
       end
 
-      ["ssh", @ssh_flags, @host, cmd].flatten.compact
+      flags = [*options[:flags]].concat @ssh_flags
+
+      ["ssh", flags, @host, cmd].flatten.compact
     end
 
 
