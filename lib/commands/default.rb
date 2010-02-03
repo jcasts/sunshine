@@ -108,6 +108,7 @@ Sunshine is an object oriented deploy tool for rack applications.
 
       opts.parse! argv
 
+
       if options['servers']
         options['servers'].map! do |host|
           DeployServer.new host, :user => options['user']
@@ -115,6 +116,13 @@ Sunshine is an object oriented deploy tool for rack applications.
         options['servers'] = DeployServerDispatcher.new(*options['servers'])
       else
         options['servers'] = [Sunshine.console]
+      end
+
+
+      if options['sudo']
+        options['servers'].each do |ds|
+          ds.sudo = options['sudo']
+        end
       end
 
       options
