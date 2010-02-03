@@ -22,6 +22,7 @@ module Sunshine
       @jobs[namespace] << cron_cmd unless @jobs[namespace].include?(cron_cmd)
     end
 
+
     ##
     # Build the crontab by replacing preexisting cron jobs and adding new ones.
 

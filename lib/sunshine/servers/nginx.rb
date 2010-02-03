@@ -7,7 +7,7 @@ module Sunshine
 
     def initialize app, options={}
       super
-      @sudo = @port < 1024
+      @sudo ||= @port < 1024
     end
 
 

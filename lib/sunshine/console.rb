@@ -91,9 +91,8 @@ module Sunshine
 
     def sh_cmd string
       string = string.gsub(/'/){|s| "'\\''"}
-      string = "'#{string}'"
 
-      ["sh", "-c", string]
+      ["sh", "-c", "'#{string}'"]
     end
 
 

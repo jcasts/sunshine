@@ -13,13 +13,18 @@ module Sunshine
 
     BINDER_METHODS = [
       :app, :name, :target, :bin, :pid, :server_name, :port,
-      :processes, :config_path, :log_file, :sudo
+      :processes, :config_path, :log_file, :timeout
     ]
 
     attr_reader :app, :name, :target, :server_name
 
-    attr_accessor :bin, :pid, :port, :processes, :sudo, :deploy_servers
+    attr_accessor :bin, :pid, :port, :processes, :timeout,
+                  :sudo, :deploy_servers
+
     attr_accessor :config_template, :config_path, :config_file
+
+    attr_writer :start_cmd, :stop_cmd, :restart_cmd
+
 
     # Server objects need only an App object to be instantiated but many options
     # are available for customization:
@@ -37,6 +42,8 @@ module Sunshine
     #                    defaults to 80
     #
     # :sudo:: bool|str - define if sudo should be used and with what user
+    #
+    # :timeout:: int|str - timeout to use for server config
     #
     # :processes:: prcss_num - number of processes server should run
     #                          defaults to 1
@@ -68,6 +75,7 @@ module Sunshine
       @bin         = options[:bin] || @name
       @port        = options[:port] || 80
       @sudo        = options[:sudo]
+      @timeout     = options[:timeout] || 0
       @processes   = options[:processes] || 1
       @server_name = options[:server_name]
 

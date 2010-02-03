@@ -50,7 +50,7 @@ http {
 
   <% if target.is_a?(Sunshine::Server) %>
   upstream app_server {
-    server 0:<%= target.port %> fail_timeout=0;
+    server 0:<%= target.port %> fail_timeout=<%= timeout %>;
   }
   <% end %>
 
