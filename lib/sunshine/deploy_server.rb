@@ -22,7 +22,7 @@ module Sunshine
     TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
 
     attr_reader :host, :user
-    attr_accessor :sudo, :roles, :env, :ssh_flags, :rsync_flags
+    attr_accessor :roles, :env, :ssh_flags, :rsync_flags
 
 
     ##
@@ -206,11 +206,11 @@ module Sunshine
     def build_rsync_flags options
       flags   = @rsync_flags.dup
 
-      sudo = @sudo
-      sudo = options[:sudo] if options.has_key?(:sudo)
+      sudo_val = @sudo
+      sudo_val = options[:sudo] if options.has_key?(:sudo)
 
-      if sudo
-        path = sudo_cmd(sudo, 'rsync').join(' ')
+      if sudo_val
+        path = sudo_cmd('rsync', sudo_val).join(' ')
         flags << "--rsync-path='#{ path }'"
       end
 
@@ -229,15 +229,15 @@ module Sunshine
 
 
     def ssh_cmd string, options={}
-      sudo = @sudo
-      sudo = options[:sudo] if options.has_key?(:sudo)
+      sudo_val = @sudo
+      sudo_val = options[:sudo] if options.has_key?(:sudo)
 
       string = string.gsub(/'/){|s| "'\\''"}
       string = "'#{string}'"
 
       cmd = ["sh", "-c", string]
 
-      cmd = sudo_cmd(sudo, cmd) if sudo
+      cmd = sudo_cmd(cmd, sudo_val) if sudo_val
 
       if @env && !@env.empty?
         env_vars = @env.map{|e| e.join("=")}
@@ -247,18 +247,6 @@ module Sunshine
       flags = [*options[:flags]].concat @ssh_flags
 
       ["ssh", flags, @host, cmd].flatten.compact
-    end
-
-
-    def sudo_cmd sudo, cmd
-      case sudo
-      when true
-        ["sudo", cmd].flatten
-      when String
-        ["sudo", "-u", sudo, cmd].flatten
-      else
-        cmd
-      end
     end
   end
 end

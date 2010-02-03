@@ -13,6 +13,7 @@ module Sunshine
     SUDO_PROMPT = /^Password:/
 
     attr_reader :user, :host, :password, :input, :output
+    attr_accessor :sudo
 
     def initialize output = $stdout
       @output = output
@@ -50,9 +51,28 @@ module Sunshine
 
 
     ##
+    # Build a command with sudo
+
+    def sudo_cmd cmd, sudo_val=@sudo
+      case sudo_val
+      when true
+        ["sudo", cmd].flatten
+      when String
+        ["sudo", "-u", sudo_val, cmd].flatten
+      else
+        cmd
+      end
+    end
+
+
+    ##
     # Execute a command on the local system and return the output.
 
-    def call cmd, &block
+    def call cmd, options={}, &block
+      sudo = @sudo
+      sudo = options[:sudo] if options.has_key?(:sudo)
+      cmd  = sudo_cmd(cmd, sudo) if sudo
+
       execute cmd, &block
     end
 

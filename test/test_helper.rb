@@ -78,7 +78,7 @@ def assert_rsync from, to, ds=@deploy_server, sudo=false
   received = ds.cmd_log.last
 
   rsync_path = if sudo
-    path = ds.send(:sudo_cmd, sudo, 'rsync').join(' ')
+    path = ds.sudo_cmd('rsync', sudo).join(' ')
     "--rsync-path='#{ path }' "
   end
 
