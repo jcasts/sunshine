@@ -442,6 +442,7 @@ module Sunshine
       @deploy_servers.each do |deploy_server|
         deploy_server.sudo = value
       end
+      @sudo = value
       Sunshine.logger.info :app, "Using sudo = #{value.inspect}"
     end
 

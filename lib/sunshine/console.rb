@@ -13,14 +13,26 @@ module Sunshine
     SUDO_PROMPT = /^Password:/
 
     attr_reader :user, :host, :password, :input, :output
-    attr_accessor :sudo
+    attr_accessor :env, :sudo
 
-    def initialize output = $stdout
+    def initialize output = $stdout, options={}
       @output = output
       @input = HighLine.new
+
       @user = LOCAL_USER
       @host = LOCAL_HOST
-      @password = nil
+
+      @sudo     = options[:sudo]
+      @env      = options[:env] || {}
+      @password = options[:password]
+    end
+
+
+    ##
+    # Checks for equality
+
+    def == console
+      @host == console.host && @user == console.user
     end
 
 
@@ -29,6 +41,18 @@ module Sunshine
 
     def ask(*args, &block)
       @input.ask(*args, &block)
+    end
+
+
+    ##
+    # Execute a command on the local system and return the output.
+
+    def call cmd, options={}, &block
+      sudo_val = @sudo
+      sudo_val = options[:sudo] if options.has_key?(:sudo)
+      cmd      = sudo_cmd(cmd, sudo_val) if sudo_val
+
+      execute cmd, &block
     end
 
 
@@ -51,9 +75,35 @@ module Sunshine
 
 
     ##
+    # Build an env command if an env_hash is passed
+
+    def env_cmd cmd, env_hash=@env
+      if env_hash && !env_hash.empty?
+        env_vars = env_hash.map{|e| e.join("=")}
+        cmd = ["env", env_vars, cmd]
+      end
+      cmd
+    end
+
+
+    ##
+    # Build an sh -c command
+
+    def sh_cmd string
+      string = string.gsub(/'/){|s| "'\\''"}
+      string = "'#{string}'"
+
+      ["sh", "-c", string]
+    end
+
+
+    ##
     # Build a command with sudo
 
-    def sudo_cmd cmd, sudo_val=@sudo
+    def sudo_cmd cmd, sudo_val=nil
+      sudo_val = sudo_val[:sudo] if Hash === sudo_val
+      sudo_val = @sudo if sudo_val.nil?
+
       case sudo_val
       when true
         ["sudo", cmd].flatten
@@ -62,18 +112,6 @@ module Sunshine
       else
         cmd
       end
-    end
-
-
-    ##
-    # Execute a command on the local system and return the output.
-
-    def call cmd, options={}, &block
-      sudo = @sudo
-      sudo = options[:sudo] if options.has_key?(:sudo)
-      cmd  = sudo_cmd(cmd, sudo) if sudo
-
-      execute cmd, &block
     end
 
 

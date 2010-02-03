@@ -22,7 +22,7 @@ module Sunshine
     TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
 
     attr_reader :host, :user
-    attr_accessor :roles, :env, :ssh_flags, :rsync_flags
+    attr_accessor :roles, :ssh_flags, :rsync_flags
 
 
     ##
@@ -38,15 +38,11 @@ module Sunshine
     #                      will attempt to prompt the user for a password.
 
     def initialize host, options={}
-      super $stdout
+      super $stdout, options
 
       @host, @user = host.split("@").reverse
 
-      @user   ||= options[:user]
-
-      @sudo     = options[:sudo]
-      @env      = options[:env] || {}
-      @password = options[:password]
+      @user ||= options[:user]
 
       @roles = options[:roles] || []
       @roles = @roles.split(" ") if String === @roles
@@ -67,10 +63,13 @@ module Sunshine
 
 
     ##
-    # Checks for equality
+    # Runs a command via SSH. Optional block is passed the
+    # stream(stderr, stdout) and string data
 
-    def == deploy_server
-      @host == deploy_server.host && @user == deploy_server.user
+    def call command_str, options={}, &block
+      Sunshine.logger.info @host, "Running: #{command_str}" do
+        execute ssh_cmd(command_str, options), &block
+      end
     end
 
 
@@ -171,17 +170,6 @@ module Sunshine
 
 
     ##
-    # Runs a command via SSH. Optional block is passed the
-    # stream(stderr, stdout) and string data
-
-    def call command_str, options={}, &block
-      Sunshine.logger.info @host, "Running: #{command_str}" do
-        execute ssh_cmd(command_str, options), &block
-      end
-    end
-
-
-    ##
     # Force symlinking a remote directory
 
     def symlink target, symlink_name
@@ -202,16 +190,13 @@ module Sunshine
 
     private
 
-
     def build_rsync_flags options
-      flags   = @rsync_flags.dup
+      flags = @rsync_flags.dup
 
-      sudo_val = @sudo
-      sudo_val = options[:sudo] if options.has_key?(:sudo)
+      rsync_sudo = sudo_cmd 'rsync', options
 
-      if sudo_val
-        path = sudo_cmd('rsync', sudo_val).join(' ')
-        flags << "--rsync-path='#{ path }'"
+      unless rsync_sudo == 'rsync'
+        flags << "--rsync-path='#{ rsync_sudo.join(" ") }'"
       end
 
       flags << "-e \"ssh #{@ssh_flags.join(' ')}\"" if @ssh_flags
@@ -229,20 +214,9 @@ module Sunshine
 
 
     def ssh_cmd string, options={}
-      sudo_val = @sudo
-      sudo_val = options[:sudo] if options.has_key?(:sudo)
-
-      string = string.gsub(/'/){|s| "'\\''"}
-      string = "'#{string}'"
-
-      cmd = ["sh", "-c", string]
-
-      cmd = sudo_cmd(cmd, sudo_val) if sudo_val
-
-      if @env && !@env.empty?
-        env_vars = @env.map{|e| e.join("=")}
-        cmd      = ["env", env_vars, cmd]
-      end
+      cmd = sh_cmd string
+      cmd = env_cmd cmd
+      cmd = sudo_cmd cmd, options
 
       flags = [*options[:flags]].concat @ssh_flags
 
