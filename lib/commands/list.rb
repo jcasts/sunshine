@@ -9,7 +9,6 @@ module Sunshine
   #   app_name      Name of an application to list.
   #
   # Options:
-  #   -b, --bool               Return a boolean when performing list action.
   #   -s, --status             Check if an app is running.
   #   -d, --details            Get details about the deployed apps.
   #   -h, --health [STATUS]    Set or get the healthcheck status.
@@ -30,56 +29,175 @@ module Sunshine
     # and optionally an accompanying message.
 
     def self.exec names, config
-      errors = false
-      out = []
-      boolean_output = config['return_type'] == :boolean
+      deploy_servers = config['servers']
+      action         = config['return'] || :exist?
+      response_type  = config['return_type'] || :txt_response
 
-      each_server_list(config['servers']) do |list, server|
-        app_names = names.empty? ? list.keys : names
+      args = config[action.to_s] || []
+      args = [args, names].flatten
 
-        next if app_names.empty?
+      responses = {}
+      success   = true
 
-        separator = "-" * server.host.length
+      deploy_servers.each do |deploy_server|
 
-        out.concat [separator, server.host, separator]
-
-        app_names.each do |name|
-          app_path = list[name]
-          out << "#{name} -> #{app_path || '?'}"
-
-          unless app_path
-            errors = true
-            return !errors, false if boolean_output
-            next
-          end
-
-
-          out << case config['return']
-
-          when :details
-            server.call("cat #{app_path}/info")
-
-          when :health
-            health = Healthcheck.new "#{app_path}/shared", [server]
-            health.send config['health'] if config['health']
-            h = health.status.values.first
-            return !errors, false if h != :ok && boolean_output
-            h
-
-          when :status
-            s = server.call("#{app_path}/status") && "running" rescue "stopped"
-            return !errors, false if s == "stopped" && boolean_output
-            s
-          end.to_s
-
-          out.last << "\n"
+        begin
+          state, response = new(deploy_server).send(action, *args)
+        rescue => e
+          state = false
+          response = "#{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
         end
 
-        out.last << "\n"
+        host            = deploy_server.host
+        success         = state if success
+        responses[host] = response
       end
 
-      out = boolean_output ? !errors : out.join("\n")
-      return !errors, out
+      return success, self.send(response_type, responses)
+    end
+
+
+    ##
+    # Formats response as text output:
+    #   ------------------
+    #   subdomain.host.com
+    #   ------------------
+    #   app_name: running
+
+    def self.txt_response res_hash
+      str_out = ""
+
+      res_hash.each do |host, response|
+        separator = "-" * host.length
+
+        host_status = if Hash === response
+          apps_status = response.map do |app_name, status|
+            "#{app_name}: #{status[:data]}\n"
+          end
+          apps_status.join("\n")
+
+        else
+          response
+        end
+
+        str_out << "\n"
+        str_out << [separator, host, separator].join("\n")
+        str_out << "\n"
+        str_out << host_status
+        str_out << "\n"
+      end
+
+      str_out
+    end
+
+
+
+    attr_accessor :app_list, :deploy_server
+
+    def initialize deploy_server
+      @deploy_server = deploy_server
+      @deploy_server.connect
+
+      @app_list = self.class.load_list @deploy_server
+    end
+
+
+    ##
+    # Reads and returns the specified apps' info file.
+    # Returns a response hash (see ListCommand#each_app).
+
+    def details(*app_names)
+      each_app(*app_names) do |name, path|
+        output = @deploy_server.call "cat #{path}/info"
+        "\n#{output}"
+      end
+    end
+
+
+    ##
+    # Returns the path of specified apps.
+    # Returns a response hash (see ListCommand#each_app).
+
+    def exist?(*app_names)
+      each_app(*app_names) do |name, path|
+        path
+      end
+    end
+
+
+    ##
+    # Get or set the healthcheck statue.
+    # Returns a response hash (see ListCommand#each_app).
+
+    def health(*app_names)
+      action = app_names.delete_at(0) if Symbol === app_names.first
+
+      each_app(*app_names) do |name, path|
+        health = Healthcheck.new "#{path}/shared", @deploy_server
+        health.send action if action
+
+        health.status.values.first
+      end
+    end
+
+
+    ##
+    # Checks if the apps' pids are present.
+    # Returns a response hash (see ListCommand#each_app).
+
+    def status(*app_names)
+      each_app(*app_names) do |name, path|
+        @deploy_server.call("#{path}/status") && "running" rescue "stopped"
+      end
+    end
+
+
+    # Do something with each server app it to a set of app names
+    # and build a response hash:
+    #   each_app do |name, path|
+    #     ...
+    #   end
+    #
+    # Restrict it to a set of apps if they are present on the server:
+    #   each_app('app1', 'app2') do |name, path|
+    #     ...
+    #   end
+    #
+    # Returns a response hash:
+    #   {"app_name" => {:success => true, :data => "somedata"} ...}
+
+    def each_app(*app_names)
+      app_names = @app_list.keys if app_names.empty?
+      response  = {}
+      success   = true
+
+      app_names.each do |name|
+        path = @app_list[name]
+
+        begin
+          raise "Application not found." unless path
+
+          data = yield(name, path) if block_given?
+
+          response[name] = build_response true, data
+
+        rescue => e
+          success = false
+          response[name] = build_response false, e.message
+        end
+
+      end
+
+      [success, response]
+    end
+
+
+    ##
+    # Builds a standard response entry:
+    #   {:success => true, :data => "somedata"}
+
+    def build_response success, data=nil
+      {:success => success, :data => data}
     end
 
 
@@ -136,11 +254,6 @@ Arguments:
     app_name      Name of an application to list.
         EOF
 
-        opt.on('-b', '--bool',
-               'Return a boolean when performing list action.') do
-          options['return_type'] = :boolean
-        end
-
         opt.on('-s', '--status',
                'Check if an app is running.') do
           options['return'] = :status
@@ -156,7 +269,7 @@ Arguments:
         desc = "Set or get the healthcheck status. (#{vals.join(", ")})"
 
         opt.on('-h', '--health [STATUS]', vals, desc) do |status|
-          options['health'] = status
+          options['health'] = status.to_sym if status
           options['return'] = :health
         end
       end

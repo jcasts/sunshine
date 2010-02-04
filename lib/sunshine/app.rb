@@ -91,7 +91,8 @@ module Sunshine
         :deployed_at => Time.now,
         :deployed_by => Sunshine.console.user,
         :scm_url     => @repo.url,
-        :scm_rev     => @repo.revision
+        :scm_rev     => @repo.revision,
+        :path        => @deploy_path
       }
     end
 
