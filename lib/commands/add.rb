@@ -12,10 +12,10 @@ module Sunshine
   #
   # Options:
   #     -u, --user USER            User to use for remote login. Use with -r.
-  #     -r, --remote svr1,svr2     Run on one or more remote servers
-  #     -v, --verbose              Run in verbose mode
+  #     -r, --remote svr1,svr2     Run on one or more remote servers.
+  #     -v, --verbose              Run in verbose mode.
 
-  module AddCommand
+  class AddCommand < ListCommand
 
     ##
     # Takes an array and a hash, runs the command and returns:
@@ -30,8 +30,8 @@ module Sunshine
       errors = false
       verbose = config['verbose']
 
-      ListCommand.each_server_list(config['servers']) do |apps, server|
-        puts "Updating #{host}..." if verbose
+      each_server_list(config['servers']) do |apps, server|
+        puts "Updating #{server.host}..." if verbose
 
         app_paths.each do |path|
           app_name, path = path.split(":") if path.include?(":")
@@ -48,7 +48,7 @@ module Sunshine
           Sunshine.console << "  add: #{app_name} -> #{path}" if verbose
         end
 
-        ListCommand.save_list apps, server
+        save_list apps, server
       end
 
       return !errors
@@ -60,7 +60,7 @@ module Sunshine
 
     def self.parse_args argv
 
-      DefaultCommand.parse_remote_args(argv) do |opt, options|
+      parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
 Usage: #{opt.program_name} add app_path [more paths...] [options]

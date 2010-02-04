@@ -12,10 +12,10 @@ module Sunshine
   #     -d, --delete               Delete the app directory.
   #     -D, --sudo-delete          Delete the app directory using sudo.
   #     -u, --user USER            User to use for remote login. Use with -r.
-  #     -r, --remote svr1,svr2     Run on one or more remote servers
-  #     -v, --verbose              Run in verbose mode
+  #     -r, --remote svr1,svr2     Run on one or more remote servers.
+  #     -v, --verbose              Run in verbose mode.
 
-  module RmCommand
+  class RmCommand < ListCommand
 
     ##
     # Takes an array and a hash, runs the command and returns:
@@ -28,8 +28,8 @@ module Sunshine
 
     def self.exec app_names, config
 
-      ListCommand.each_server_list(config['servers']) do |apps, server|
-        puts "Updating #{host}..." if config['verbose']
+      each_server_list(config['servers']) do |apps, server|
+        puts "Updating #{server.host}..." if config['verbose']
 
         app_names.each do |app_name|
 
@@ -54,7 +54,7 @@ module Sunshine
           puts "  rm: #{app_name} -> #{path}" if config['verbose']
         end
 
-        ListCommand.save_list apps, server
+        save_list apps, server
       end
 
       return true
@@ -65,7 +65,7 @@ module Sunshine
     # Parses the argv passed to the command
 
     def self.parse_args argv
-      DefaultCommand.parse_remote_args(argv) do |opt, options|
+      parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
 Usage: #{opt.program_name} rm app_name [more names...] [options]

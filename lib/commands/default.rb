@@ -3,7 +3,7 @@ module Sunshine
   ##
   # Default sunshine behavior when no command is passed. Outputs help.
 
-  module DefaultCommand
+  class DefaultCommand
 
     ##
     # Takes an array and a hash, runs the command and returns:
@@ -96,12 +96,12 @@ Sunshine is an object oriented deploy tool for rack applications.
         end
 
         opt.on('-r', '--remote server1,server2', Array,
-               'Run on one or more remote servers') do |servers|
+               'Run on one or more remote servers.') do |servers|
           options['servers'] = servers
         end
 
         opt.on('-v', '--verbose',
-               'Run in verbose mode') do
+               'Run in verbose mode.') do
           options['verbose'] = true
         end
       end
@@ -126,6 +126,14 @@ Sunshine is an object oriented deploy tool for rack applications.
       end
 
       options
+    end
+
+
+    ##
+    # Build a Sunshine command response
+
+    def self.build_response status, data
+      {'status' => status, 'data' => data}.to_yaml
     end
   end
 end

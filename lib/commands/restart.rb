@@ -10,10 +10,10 @@ module Sunshine
   #
   # Options:
   #     -u, --user USER            User to use for remote login. Use with -r.
-  #     -r, --remote svr1,svr2     Run on one or more remote servers
-  #     -v, --verbose              Run in verbose mode
+  #     -r, --remote svr1,svr2     Run on one or more remote servers.
+  #     -v, --verbose              Run in verbose mode.
 
-  module RestartCommand
+  class RestartCommand < ListCommand
 
     ##
     # Takes an array and a hash, runs the command and returns:
@@ -27,7 +27,7 @@ module Sunshine
     def self.exec argv, config
       app_names = argv
 
-      ListCommand.each_server_list(config['servers']) do |apps, server|
+      each_server_list(config['servers']) do |apps, server|
         app_names.each do |name|
           app_path = apps[name]
           server.call File.join(app_path, "restart")
@@ -42,7 +42,7 @@ module Sunshine
     # Parses the argv passed to the command
 
     def self.parse_args argv
-      DefaultCommand.parse_remote_args(argv) do |opt, options|
+      parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
 Usage: #{opt.program_name} restart app_name [more names...] [options]

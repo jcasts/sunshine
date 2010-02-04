@@ -99,10 +99,10 @@ module Sunshine
   require 'sunshine/deploy_server'
   require 'sunshine/app'
 
-  require 'commands/add'
   require 'commands/default'
-  require 'commands/deploy'
   require 'commands/list'
+  require 'commands/add'
+  require 'commands/deploy'
   require 'commands/restart'
   require 'commands/rm'
   require 'commands/start'

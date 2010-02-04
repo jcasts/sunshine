@@ -12,13 +12,13 @@ module Sunshine
   #   -b, --bool               Return a boolean when performing list action.
   #   -s, --status             Check if an app is running.
   #   -d, --details            Get details about the deployed apps.
-  #   -h, --health [STATUS]    Set or get the healthcheck status
+  #   -h, --health [STATUS]    Set or get the healthcheck status.
   #                            (enable, disable, remove)
-  #   -u, --user USER          User to use for remote login. Use with -r.
-  #   -r, --remote svr1,svr2   Run on one or more remote servers
-  #   -v, --verbose            Run in verbose mode
+  #   -u, --user USER          User to use for remote login. Use with -r
+  #   -r, --remote svr1,svr2   Run on one or more remote servers.
+  #   -v, --verbose            Run in verbose mode.
 
-  module ListCommand
+  class ListCommand < DefaultCommand
 
     ##
     # Takes an array and a hash, runs the command and returns:
@@ -114,7 +114,7 @@ module Sunshine
 
         server.connect if server.respond_to? :connect
 
-        apps = ListCommand.load_list server
+        apps = load_list server
 
         yield(apps, server) if block_given?
 
@@ -127,7 +127,7 @@ module Sunshine
     # Parses the argv passed to the command
 
     def self.parse_args argv
-      DefaultCommand.parse_remote_args(argv) do |opt, options|
+      parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
 Usage: #{opt.program_name} list app_name [more names...] [options]
@@ -153,7 +153,7 @@ Arguments:
 
 
         vals = [:enable, :disable, :remove]
-        desc = "Set or get the healthcheck status (#{vals.join(", ")})"
+        desc = "Set or get the healthcheck status. (#{vals.join(", ")})"
 
         opt.on('-h', '--health [STATUS]', vals, desc) do |status|
           options['health'] = status

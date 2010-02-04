@@ -14,7 +14,7 @@ module Sunshine
   #     -a, --auto                Non-interactive - automate or fail.
   #         --no-trace            Don't trace any output.
 
-  module DeployCommand
+  class DeployCommand < DefaultCommand
 
     ##
     # Takes an array and a hash, runs the command and returns:
@@ -61,7 +61,7 @@ module Sunshine
     def self.parse_args argv
       options = {'trace' => true}
 
-      opts = DefaultCommand.opt_parser(options) do |opt|
+      opts = opt_parser(options) do |opt|
         opt.banner = <<-EOF
 
 Usage: #{opt.program_name} deploy [deploy_file] [options]
