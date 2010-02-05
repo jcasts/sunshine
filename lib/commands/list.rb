@@ -179,10 +179,25 @@ module Sunshine
 
     def status(*app_names)
       each_app(*app_names) do |name, path|
-        @deploy_server.call("#{path}/status") && "running" rescue "stopped"
+        text_status path
       end
     end
 
+
+    ##
+    # Get an app's status
+
+    def text_status path
+      running?(path) && "running" || "down"
+    end
+
+
+    ##
+    # Check if an app is running
+
+    def running? path
+      @deploy_server.call "#{path}/status" rescue false
+    end
 
     # Do something with each server app it to a set of app names
     # and build a response hash:

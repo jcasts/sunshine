@@ -24,18 +24,30 @@ module Sunshine
     #     code != 0: failed
     # and optionally an accompanying message.
 
-    def self.exec app_names, config
-
-      each_server_list(config['servers']) do |apps, server|
-        app_names.each do |name|
-          app_path = apps[name]
-          server.call File.join(app_path, "stop")
-        end
+    def self.exec names, config
+      output = exec_each_server config do |deploy_server|
+        new(deploy_server).stop(names)
       end
 
-      return true
+      return output
     end
 
+
+    ##
+    # Stop specified apps.
+
+    def stop app_names
+      each_app(*app_names) do |name, path|
+
+        begin
+          @deploy_server.call "#{path}/stop"
+          text_status path
+
+        rescue CmdError => e
+          raise "Could not stop. #{text_status(path)}"
+        end
+      end
+    end
 
     ##
     # Parses the argv passed to the command

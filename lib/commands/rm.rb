@@ -31,7 +31,7 @@ module Sunshine
 
       output = exec_each_server config do |deploy_server|
         server_command = new(deploy_server)
-        results        = server_command.remove(delete_dir, *names)
+        results        = server_command.remove(names, delete_dir)
 
         self.save_list server_command.app_list, deploy_server
 
@@ -45,7 +45,7 @@ module Sunshine
     ##
     # Remove a registered app on a given deploy server
 
-    def remove(delete_dir, *app_names)
+    def remove app_names, delete_dir=false
       each_app(*app_names) do |name, path|
         if delete_dir
           @deploy_server.call File.join(path, "stop")

@@ -62,7 +62,7 @@ module Sunshine
     ##
     # Add a registered app on a given deploy server
 
-    def add(apps_hash)
+    def add apps_hash
       response_for_each(*apps_hash.keys) do |name|
         path = apps_hash[name]
         test_dir = @deploy_server.call("test -d #{path}") rescue false

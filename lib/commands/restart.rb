@@ -26,7 +26,7 @@ module Sunshine
 
     def self.exec names, config
       output = exec_each_server config do |deploy_server|
-        new(deploy_server).restart(*names)
+        new(deploy_server).restart(names)
       end
 
       return output
@@ -36,7 +36,7 @@ module Sunshine
     ##
     # Restart specified apps.
 
-    def restart(*app_names)
+    def restart app_names
       each_app(*app_names) do |name, path|
         @deploy_server.call( File.join(path, "restart") ) && true
       end

@@ -46,28 +46,12 @@ module Sunshine
 
         begin
           @deploy_server.call "#{path}/start"
-          status(path)
+          text_status path
+
         rescue CmdError => e
-          raise "Could not start. #{status(path)}"
+          raise "Could not start. #{text_status(path)}"
         end
-
       end
-    end
-
-
-    ##
-    # Get an app's status
-
-    def status path
-      running?(path) ? "App is running." : "App is down."
-    end
-
-
-    ##
-    # Check if an app is running
-
-    def running? path
-      @deploy_server.call "#{path}/status" rescue false
     end
 
 
