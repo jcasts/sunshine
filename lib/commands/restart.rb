@@ -38,16 +38,7 @@ module Sunshine
     # Restart specified apps.
 
     def restart app_names
-      each_app(*app_names) do |name, path|
-
-        begin
-          @deploy_server.call "#{path}/restart"
-          text_status path
-
-        rescue CmdError => e
-          raise "Could not restart. #{text_status(path)}"
-        end
-      end
+      status_after_command :restart, app_names
     end
 
 

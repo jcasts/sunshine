@@ -41,17 +41,9 @@ module Sunshine
     # Start specified apps.
 
     def start app_names, force=false
-      each_app(*app_names) do |name, path|
+      status_after_command :start, app_names do |name, path|
 
         @deploy_server.call "#{path}/stop" if running?(path) && force
-
-        begin
-          @deploy_server.call "#{path}/start"
-          text_status path
-
-        rescue CmdError => e
-          raise "Could not start. #{text_status(path)}"
-        end
       end
     end
 

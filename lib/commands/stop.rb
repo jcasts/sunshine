@@ -38,16 +38,7 @@ module Sunshine
     # Stop specified apps.
 
     def stop app_names
-      each_app(*app_names) do |name, path|
-
-        begin
-          @deploy_server.call "#{path}/stop"
-          text_status path
-
-        rescue CmdError => e
-          raise "Could not stop. #{text_status(path)}"
-        end
-      end
+      status_after_command :stop, app_names
     end
 
     ##

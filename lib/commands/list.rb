@@ -186,6 +186,26 @@ module Sunshine
 
 
     ##
+    # Runs a command and returns the text_status for each app_name:
+    #   status_after_command 'restart', ['app1', 'app2']
+
+    def status_after_command cmd, app_names
+      each_app(*app_names) do |name, path|
+
+        yield(name, path) if block_given?
+
+        begin
+          @deploy_server.call "#{path}/#{cmd}"
+          text_status path
+
+        rescue CmdError => e
+          raise "Failed running #{cmd}: #{text_status(path)}"
+        end
+      end
+    end
+
+
+    ##
     # Get an app's status
 
     def text_status path
