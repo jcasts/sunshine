@@ -11,6 +11,7 @@ module Sunshine
   #                 By default: name = File.basename app_path
   #
   # Options:
+  #     -f, --format FORMAT        Set the output format (txt, yml, json)
   #     -u, --user USER            User to use for remote login. Use with -r.
   #     -r, --remote svr1,svr2     Run on one or more remote servers.
   #     -v, --verbose              Run in verbose mode.

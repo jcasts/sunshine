@@ -102,7 +102,7 @@ Sunshine is an object oriented deploy tool for rack applications.
 
         formats = %w{txt yml json}
         opt.on('-f', '--format FORMAT', formats,
-               "Set the output format (#{formats.join(',')})") do |format|
+               "Set the output format (#{formats.join(', ')})") do |format|
           options['format'] = "#{format}_format".to_sym
         end
 
