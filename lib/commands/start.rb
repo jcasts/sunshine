@@ -9,7 +9,7 @@ module Sunshine
   #     app_name     Name of the application to start.
   #
   # Options:
-  #     -f, --force                Stop apps that are running, then start them.
+  #     -F, --force                Stop apps that are running, then start them.
   #     -u, --user USER            User to use for remote login. Use with -r.
   #     -r, --remote svr1,svr2     Run on one or more remote servers.
   #     -v, --verbose              Run in verbose mode.
@@ -25,29 +25,49 @@ module Sunshine
     #     code != 0: failed
     # and optionally an accompanying message.
 
-    def self.exec app_names, config
-      errors = false
+    def self.exec names, config
+      force = config['force']
 
-      each_server_list(config['servers']) do |apps, server|
-        app_names.each do |name|
-          app_path = apps[name]
-          unless app_path
-            errors = true
-            next
-          end
-
-          running = server.call File.join(app_path, "status") rescue false
-
-          if running && config['force']
-            server.call File.join(app_path, "stop")
-            running = false
-          end
-
-          server.call File.join(app_path, "start") unless running
-        end
+      output = exec_each_server config do |deploy_server|
+        new(deploy_server).start(names, force)
       end
 
-      return !errors
+      return output
+    end
+
+
+    ##
+    # Start specified apps.
+
+    def start app_names, force=false
+      each_app(*app_names) do |name, path|
+
+        @deploy_server.call "#{path}/stop" if running?(path) && force
+
+        begin
+          @deploy_server.call "#{path}/start"
+          status(path)
+        rescue CmdError => e
+          raise "Could not start. #{status(path)}"
+        end
+
+      end
+    end
+
+
+    ##
+    # Get an app's status
+
+    def status path
+      running?(path) ? "App is running." : "App is down."
+    end
+
+
+    ##
+    # Check if an app is running
+
+    def running? path
+      @deploy_server.call "#{path}/status" rescue false
     end
 
 
@@ -64,7 +84,7 @@ Arguments:
     app_name     Name of the application to start.
         EOF
 
-        opt.on('-f', '--force',
+        opt.on('-F', '--force',
                'Stop apps that are running before starting them again.') do
           options['force'] = true
         end
