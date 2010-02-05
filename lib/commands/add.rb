@@ -26,32 +26,51 @@ module Sunshine
     #     code != 0: failed
     # and optionally an accompanying message.
 
-    def self.exec app_paths, config
-      errors = false
-      verbose = config['verbose']
+    def self.exec names, config
+      apps_hash  = parse_app_paths(*names)
 
-      each_server_list(config['servers']) do |apps, server|
-        puts "Updating #{server.host}..." if verbose
+      output = exec_each_server config do |deploy_server|
+        server_command = new(deploy_server)
+        results        = server_command.add apps_hash
 
-        app_paths.each do |path|
-          app_name, path = path.split(":") if path.include?(":")
-          app_name ||= File.basename path
+        self.save_list server_command.app_list, deploy_server
 
-          unless (server.call "test -d #{path}" rescue false)
-            puts "  #{path} is not a valid directory"
-            errors = true
-            next
-          end
-
-          apps[app_name] = path
-
-          Sunshine.console << "  add: #{app_name} -> #{path}" if verbose
-        end
-
-        save_list apps, server
+        results
       end
 
-      return !errors
+      return output
+    end
+
+
+    ##
+    # Takes an array of app path definitions and returns a hash:
+    #   parse_app_paths "myapp:/path/to/app", "/path/to/otherapp"
+    #   #=> {'myapp' => '/path/to/app', 'otherapp' => '/path/to/otherapp'}
+
+    def self.parse_app_paths(*app_paths)
+      apps_hash = {}
+      app_paths.each do |path|
+        name, path = path.split(":") if path.include?(":")
+        name ||= File.basename path
+
+        apps_hash[name] = path
+      end
+      apps_hash
+    end
+
+
+    ##
+    # Add a registered app on a given deploy server
+
+    def add(apps_hash)
+      response_for_each(*apps_hash.keys) do |name|
+        path = apps_hash[name]
+        test_dir = @deploy_server.call("test -d #{path}") rescue false
+
+        raise "'#{path}' is not a directory." unless test_dir
+
+        @app_list[name] = path
+      end
     end
 
 

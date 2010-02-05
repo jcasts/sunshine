@@ -29,7 +29,7 @@ module Sunshine
     def self.exec names, config
       delete_dir = config['delete_dir']
 
-      output = exec_each_server names, config do |deploy_server|
+      output = exec_each_server config do |deploy_server|
         server_command = new(deploy_server)
         results        = server_command.remove(delete_dir, *names)
 

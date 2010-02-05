@@ -2,8 +2,6 @@
 
 * Added sudo functionality:
 
-  * Support for --sudo and --sudo=user on all Sunshine commands
-
   * Support for :sudo option on Sunshine::App, Sunshine::Server, and
     Sunshine::DeployServer constructors, and attr_accessor :sudo
 
@@ -15,6 +13,12 @@
     #yaml for app goes here...
 
 * Changed the format of the App#checkout_path directory
+
+* Commands functionality expanded:
+
+  * Support for --sudo and --sudo=user on all Sunshine commands
+
+  * Added --format option for control commands. Supports txt, yml, json.
 
 * Control scripts generated on the remote server now keep deploy-time
   shell_env variables:
@@ -28,6 +32,8 @@
     Supports all options the env command supports.
 
 * DeployServers now support passing custom flags for ssh and rsync:
+    deploy_server = DeployServer.new "svr.com", :rsync_flags => [...]
+
     deploy_server.call "some_command",
       :sudo => "user", :flags => '-C'
 

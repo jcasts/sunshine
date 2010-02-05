@@ -36,7 +36,7 @@ module Sunshine
       args = config[action.to_s] || []
       args = [args, names].flatten
 
-      output = exec_each_server names, config do |deploy_server|
+      output = exec_each_server config do |deploy_server|
         new(deploy_server).send(action, *args)
       end
 
@@ -47,7 +47,7 @@ module Sunshine
     ##
     # Executes common list functionality for each deploy server.
 
-    def self.exec_each_server names, config
+    def self.exec_each_server config
       deploy_servers = config['servers']
       format         = config['format']
 
@@ -68,7 +68,8 @@ module Sunshine
         responses[host] = build_response state, response
       end
 
-      return success, self.send(format, responses)
+      output = format ? self.send(format, responses) : responses
+      return success, output
     end
 
 
@@ -199,22 +200,31 @@ module Sunshine
 
     def each_app(*app_names)
       app_names = @app_list.keys if app_names.empty?
+
+      response_for_each(*app_names) do |name|
+        path = @app_list[name]
+
+        raise "Application not found." unless path
+
+        yield(name, path) if block_given?
+      end
+    end
+
+
+    def response_for_each(*items)
       response  = {}
       success   = true
 
-      app_names.each do |name|
-        path = @app_list[name]
+      items.each do |item|
 
         begin
-          raise "Application not found." unless path
+          data = yield(item) if block_given?
 
-          data = yield(name, path) if block_given?
-
-          response[name] = self.class.build_response true, data
+          response[item] = self.class.build_response true, data
 
         rescue => e
           success = false
-          response[name] = self.class.build_response false, e.message
+          response[item] = self.class.build_response false, e.message
         end
 
       end
