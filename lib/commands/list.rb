@@ -1,3 +1,5 @@
+require 'json'
+
 module Sunshine
 
   ##
@@ -31,7 +33,7 @@ module Sunshine
     def self.exec names, config
       deploy_servers = config['servers']
       action         = config['return'] || :exist?
-      response_type  = config['return_type'] || :txt_response
+      format         = config['format']
 
       args = config[action.to_s] || []
       args = [args, names].flatten
@@ -50,10 +52,10 @@ module Sunshine
 
         host            = deploy_server.host
         success         = state if success
-        responses[host] = response
+        responses[host] = build_response state, response
       end
 
-      return success, self.send(response_type, responses)
+      return success, self.send(format, responses)
     end
 
 
@@ -64,20 +66,20 @@ module Sunshine
     #   ------------------
     #   app_name: running
 
-    def self.txt_response res_hash
+    def self.txt_format res_hash
       str_out = ""
 
       res_hash.each do |host, response|
         separator = "-" * host.length
 
-        host_status = if Hash === response
-          apps_status = response.map do |app_name, status|
+        host_status = if Hash === response[:data]
+          apps_status = response[:data].map do |app_name, status|
             "#{app_name}: #{status[:data]}\n"
           end
           apps_status.join("\n")
 
         else
-          response
+          response[:data]
         end
 
         str_out << "\n"
@@ -88,6 +90,22 @@ module Sunshine
       end
 
       str_out
+    end
+
+
+    ##
+    # Formats response as yaml:
+
+    def self.yml_format res_hash
+      res_hash.to_yaml
+    end
+
+
+    ##
+    # Formats response as json:
+
+    def self.json_format res_hash
+      res_hash.to_json
     end
 
 
@@ -179,11 +197,11 @@ module Sunshine
 
           data = yield(name, path) if block_given?
 
-          response[name] = build_response true, data
+          response[name] = self.class.build_response true, data
 
         rescue => e
           success = false
-          response[name] = build_response false, e.message
+          response[name] = self.class.build_response false, e.message
         end
 
       end
@@ -196,7 +214,7 @@ module Sunshine
     # Builds a standard response entry:
     #   {:success => true, :data => "somedata"}
 
-    def build_response success, data=nil
+    def self.build_response success, data=nil
       {:success => success, :data => data}
     end
 

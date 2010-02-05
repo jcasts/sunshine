@@ -100,6 +100,12 @@ Sunshine is an object oriented deploy tool for rack applications.
           options['servers'] = servers
         end
 
+        formats = %w{txt yml json}
+        opt.on('-f', '--format FORMAT', formats,
+               "Set the output format (#{formats.join(',')})") do |format|
+          options['format'] = "#{format}_format".to_sym
+        end
+
         opt.on('-v', '--verbose',
                'Run in verbose mode.') do
           options['verbose'] = true
@@ -117,6 +123,8 @@ Sunshine is an object oriented deploy tool for rack applications.
       else
         options['servers'] = [Sunshine.console]
       end
+
+      options['format'] ||= :txt_format
 
 
       if options['sudo']
