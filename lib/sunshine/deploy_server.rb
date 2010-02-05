@@ -111,11 +111,7 @@ module Sunshine
     def disconnect
       return unless connected?
 
-      begin
-        Process.kill "HUP", @pid
-        Process.wait
-      rescue
-      end
+      kill_process @pid, "HUP"
 
       @inn.close rescue nil
       @out.close rescue nil

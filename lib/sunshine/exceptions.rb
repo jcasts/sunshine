@@ -32,15 +32,20 @@ module Sunshine
 
 
   ##
+  # Something went wrong with a deploy-specific item.
+  class DeployError < Exception; end
+
+
+  ##
   # The error is serious enough that deploy cannot proceed.
   # Sunshine will attempt to revert to a previous deploy if available.
-  class CriticalDeployError < Exception; end
+  class CriticalDeployError < DeployError; end
 
 
   ##
   # The error is so serious that all no more action can be taken.
   # Sunshine will attempt to close any ssh connections and stop the deploy.
-  class FatalDeployError < Exception; end
+  class FatalDeployError < DeployError; end
 
   ##
   # A dependency could not be installed.

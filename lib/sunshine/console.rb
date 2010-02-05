@@ -138,13 +138,68 @@ module Sunshine
     # raises a CmdError if the exit status of the command is not zero.
 
     def execute cmd
-      cmd = [*cmd]
-      result = Hash.new{|h,k| h[k] = []}
-
       pid, inn, out, err = popen4(*cmd)
 
-      inn.sync   = true
-      streams    = [out, err]
+      inn.sync = true
+      log_methods = {out => :debug, err => :error}
+
+      result, status = process_streams(pid, out, err) do |stream, data|
+        stream_name = stream == out ? :out : :err
+
+        Sunshine.logger.send log_methods[stream], ">>", data
+
+        yield(stream_name, data) if block_given?
+
+        if password_required?(stream_name, data) then
+
+          kill_process(pid) unless Sunshine.interactive?
+
+          send_password_to_stream(inn)
+
+          data << "\n"
+          Sunshine.console << "\n"
+        end
+      end
+
+      raise_command_failed(status, cmd) unless status.success?
+
+      result[out].join.chomp
+
+    ensure
+      inn.close rescue nil
+      out.close rescue nil
+      err.close rescue nil
+    end
+
+
+    private
+
+    def raise_command_failed(status, cmd)
+      raise CmdError,
+        "Execution failed with status #{status.exitstatus}: #{[*cmd].join ' '}"
+    end
+
+    def password_required? stream_name, data
+      stream_name == :err && data =~ SUDO_PROMPT
+    end
+
+
+    def send_password_to_stream inn
+      inn.puts @password || prompt_for_password
+    end
+
+
+    def kill_process pid, kill_type="KILL"
+      begin
+        Process.kill kill_type, pid
+        Process.wait
+      rescue
+      end
+    end
+
+
+    def process_streams pid, *streams
+      result = Hash.new{|h,k| h[k] = []}
 
       # Handle process termination ourselves
       status = nil
@@ -167,40 +222,13 @@ module Sunshine
 
           data = stream.readpartial(1024)
 
-          Sunshine.logger.debug ">>", data if stream == out
-          Sunshine.logger.error ">>", data if stream == err
-
-          stream_name = stream == out ? :out : :err
-          yield(stream_name, data) if block_given?
-
-          if stream == err && data =~ SUDO_PROMPT then
-
-            unless Sunshine.interactive?
-              Process.kill "KILL", pid
-              Process.wait
-            end
-
-            inn.puts @password || prompt_for_password
-
-            data << "\n"
-            Sunshine.console << "\n"
-          end
+          yield(stream, data)
 
           result[stream] << data
         end
       end
 
-      unless status.success? then
-        raise CmdError,
-          "Execution failed with status #{status.exitstatus}: #{cmd.join ' '}"
-      end
-
-      result[out].join.chomp
-
-    ensure
-      inn.close rescue nil
-      out.close rescue nil
-      err.close rescue nil
+      return result, status
     end
   end
 end

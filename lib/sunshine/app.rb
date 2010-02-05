@@ -92,7 +92,8 @@ module Sunshine
         :deployed_by => Sunshine.console.user,
         :scm_url     => @repo.url,
         :scm_rev     => @repo.revision,
-        :path        => @deploy_path
+        :path        => @deploy_path,
+        :ports       => Hash.new{|h,k| h[k] = {}}
       }
     end
 
@@ -119,20 +120,27 @@ module Sunshine
       remove_old_deploys
       register_as_deployed
 
-    rescue CriticalDeployError => e
-      Sunshine.logger.error :app, "#{e.class}: #{e.message} - cannot deploy" do
-        Sunshine.logger.error '>>', e.backtrace.join("\n")
-        revert!
-      end
-
-    rescue FatalDeployError => e
-      Sunshine.logger.fatal :app, "#{e.class}: #{e.message}" do
-        Sunshine.logger.error '>>', e.backtrace.join("\n")
-      end
+    rescue DeployError => e
+      handle_deploy_error e
 
     ensure
       Sunshine.logger.info :app, "Ending deploy of #{@name}" do
         @deploy_servers.disconnect
+      end
+    end
+
+
+    ##
+    # Figure out what to do based on what kind of deploy error was received.
+
+    def handle_deploy_error e
+      message = "#{e.class}: #{e.message}"
+      log_method = FatalDeployError === e ? :fatal : :error
+
+      Sunshine.logger.send(log_method, :app, message) do
+        Sunshine.logger.error '>>', e.backtrace.join("\n")
+
+        revert! if CriticalDeployError === e
       end
     end
 

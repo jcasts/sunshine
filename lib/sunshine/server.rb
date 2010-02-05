@@ -310,18 +310,13 @@ module Sunshine
 
     def register_after_user_script
       @app.after_user_script do |app|
-        app.scripts[:start]  << self.start_cmd
-        app.scripts[:stop]   << self.stop_cmd
+        app.scripts[:start]  << start_cmd
+        app.scripts[:stop]   << stop_cmd
         app.scripts[:status] << "test -f #{@pid}"
 
-        if self.restart_cmd
-          app.scripts[:restart] << self.restart_cmd
-        else
-          app.scripts[:restart] << self.stop_cmd
-          app.scripts[:restart] << self.start_cmd
-        end
+        restart = restart_cmd ? restart_cmd : [start_cmd, stop_cmd]
+        app.scripts[:restart].concat [*restart]
 
-        app.info[:ports] ||= {}
         app.info[:ports][@pid] = @port
       end
     end
