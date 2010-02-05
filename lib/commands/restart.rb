@@ -24,17 +24,22 @@ module Sunshine
     #     code != 0: failed
     # and optionally an accompanying message.
 
-    def self.exec argv, config
-      app_names = argv
-
-      each_server_list(config['servers']) do |apps, server|
-        app_names.each do |name|
-          app_path = apps[name]
-          server.call File.join(app_path, "restart")
-        end
+    def self.exec names, config
+      output = exec_each_server config do |deploy_server|
+        new(deploy_server).restart(*names)
       end
 
-      return true
+      return output
+    end
+
+
+    ##
+    # Restart specified apps.
+
+    def restart(*app_names)
+      each_app(*app_names) do |name, path|
+        @deploy_server.call( File.join(path, "restart") ) && true
+      end
     end
 
 
