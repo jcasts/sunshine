@@ -226,6 +226,10 @@ module Sunshine
     end
 
 
+    ##
+    # Builds a response object for each item passed and returns
+    # the result of the passed block as its data value.
+
     def response_for_each(*items)
       response  = {}
       success   = true
@@ -272,28 +276,6 @@ module Sunshine
 
     def self.save_list list, server
       server.call "echo '#{list.to_yaml}' > #{Sunshine::APP_LIST_PATH}"
-    end
-
-
-    ##
-    # Do something which the installed apps list on each server.
-    #   each_server_list(deploy_servers) do |list, server|
-    #     list    #=> {app_name => app_path, ...}
-    #   end
-
-    def self.each_server_list servers
-      servers.each do |server|
-        host = server.host rescue "localhost"
-        log_arr = []
-
-        server.connect if server.respond_to? :connect
-
-        apps = load_list server
-
-        yield(apps, server) if block_given?
-
-        server.disconnect if server.respond_to? :disconnect
-      end
     end
 
 
