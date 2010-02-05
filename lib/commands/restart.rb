@@ -39,7 +39,14 @@ module Sunshine
 
     def restart app_names
       each_app(*app_names) do |name, path|
-        @deploy_server.call( File.join(path, "restart") ) && true
+
+        begin
+          @deploy_server.call "#{path}/restart"
+          text_status path
+
+        rescue CmdError => e
+          raise "Could not restart. #{text_status(path)}"
+        end
       end
     end
 
