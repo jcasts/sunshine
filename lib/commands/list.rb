@@ -31,12 +31,25 @@ module Sunshine
     # and optionally an accompanying message.
 
     def self.exec names, config
-      deploy_servers = config['servers']
-      action         = config['return'] || :exist?
-      format         = config['format']
+      action = config['return'] || :exist?
 
       args = config[action.to_s] || []
       args = [args, names].flatten
+
+      output = exec_each_server names, config do |deploy_server|
+        new(deploy_server).send(action, *args)
+      end
+
+      return output
+    end
+
+
+    ##
+    # Executes common list functionality for each deploy server.
+
+    def self.exec_each_server names, config
+      deploy_servers = config['servers']
+      format         = config['format']
 
       responses = {}
       success   = true
@@ -44,7 +57,7 @@ module Sunshine
       deploy_servers.each do |deploy_server|
 
         begin
-          state, response = new(deploy_server).send(action, *args)
+          state, response = yield(deploy_server)
         rescue => e
           state = false
           response = "#{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
@@ -114,7 +127,7 @@ module Sunshine
 
     def initialize deploy_server
       @deploy_server = deploy_server
-      @deploy_server.connect
+      @deploy_server.connect rescue nil
 
       @app_list = self.class.load_list @deploy_server
     end

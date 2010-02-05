@@ -138,6 +138,7 @@ module Sunshine
     # raises a CmdError if the exit status of the command is not zero.
 
     def execute cmd
+      cmd = [cmd] unless Array === cmd
       pid, inn, out, err = popen4(*cmd)
 
       inn.sync = true
