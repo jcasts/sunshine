@@ -38,6 +38,7 @@ class Settler
 
   require 'settler/dependency'
   require 'settler/yum'
+  require 'settler/apt_get'
   require 'settler/gem'
   require 'settler/atti_tpkg'
 
