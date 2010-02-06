@@ -90,12 +90,97 @@ Yaml files are read on a deploy-environment basis so its format reflects this:
       - qa2.servers.com
 
 
+== Dependencies
+
+Sunshine has simple, basic dependency support, and relies mostly on preexisting
+package manager tools such as yum or rubygems. Sunshine's default dependencies
+are defined in the Sunshine::Dependencies class and can be overridden as needed:
+
+  class Sunshine::Dependencies < Settler
+
+    yum 'svn', :pkg => 'subversion'
+
+    yum 'git'
+
+    yum 'nginx'
+    ...
+  end
+
+
+Dependencies are uniquely named to the Settler class they belong to, which means
+using a different package manager is as simple as redefining the dependencies:
+
+  class Sunshine::Dependencies < Settler
+
+    apt_get 'svn', :pkg => 'subversion'
+
+    apt_get 'git'
+
+    apt_get 'nginx'
+    ...
+  end
+
+
+If you would like to define a custom dependency or dependency type, you can do
+so by either subclassing Settler::Dependency, or by using the plain
+Settler::dependency method and defining custom install, uninstall, and check
+bash commands. If passed a String these commands rely on the shell's exit
+status; if passed a block it will use the block's return value:
+
+  class Sunshine::Dependencies < Settler
+
+    dependency 'rubygems' do
+      requires  'ruby', 'irb'
+
+      install 'yum install -y rubygems && gem update --system --no-ri --no-rdoc'
+
+      uninstall 'yum remove rubygems'
+
+      check do |shell|
+        shell.call("gem -v || echo 0").strip >= '1.3.5'
+      end
+    end
+  end
+
+
+Installing dependencies can be done by calling Settler::install or
+directly on the dependency object with Dependency#install!:
+
+  Sunshine::Dependencies.install 'nginx', 'rubygems'
+
+  # Equivalent to:
+
+  Sunshine::Dependencies['nginx'].install!
+  Sunshine::Dependencies['rubygems'].install!
+
+
+By default dependencies are run by Sunshine::console which is a representation
+of the local shell. However, Settler dependencies may use any object that
+responds to a #call method and takes a single argument, such as
+Sunshine::DeployServer objects:
+
+  Sunshine::Dependencies.install 'nginx', :call => deploy_server
+
+  # Equivalent to:
+
+  Sunshine::Dependencies['nginx'].install! :call => deploy_server
+
+
+Note: To install Sunshine dependencies for a given Sunshine::App object, use
+Sunshine::App#install_deps to install on all the app's deploy servers:
+
+    app.install_deps 'nginx', 'rubygems'
+
+    app.install_deps 'postgres', 'pgserver',
+      :servers => app.deploy_servers.find(:role => 'db')
+
+
 == Deployed Application Control
 
 Sunshine has a variety of commands that allow simple control of
 remote or locally deployed applications. These include start, stop, restart
 actions to be taken application-wide, as well as querying for the
-health and state of the app.
+health and state of the app:
 
 Examples:
   sunshine deploy deploy_script.rb
