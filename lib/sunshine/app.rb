@@ -513,7 +513,6 @@ module Sunshine
       @shared_path   = "#{@deploy_path}/shared"
       @log_path      = "#{@shared_path}/log"
       @checkout_path = "#{@deploys_dir}/#{Time.now.to_i}"
-      #@checkout_path = "#{@deploys_dir}/#{Time.now.to_i}_#{@repo.revision}"
     end
 
 
@@ -547,6 +546,9 @@ module Sunshine
     end
 
 
+    ##
+    # Load and merge a yml config file with the app's deploy_options hash
+
     def merge_config_file config_file, deploy_options
       return deploy_options unless config_file
       env = deploy_options[:deploy_env]
@@ -560,15 +562,41 @@ module Sunshine
 
     def load_config_for deploy_env, config_file
       config_hash = case config_file
-      when File   then YAML.load config_file
-      when String then YAML.load_file config_file
-      end
+                    when File   then YAML.load config_file
+                    when String then YAML.load_file config_file
+                    end
 
       return {} unless config_hash
 
-      default_config = config_hash[:default] || {}
-      current_config = config_hash[deploy_env] || {}
-      default_config.merge(current_config)
+      deploy_env_config = (config_hash[deploy_env] || {}).dup
+      deploy_env_config[:inherits] ||= []
+      deploy_env_config[:inherits].unshift(:default) if
+        :default != deploy_env && config_hash[:default]
+
+      merge_config_inheritance deploy_env_config, config_hash
+
+
+      #default_config = config_hash[:default] || {}
+      #current_config = config_hash[deploy_env] || {}
+      #default_config.merge(current_config)
+    end
+
+
+    ##
+    # Recursively merges config hashes based on the value at :inherits
+
+    def merge_config_inheritance main_config, all_configs
+      new_config = {}
+      parents    = [*main_config[:inherits]].compact
+
+      parents.each do |config_name|
+        parent = all_configs[config_name]
+        parent = merge_config_inheritance parent, all_configs
+
+        new_config = new_config.merge parent
+      end
+
+      new_config.merge main_config # Two merges important for inheritance order
     end
 
 

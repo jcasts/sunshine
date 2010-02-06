@@ -85,6 +85,56 @@ class TestApp < Test::Unit::TestCase
   end
 
 
+  TEST_CONFIG = <<-STR
+    :conf1:
+      :common:     "conf1"
+      :from_conf1: true
+      :not_conf4:  "conf1"
+
+    :conf2:
+      :inherits:   :conf1
+      :common:     "conf2"
+      :from_conf2: true
+      :not_conf4:  "conf2"
+
+    :conf3:
+      :common:     "conf3"
+      :from_conf3: true
+      :not_conf4:  "conf3"
+
+    :conf4:
+      :inherits:
+        - :conf2
+        - :conf3
+      :common:     "conf4"
+      :from_conf4: true
+  STR
+
+  def test_merge_config_inheritance
+    all_configs = YAML.load TEST_CONFIG
+    main_conf   = all_configs[:conf2]
+
+    main_conf = @app.send(:merge_config_inheritance, main_conf, all_configs)
+
+    assert main_conf[:from_conf1]
+    assert_equal "conf2", main_conf[:common]
+  end
+
+
+  def test_multiple_merge_config_inheritance
+    all_configs = YAML.load TEST_CONFIG
+    main_conf   = all_configs[:conf4]
+
+    main_conf = @app.send(:merge_config_inheritance, main_conf, all_configs)
+
+    assert main_conf[:from_conf1]
+    assert main_conf[:from_conf2]
+    assert main_conf[:from_conf3]
+    assert_equal "conf4", main_conf[:common]
+    assert_equal "conf3", main_conf[:not_conf4]
+  end
+
+
   class MockError < Exception; end
 
   def test_app_deploy_error_handling
