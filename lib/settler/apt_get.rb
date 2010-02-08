@@ -17,7 +17,9 @@ class Settler
 
         install    "sudo apt-get install -y #{pkg_name}"
         uninstall  "sudo apt-get remove -y #{pkg_name}"
-        check_test "sudo apt-cache search #{@pkg} | grep -c #{@pkg}", '-ge 1'
+
+        @pkg = "#{@pkg}-#{options[:version]}" if options[:version]
+        check_test "sudo apt-cache search ^#{@pkg} | grep -c ^#{@pkg}", '-ge 1'
 
         instance_eval(&block) if block_given?
       end

@@ -31,6 +31,8 @@
       /path/to/app/env EXTRA_VAR=some_value some_command
     Supports all options the env command supports.
 
+* Dependency handling now supports apt.
+
 * DeployServers now support passing custom flags for ssh and rsync:
     deploy_server = DeployServer.new "svr.com", :rsync_flags => [...]
 
