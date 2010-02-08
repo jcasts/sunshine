@@ -90,12 +90,7 @@ module Sunshine
       @deploy_successful = false
 
       @info = {
-        :deployed_at => Time.now,
-        :deployed_by => Sunshine.console.user,
-        :scm_url     => @repo.url,
-        :scm_rev     => @repo.revision,
-        :path        => @deploy_path,
-        :ports       => Hash.new{|h,k| h[k] = {}}
+        :ports => Hash.new{|h,k| h[k] = {}}
       }
     end
 
@@ -331,7 +326,14 @@ module Sunshine
 
     def make_deploy_info_file(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Creating info file" do
-        contents = @info.dup
+
+        contents = {
+          :deployed_at => Time.now,
+          :deployed_by => Sunshine.console.user,
+          :scm_url     => @repo.url,
+          :scm_rev     => @repo.revision,
+          :path        => @deploy_path
+        }.merge @info
 
         d_servers.each do |deploy_server|
           contents[:deployed_as] ||= deploy_server.call "whoami"
@@ -586,11 +588,6 @@ module Sunshine
         :default != deploy_env && config_hash[:default]
 
       merge_config_inheritance deploy_env_config, config_hash
-
-
-      #default_config = config_hash[:default] || {}
-      #current_config = config_hash[deploy_env] || {}
-      #default_config.merge(current_config)
     end
 
 
