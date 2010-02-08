@@ -5,6 +5,12 @@ module Sunshine
 
   class Unicorn < Server
 
+    def initialize app, options={}
+      super
+      @timeout = options[:timeout] || 3.0
+    end
+
+
     def start_cmd
       "cd #{@app.current_path} && #{@bin} -D -E"+
         " #{@app.deploy_env} -p #{@port} -c #{self.config_file_path};"

@@ -44,9 +44,10 @@ module Sunshine
     # :sudo:: bool|str - define if sudo should be used and with what user
     #
     # :timeout:: int|str - timeout to use for server config
+    #                      defaults to 1
     #
     # :processes:: prcss_num - number of processes server should run
-    #                          defaults to 1
+    #                          defaults to 0
     #
     # :server_name:: myserver.com - host name used by server
     #                               defaults to nil
