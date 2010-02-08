@@ -54,8 +54,9 @@ class Settler
     def initialize dependency_lib, name, options={}, &block
       @dependency_lib = dependency_lib
 
-      @name = name.to_s
-      @pkg  = options[:pkg] || @name
+      @name    = name.to_s
+      @pkg     = options[:pkg] || @name
+      @options = options.dup
 
       @install   = nil
       @uninstall = nil

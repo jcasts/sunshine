@@ -202,6 +202,20 @@ module Sunshine
     'max_deploy_versions' => 5
   }
 
+  ##
+  # Temp directory used by various sunshine classes
+  # for uploads, checkouts, etc...
+  TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
+  FileUtils.mkdir_p TMP_DIR
+
+
+  ##
+  # Cleanup after sunshine has run, remove temp dirs, etc...
+
+  def self.cleanup
+    FileUtils.rm_rf TMP_DIR if Dir.glob("#{TMP_DIR}/*").empty?
+  end
+
 
   ##
   # Setup sunshine with a custom config:
@@ -241,6 +255,7 @@ module Sunshine
     self.setup config, true
 
     result = command.exec argv, config
+
     self.exit(*result)
   end
 
@@ -267,6 +282,8 @@ module Sunshine
   #     # both output: stderr >> oh noes - exitcode 1
 
   def self.exit status, msg=nil
+    self.cleanup
+
     status = case status
     when true
       0

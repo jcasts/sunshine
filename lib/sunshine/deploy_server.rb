@@ -19,8 +19,6 @@ module Sunshine
 
     LOGIN_LOOP = "echo ready; for (( ; ; )); do sleep 100; done"
 
-    TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
-
     attr_reader :host, :user
     attr_accessor :roles, :ssh_flags, :rsync_flags
 
@@ -143,7 +141,6 @@ module Sunshine
     # Create a file remotely
 
     def make_file filepath, content, options={}
-      FileUtils.mkdir_p TMP_DIR
 
       temp_filepath =
         "#{TMP_DIR}/#{File.basename(filepath)}_#{Time.now.to_i}#{rand(10000)}"
@@ -153,7 +150,6 @@ module Sunshine
       self.upload temp_filepath, filepath, options
 
       File.delete(temp_filepath)
-      FileUtils.rm_rf TMP_DIR if Dir.glob("#{TMP_DIR}/*").empty?
     end
 
 
