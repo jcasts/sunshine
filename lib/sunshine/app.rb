@@ -87,6 +87,8 @@ module Sunshine
 
       @post_user_lambdas = []
 
+      @deploy_successful = false
+
       @info = {
         :deployed_at => Time.now,
         :deployed_by => Sunshine.console.user,
@@ -119,6 +121,8 @@ module Sunshine
       make_deploy_info_file
       remove_old_deploys
       register_as_deployed
+
+      @deploy_successful = true
 
     rescue DeployError => e
       handle_deploy_error e
@@ -242,6 +246,14 @@ module Sunshine
 
     rescue => e
       raise CriticalDeployError, e
+    end
+
+
+    ##
+    # Check if app has been deployed successfully.
+
+    def deployed?
+      @deploy_successful
     end
 
 
