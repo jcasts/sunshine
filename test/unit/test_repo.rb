@@ -3,15 +3,17 @@ require 'test/test_helper'
 class TestRepo < Test::Unit::TestCase
 
   def setup
-    @repo = Sunshine::Repo.new_of_type(:svn, "https://svnurl").extend MockObject
+    @svn_url = "https://svnurl/to/repo/tag"
+    @repo = Sunshine::Repo.new_of_type(:svn, @svn_url)
+    @repo.extend MockObject
   end
 
   def test_new_of_type
-    repo = Sunshine::Repo.new_of_type :svn, "https://svnurl"
+    repo = Sunshine::Repo.new_of_type :svn, @svn_url
     assert_equal Sunshine::SvnRepo, repo.class
-    assert_equal "https://svnurl", repo.url
+    assert_equal @svn_url, repo.url
 
-    repo = Sunshine::Repo.new_of_type "", "someurl"
+    repo = Sunshine::Repo.new_of_type "", @svn_url
     assert_equal Sunshine::Repo, repo.class
   end
 
@@ -29,7 +31,7 @@ class TestRepo < Test::Unit::TestCase
 
   def test_update_repo_info
     begin
-      Sunshine::Repo.new("repourl").update_repo_info
+      Sunshine::Repo.new(@svn_url).update_repo_info
       raise "Didn't raise RepoError when it should have"
     rescue Sunshine::RepoError => e
       msg = "The 'update_repo_info' method must be implemented by child classes"
@@ -40,7 +42,7 @@ class TestRepo < Test::Unit::TestCase
 
   def test_checkout_to
     begin
-      Sunshine::Repo.new("repourl").checkout_to mock_deploy_server, "somepath"
+      Sunshine::Repo.new(@svn_url).checkout_to mock_deploy_server, "somepath"
       raise "Didn't raise RepoError on checkout_cmd"
     rescue Sunshine::RepoError => e
       msg = "The 'checkout_cmd' method must be implemented by child classes"

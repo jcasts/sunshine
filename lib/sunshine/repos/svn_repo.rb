@@ -21,5 +21,14 @@ module Sunshine
     def checkout_cmd path
       "svn checkout -r #{revision} #{url} #{path}"
     end
+
+
+    def valid_scm_dir? dir
+      info = Sunshine.console.call "svn info #{dir} | grep URL:" rescue false
+      return unless info
+
+      info.sub! /^URL:\s/, ''
+      @url == info.sub(/^URL:\s/, '').strip
+    end
   end
 end

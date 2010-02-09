@@ -14,6 +14,15 @@
 
 * Changed the format of the App#checkout_path directory
 
+* Changed how the app source gets to the deploy servers:
+
+  * Checks for repo information.
+
+  * Checks out code if necessary.
+
+  * If no repo information is available or if the :source_path app config
+    is set uses either the pwd or the set source_path value.
+
 * Commands functionality expanded:
 
   * Support for --sudo and --sudo=user on all Sunshine commands

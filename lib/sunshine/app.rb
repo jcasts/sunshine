@@ -50,7 +50,7 @@ module Sunshine
     attr_reader :name, :repo, :deploy_servers, :crontab, :health, :sudo
     attr_reader :deploy_path, :checkout_path, :current_path
     attr_reader :deploys_dir, :shared_path, :log_path
-    attr_accessor :deploy_env, :scripts, :info
+    attr_accessor :deploy_env, :scripts, :info, :source_path
 
 
     def initialize(*args)
@@ -70,6 +70,8 @@ module Sunshine
       @deploy_env = deploy_options[:deploy_env]
 
       set_repo deploy_options[:repo]
+
+      set_source_path deploy_options[:source_path]
 
       set_deploy_servers deploy_options[:deploy_servers]
 
@@ -485,6 +487,20 @@ module Sunshine
 
 
     ##
+    # Uploads the app's source to deploy servers.
+
+    def upload_source(d_servers = @deploy_servers)
+      Sunshine.logger.info :app,
+        "Uploading #{@name} source: #{@source_path}" do
+        d_servers.upload @source_path, @current_path
+      end
+
+    rescue => e
+      raise FatalDeployError, e
+    end
+
+
+    ##
     # Upload common rake tasks from the sunshine lib.
     #   app.upload_tasks
     #     #=> upload all tasks
@@ -554,9 +570,19 @@ module Sunshine
     def set_repo repo_def
       @repo = if Sunshine::Repo === repo_def
         repo_def
-      else
+      elsif repo_def
         Sunshine::Repo.new_of_type repo_def[:type], repo_def[:url]
       end
+    end
+
+
+    ##
+    # Set where the app should upload its source from.
+
+    def set_source_path value
+      @source_path = value
+      @source_path ||= @repo.local_checkout if @repo
+      @source_path ||= Dir.pwd
     end
 
 

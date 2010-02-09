@@ -26,6 +26,9 @@ module Sunshine
       @branch = nil
       @date = nil
       @message = nil
+
+      tmp_dirname = @url.split("/")[3..-1].join('.')
+      @temp_checkout_dir = File.join Sunshine::TMP_DIR, tmp_dirname
     end
 
     ##
@@ -57,6 +60,12 @@ module Sunshine
     end
 
     ##
+    # Path to the local repo checkout
+    def local_checkout
+      valid_scm_dir?(Dir.pwd) || @temp_checkout_dir
+    end
+
+    ##
     # Get the current message
     def message
       update_repo_info unless @message
@@ -68,6 +77,13 @@ module Sunshine
     def update_repo_info
       raise RepoError,
         "The 'update_repo_info' method must be implemented by child classes"
+    end
+
+    ##
+    # Checks if the local dir matches the repo info - Implemented by subclass
+    def valid_scm_dir? dir
+      raise RepoError,
+        "The 'valid_scm_dir?' method must be implemented by child classes"
     end
 
     ##
