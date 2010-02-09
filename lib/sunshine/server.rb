@@ -315,7 +315,7 @@ module Sunshine
         app.scripts[:stop]   << stop_cmd
         app.scripts[:status] << "test -f #{@pid}"
 
-        restart = restart_cmd ? restart_cmd : [start_cmd, stop_cmd]
+        restart = restart_cmd ? restart_cmd : [stop_cmd, start_cmd]
         app.scripts[:restart].concat [*restart]
 
         app.info[:ports][@pid] = @port

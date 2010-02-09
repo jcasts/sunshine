@@ -27,7 +27,6 @@ module Sunshine
       info = Sunshine.console.call "svn info #{dir} | grep URL:" rescue false
       return unless info
 
-      info.sub! /^URL:\s/, ''
       @url == info.sub(/^URL:\s/, '').strip
     end
   end
