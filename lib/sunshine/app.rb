@@ -202,7 +202,9 @@ module Sunshine
 
         chmod = '--chmod=ugo=rwx'
 
-        @scripts[:env] = make_env_bash_script
+        bash = make_env_bash_script
+        d_servers.make_file "#{@checkout_path}/env", bash, :flags => chmod
+        d_servers.symlink "#{@current_path}/env", "#{@deploy_path}/env"
 
         if @scripts[:restart].empty? &&
           !@scripts[:start].empty? && !@scripts[:stop].empty?
