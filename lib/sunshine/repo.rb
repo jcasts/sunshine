@@ -21,73 +21,12 @@ module Sunshine
     def initialize url
       @name = self.class.name.split("::").last.sub('Repo', '').downcase
       @url = url
-      @revision = nil
-      @committer = nil
-      @branch = nil
-      @date = nil
-      @message = nil
-
-      tmp_dirname = @url.split("/")[3..-1].join('.')
-      @temp_checkout_dir = File.join Sunshine::TMP_DIR, tmp_dirname
     end
 
     ##
-    # Get the revision
-    def revision
-      update_repo_info unless @revision
-      @revision
-    end
-
-    ##
-    # Get the last committer
-    def committer
-      update_repo_info unless @committer
-      @committer
-    end
-
-    ##
-    # Get the current branch
-    def branch
-      update_repo_info unless @branch
-      @branch
-    end
-
-    ##
-    # Get the current date
-    def date
-      update_repo_info unless @date
-      @date
-    end
-
-    ##
-    # Path to the local repo checkout
-    def local_checkout
-      valid_scm_dir?(Dir.pwd) || @temp_checkout_dir
-    end
-
-    ##
-    # Get the current message
-    def message
-      update_repo_info unless @message
-      @message
-    end
-
-    ##
-    # Update the repo information - Implemented by subclass
-    def update_repo_info
-      raise RepoError,
-        "The 'update_repo_info' method must be implemented by child classes"
-    end
-
-    ##
-    # Checks if the local dir matches the repo info - Implemented by subclass
-    def valid_scm_dir? dir
-      raise RepoError,
-        "The 'valid_scm_dir?' method must be implemented by child classes"
-    end
-
-    ##
-    # Checkout code to a deploy_server
+    # Checkout code to a deploy_server and return an info log hash:
+    #   repo.chekout_to server, "some/path"
+    #   #=> {:revision => 123, :committer => 'someone', :date => time_obj ...}
     def checkout_to deploy_server, path
       Sunshine.logger.info @name,
         "Checking out to #{deploy_server.host} #{path}" do
@@ -97,15 +36,23 @@ module Sunshine
 
         deploy_server.call "test -d #{path} && rm -rf #{path} || echo false"
         deploy_server.call "mkdir -p #{path} && #{checkout_cmd(path)}"
+
+        get_repo_info deploy_server, path
       end
     end
-
 
     ##
     # Command to run to checkout the repo - implemented by subclass
     def checkout_cmd path
       raise RepoError,
         "The 'checkout_cmd' method must be implemented by child classes"
+    end
+
+    ##
+    # Returns the repo information - Implemented by subclass
+    def get_repo_info deploy_server, path
+      raise RepoError,
+        "The 'get_repo_info' method must be implemented by child classes"
     end
   end
 end

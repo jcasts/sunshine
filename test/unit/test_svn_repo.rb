@@ -4,28 +4,30 @@ class TestSvnRepo < Test::Unit::TestCase
 
   def setup
     @svn = Sunshine::SvnRepo.new("svn://someurl/somebranch")
+    @ds = mock_deploy_server
     mock_svn_response @svn
   end
 
-  def test_update_repo_info
-    assert_equal "786",        @svn.revision
-    assert_equal "jcastagna",  @svn.committer
-    assert_equal "somebranch", @svn.branch
+  def test_get_repo_info
+    info = @svn.get_repo_info @ds, "path/to/checkout"
 
-    assert_equal "finished testing server.rb", @svn.message
+    assert_equal "786",        info[:revision]
+    assert_equal "jcastagna",  info[:committer]
+    assert_equal "somebranch", info[:branch]
+
+    assert_equal "finished testing server.rb", info[:message]
 
     date = Time.parse "2010-01-26T01:49:17.372152Z"
-    assert_equal date, @svn.date
+    assert_equal date, info[:date]
   end
 
   def test_checkout_to
-    ds = mock_deploy_server
     path = "/test/checkout/path"
 
-    @svn.checkout_to ds, path
+    @svn.checkout_to @ds, path
 
     assert_ssh_call "test -d #{path} && rm -rf #{path} || echo false"
     assert_ssh_call "mkdir -p #{path} && "+
-      "svn checkout -r #{@svn.revision} #{@svn.url} #{path}"
+      "svn checkout #{@svn.url} #{path}"
   end
 end

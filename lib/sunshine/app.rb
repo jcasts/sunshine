@@ -71,7 +71,7 @@ module Sunshine
 
       set_repo deploy_options[:repo]
 
-      set_source_path deploy_options[:source_path]
+      @source_path = deploy_options[:source_path] || Dir.pwd
 
       set_deploy_servers deploy_options[:deploy_servers]
 
@@ -153,7 +153,7 @@ module Sunshine
     def revert!
       Sunshine.logger.info :app, "Reverting to previous deploy..." do
         deploy_servers.each do |deploy_server|
-          deploy_server.call "rm -rf #{self.checkout_path}"
+          deploy_server.call "rm -rf #{@checkout_path}"
 
           last_deploy =
             deploy_server.call("ls -1 #{@deploys_dir}").split("\n").last
@@ -238,12 +238,17 @@ module Sunshine
     # Checks out the app's codebase to one or all deploy servers.
 
     def checkout_codebase(d_servers = @deploy_servers)
+      repo_info = {}
+
       Sunshine.logger.info :app, "Checking out codebase" do
         d_servers.each do |deploy_server|
-          @repo.checkout_to(deploy_server, self.checkout_path)
+          repo_info = @repo.checkout_to(deploy_server, @checkout_path)
         end
       end
 
+      @info[:scm_url]    = repo_info[:url]
+      @info[:scm_rev]    = repo_info[:revision]
+      @info[:scm_branch] = repo_info[:branch]
     rescue => e
       raise CriticalDeployError, e
     end
@@ -299,10 +304,10 @@ module Sunshine
         d_servers.each do |deploy_server|
 
           run_geminstaller(deploy_server) if
-            deploy_server.file?("#{self.checkout_path}/config/geminstaller.yml")
+            deploy_server.file?("#{@checkout_path}/config/geminstaller.yml")
 
           run_bundler(deploy_server) if
-            deploy_server.file?("#{self.checkout_path}/Gemfile")
+            deploy_server.file?("#{@checkout_path}/Gemfile")
         end
       end
 
@@ -336,8 +341,6 @@ module Sunshine
           :deployed_at => Time.now,
           :deployed_by => Sunshine.console.user,
           :deploy_name => File.basename(@checkout_path),
-          :scm_url     => @repo.url,
-          :scm_rev     => @repo.revision,
           :path        => @deploy_path
         }.merge @info
 
@@ -362,7 +365,7 @@ module Sunshine
       Sunshine.logger.info :app, "Running Rake task '#{command}'" do
         d_servers.each do |deploy_server|
           self.install_deps 'rake', :servers => deploy_server
-          deploy_server.call "cd #{self.checkout_path} && rake #{command}"
+          deploy_server.call "cd #{@checkout_path} && rake #{command}"
         end
       end
     end
@@ -428,7 +431,7 @@ module Sunshine
           logrotate_conf =
             build_erb("templates/logrotate/logrotate.conf.erb", binding)
 
-          config_path    = "#{self.checkout_path}/config"
+          config_path    = "#{@checkout_path}/config"
           logrotate_path = "#{config_path}/logrotate.conf"
 
           deploy_server.call "mkdir -p #{config_path} #{@log_path}/rotate"
@@ -482,8 +485,8 @@ module Sunshine
 
     def symlink_current_dir(d_servers = @deploy_servers)
       Sunshine.logger.info :app,
-        "Symlinking #{self.checkout_path} -> #{@current_path}" do
-        d_servers.symlink(self.checkout_path, @current_path)
+        "Symlinking #{@checkout_path} -> #{@current_path}" do
+        d_servers.symlink(@checkout_path, @current_path)
       end
 
     rescue => e
@@ -519,7 +522,7 @@ module Sunshine
     def upload_tasks *files
       options   = Hash === files[-1] ? files.delete_at(-1) : {}
       d_servers = [*(options[:servers] || @deploy_servers)]
-      path      = options[:path] || "#{self.checkout_path}/lib/tasks"
+      path      = options[:path] || "#{@checkout_path}/lib/tasks"
 
       files.map!{|f| "templates/tasks/#{f}.rake"}
       files = Dir.glob("templates/tasks/*") if files.empty?
@@ -578,16 +581,6 @@ module Sunshine
       elsif repo_def
         Sunshine::Repo.new_of_type repo_def[:type], repo_def[:url]
       end
-    end
-
-
-    ##
-    # Set where the app should upload its source from.
-
-    def set_source_path value
-      @source_path = value
-      @source_path ||= @repo.local_checkout if @repo
-      @source_path ||= Dir.pwd
     end
 
 
@@ -673,7 +666,7 @@ fi
 
     def run_geminstaller deploy_server
       self.install_deps 'geminstaller', :servers => deploy_server
-      deploy_server.call "cd #{self.checkout_path} && geminstaller -e"
+      deploy_server.call "cd #{@checkout_path} && geminstaller -e"
     end
 
 
@@ -682,7 +675,7 @@ fi
 
     def run_bundler deploy_server
        self.install_deps 'bundler', :servers => deploy_server
-      deploy_server.call "cd #{self.checkout_path} && gem bundle"
+      deploy_server.call "cd #{@checkout_path} && gem bundle"
     end
   end
 end

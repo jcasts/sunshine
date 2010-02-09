@@ -52,28 +52,30 @@ class TestApp < Test::Unit::TestCase
   def test_app_deploy
     yield_called = false
 
-    app = Sunshine::App.deploy @config do |app|
+    @app.deploy! do |app|
       assert app.deploy_servers.connected?
 
       yield_called = true
     end
 
-    assert !app.deploy_servers.connected?
+    assert !@app.deploy_servers.connected?
 
     setup_cmd =
-     "test -d #{app.checkout_path} && rm -rf #{app.checkout_path} || echo false"
-    checkout_cmd = "mkdir -p #{app.checkout_path} && svn checkout -r " +
-        "#{app.repo.revision} #{app.repo.url} #{app.checkout_path}"
+     "test -d #{@app.checkout_path} && rm -rf #{@app.checkout_path}"+
+     " || echo false"
+
+    checkout_cmd = "mkdir -p #{@app.checkout_path} && svn checkout " +
+        "#{@app.repo.url} #{@app.checkout_path}"
 
     run_results = [
-      "mkdir -p #{app.deploy_path}",
+      "mkdir -p #{@app.deploy_path}",
       setup_cmd,
       checkout_cmd,
-      "ln -sfT #{app.checkout_path} #{app.current_path}"
+      "ln -sfT #{@app.checkout_path} #{@app.current_path}"
     ]
 
 
-    app.deploy_servers.each do |server|
+    @app.deploy_servers.each do |server|
       use_deploy_server server
 
       run_results.each_index do |i|
@@ -214,10 +216,9 @@ class TestApp < Test::Unit::TestCase
       path = @app.checkout_path
       setup_cmd = "test -d #{path} && rm -rf #{path} || echo false"
 
-      rev = @app.repo.revision
       url = @app.repo.url
       checkout_cmd =
-        "mkdir -p #{path} && svn checkout -r #{rev} #{url} #{path}"
+        "mkdir -p #{path} && svn checkout #{url} #{path}"
 
       assert_ssh_call setup_cmd
       assert_ssh_call checkout_cmd

@@ -16,7 +16,12 @@ module MockObject
 
   def method_mock_return mock_key
     return_val = method_mocks[mock_key] rescue method_mocks[[mock_key.first]]
-    Proc === return_val ? return_val.call : return_val
+    if Proc === return_val
+      args = mock_key[1..-1]
+      return_val.call(*args)
+    else
+      return_val
+    end
   end
 
 

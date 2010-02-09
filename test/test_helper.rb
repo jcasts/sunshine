@@ -20,6 +20,7 @@ def mock_deploy_server host=nil
     deploy_server = Sunshine::DeployServer.new host
 
     deploy_server.extend MockOpen4
+    deploy_server.extend MockObject
 
     use_deploy_server deploy_server
 
@@ -41,10 +42,9 @@ def mock_svn_response repo
     </log>
   STR
 
-  Sunshine.console.mock :run, :args => "svn log #{repo.url} --limit 1 --xml",
-                              :return => svn_response
-  Sunshine.console.mock :call, :args => "svn log #{repo.url} --limit 1 --xml",
-                               :return => svn_response
+  repo.extend(MockObject) unless repo.is_a?(MockObject)
+
+  repo.mock :svn_log, :return => svn_response
 end
 
 
