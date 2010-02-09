@@ -2,6 +2,7 @@ require 'rubygems'
 require 'open4'
 require 'rainbow'
 require 'highline'
+require 'tmpdir'
 
 require 'settler'
 require 'yaml'

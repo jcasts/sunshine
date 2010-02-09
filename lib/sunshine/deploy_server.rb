@@ -1,5 +1,3 @@
-require 'tmpdir'
-
 module Sunshine
 
   ##

@@ -202,8 +202,7 @@ module Sunshine
 
         chmod = '--chmod=ugo=rwx'
 
-        bash = make_env_bash_script
-        d_servers.make_file "#{@deploy_path}/env", bash, :flags => chmod
+        @scripts[:env] = make_env_bash_script
 
         if @scripts[:restart].empty? &&
           !@scripts[:start].empty? && !@scripts[:stop].empty?
@@ -215,7 +214,9 @@ module Sunshine
           Sunshine.logger.warn :app, "#{name} script is empty" if cmds.empty?
           bash = make_bash_script name, cmds
 
-          d_servers.make_file "#{@deploy_path}/#{name}", bash, :flags => chmod
+          d_servers.make_file "#{@checkout_path}/#{name}", bash, :flags => chmod
+          d_servers.symlink "#{@current_path}/#{name}",
+            "#{@deploy_path}/#{name}"
         end
       end
     end
@@ -332,6 +333,7 @@ module Sunshine
         contents = {
           :deployed_at => Time.now,
           :deployed_by => Sunshine.console.user,
+          :deploy_name => File.basename(@checkout_path),
           :scm_url     => @repo.url,
           :scm_rev     => @repo.revision,
           :path        => @deploy_path
@@ -340,7 +342,8 @@ module Sunshine
         d_servers.each do |deploy_server|
           contents[:deployed_as] ||= deploy_server.call "whoami"
 
-          deploy_server.make_file "#{@deploy_path}/info", contents.to_yaml
+          deploy_server.make_file "#{@checkout_path}/info", contents.to_yaml
+          deploy_server.symlink "#{@current_path}/info", "#{@deploy_path}/info"
         end
       end
 

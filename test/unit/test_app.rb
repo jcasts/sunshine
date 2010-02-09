@@ -182,8 +182,8 @@ class TestApp < Test::Unit::TestCase
 
     each_deploy_server do |ds|
 
-      %w{start stop restart custom}.each do |script|
-        assert_rsync(/#{script}/, "#{ds.host}:#{@app.deploy_path}/#{script}")
+      %w{start stop restart custom env}.each do |script|
+        assert_rsync(/#{script}/, "#{ds.host}:#{@app.checkout_path}/#{script}")
       end
     end
   end
@@ -280,7 +280,7 @@ class TestApp < Test::Unit::TestCase
     @app.make_deploy_info_file
 
     each_deploy_server do |ds|
-      assert_rsync(/info/, "#{ds.host}:#{@app.deploy_path}/info")
+      assert_rsync(/info/, "#{ds.host}:#{@app.checkout_path}/info")
     end
   end
 
