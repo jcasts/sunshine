@@ -40,7 +40,7 @@ class Settler
   require 'settler/yum'
   require 'settler/apt_get'
   require 'settler/gem'
-  require 'settler/atti_tpkg'
+  require 'settler/tpkg'
 
 
   ##

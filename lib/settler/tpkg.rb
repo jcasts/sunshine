@@ -1,6 +1,6 @@
 class Settler
 
-  class AttiTpkg < Dependency
+  class Tpkg < Dependency
 
     def initialize(dependency_lib, name, options={}, &block)
       super(dependency_lib, name, options) do
@@ -8,7 +8,7 @@ class Settler
         pkg_name << "-#{options[:version]}" if options[:version]
         pkg_name << (options[:arch] ? "-#{options[:arch]}" : "-$(uname -p)")
 
-        install    "tpkg -n -i http://tpkg/tpkg/#{pkg_name}.tpkg"
+        install    "tpkg -n -i #{pkg_name}"
         uninstall  "tpkg -n -r #{pkg_name}"
         check_test "tpkg -q #{@pkg} | grep -c #{@pkg}", "-ge 1"
 
