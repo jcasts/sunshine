@@ -41,8 +41,7 @@ module Sunshine
         dependency.install! :call => deploy_server if dependency
 
         deploy_server.call "test -d #{path} && rm -rf #{path} || echo false"
-        deploy_server.call "mkdir -p #{path}"
-        deploy_server.call "cd #{path} && #{checkout_cmd(path)}"
+        deploy_server.call "mkdir -p #{path} && #{checkout_cmd(path)}"
 
         get_repo_info deploy_server, path
       end
