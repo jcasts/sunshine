@@ -22,7 +22,7 @@ module Sunshine
 
 
     def checkout_cmd path
-      "svn checkout #{url} #{path}"
+      "svn checkout #{scm_flags} #{url} #{path}"
     end
 
 

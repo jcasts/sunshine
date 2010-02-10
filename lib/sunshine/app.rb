@@ -579,7 +579,7 @@ module Sunshine
       @repo = if Sunshine::Repo === repo_def
         repo_def
       elsif repo_def
-        Sunshine::Repo.new_of_type repo_def[:type], repo_def[:url]
+        Sunshine::Repo.new_of_type repo_def[:type], repo_def[:url], repo_def
       end
     end
 

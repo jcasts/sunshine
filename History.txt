@@ -54,6 +54,15 @@
     deploy_server.download "from", "to",
       :flags => '--ignore-existing'
 
+* Repo implementation has significantly changed:
+
+  * Added support for git repo.
+
+  * Info about a repo is now retrieved with Repo#get_repo_info:
+      repo.get_repo_info deploy_server, checkout_path
+
+  * Repo constructor supports options hash with :flags option.
+
 
 === 0.0.3 / 2010-01-29
 

@@ -5,22 +5,28 @@ module Sunshine
   ##
   # An abstract class to wrap simple basic scm features. The primary function
   # of repo objects is to get information about the scm branch that is being
-  # deployed and to check it out on remote deploy servers
+  # deployed and to check it out on remote deploy servers:
+  #   svn = SvnRepo.new "svn://path/to/repo", :flags => "--ignore-externals"
+  #
+  # The :flags option can be a String or an Array and supports any scm
+  # checkout (or clone for git) options.
 
   class Repo
 
     ##
     # Creates a new repo subclass object
-    def self.new_of_type(repo_type, url)
+    def self.new_of_type repo_type, url, options={}
       repo = "#{repo_type.to_s.capitalize}Repo"
-      Sunshine.const_get(repo).new(url)
+      Sunshine.const_get(repo).new(url, options)
     end
 
     attr_reader :url
 
-    def initialize url
+    def initialize url, options={}
       @name = self.class.name.split("::").last.sub('Repo', '').downcase
-      @url = url
+
+      @url   = url
+      @flags = [*options[:flags]].compact
     end
 
     ##
@@ -35,10 +41,17 @@ module Sunshine
         dependency.install! :call => deploy_server if dependency
 
         deploy_server.call "test -d #{path} && rm -rf #{path} || echo false"
-        deploy_server.call "mkdir -p #{path} && #{checkout_cmd(path)}"
+        deploy_server.call "mkdir -p #{path}"
+        deploy_server.call "cd #{path} && #{checkout_cmd(path)}"
 
         get_repo_info deploy_server, path
       end
+    end
+
+    ##
+    # Returns the set scm flags as a string
+    def scm_flags
+      @flags.join(" ")
     end
 
     ##

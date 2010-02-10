@@ -65,7 +65,7 @@ class TestApp < Test::Unit::TestCase
      " || echo false"
 
     checkout_cmd = "mkdir -p #{@app.checkout_path} && svn checkout " +
-        "#{@app.repo.url} #{@app.checkout_path}"
+        "#{@app.repo.scm_flags} #{@app.repo.url} #{@app.checkout_path}"
 
     run_results = [
       "mkdir -p #{@app.deploy_path}",
@@ -216,9 +216,10 @@ class TestApp < Test::Unit::TestCase
       path = @app.checkout_path
       setup_cmd = "test -d #{path} && rm -rf #{path} || echo false"
 
-      url = @app.repo.url
+      url   = @app.repo.url
+      flags = @app.repo.scm_flags
       checkout_cmd =
-        "mkdir -p #{path} && svn checkout #{url} #{path}"
+        "mkdir -p #{path} && svn checkout #{flags} #{url} #{path}"
 
       assert_ssh_call setup_cmd
       assert_ssh_call checkout_cmd
