@@ -80,6 +80,7 @@ module Sunshine
       @health = Healthcheck.new @shared_path, @deploy_servers
 
       deploy_options[:shell_env] ||= {
+        "PATH"      => "/home/t/bin:$PATH",
         "RACK_ENV"  => @deploy_env.to_s,
         "RAILS_ENV" => @deploy_env.to_s
       }
