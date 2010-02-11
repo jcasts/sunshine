@@ -1,11 +1,13 @@
 
 Sunshine::Dependencies.tpkg 'git'
 Sunshine::Dependencies.gem 'isolate'
+Sunshine::Dependencies.yum 'libxml2-devel'
+Sunshine::Dependencies.yum 'libxslt-devel'
 
 
 Sunshine::App.deploy do |app|
 
-  app.install_deps 'isolate'
+  app.install_deps 'libxml2-devel', 'libxslt-devel', 'isolate'
 
   app.rake 'newb'
 
@@ -33,7 +35,7 @@ __END__
   :name: webbuzz
   :repo:
     :type:  git
-    :url:   nextgen@buzzdotcom.np.wc1.yellowpages.com:buzz.git
+    :url:   git://buzzdotcom.np.wc1.yellowpages.com/buzz.git
     :flags: "--depth 5"
 
   :deploy_path: /usr/local/nextgen/buzz

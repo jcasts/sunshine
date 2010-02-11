@@ -17,6 +17,8 @@ module Sunshine
     ].join("%n")
 
 
+    attr_accessor :tree
+
     def initialize url, options={}
       super
       @tree = options[:tree] || "master"
@@ -26,8 +28,8 @@ module Sunshine
     def get_repo_info deploy_server, path
       info = YAML.load git_log(deploy_server, path)
 
-      info[:date]   = Time.parse response[:date]
-      info[:branch] = parse_branch response
+      info[:date]   = Time.parse info[:date]
+      info[:branch] = parse_branch info
 
       info
     rescue => e
