@@ -30,8 +30,6 @@
 
   * Added --format option for control commands. Supports txt, yml, json.
 
-  * Sunshine list of installed apps moved to /root/.sunshine_list
-
 * Control scripts generated on the remote server now keep deploy-time
   shell_env variables:
 

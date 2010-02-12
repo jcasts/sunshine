@@ -105,9 +105,9 @@ module Sunshine
 
       case sudo_val
       when true
-        ["sudo", cmd].flatten
+        ["sudo", "-H", cmd].flatten
       when String
-        ["sudo", "-u", sudo_val, cmd].flatten
+        ["sudo", "-H", "-u", sudo_val, cmd].flatten
       else
         cmd
       end
