@@ -47,7 +47,7 @@ __END__
     :url:   git://buzzdotcom.np.wc1.yellowpages.com/buzz.git
     :flags: "--depth 5"
 
-  :deploy_path: /usr/local/nextgen/buzz
+  :deploy_path: ~nextgen/buzz
 
   :deploy_servers:
     - - jcastagna@jcast.np.wc1.yellowpages.com
