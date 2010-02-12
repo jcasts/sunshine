@@ -68,7 +68,6 @@ class TestServer < Test::Unit::TestCase
 
     assert server.method_called?(:upload_config_files)
 
-    assert_ssh_call "gem list rainbows -i --version '0.6.0'"
     assert_ssh_call "mkdir -p #{server.send(:remote_dirs).join(" ")}"
 
     assert_rsync(/rainbows\.conf/, "jcast.np.wc1.yellowpages.com:"+

@@ -128,6 +128,18 @@ module Sunshine
 
 
     ##
+    # Expand a path:
+    #   deploy_server.expand_path "~user/thing"
+    #   #=> "/home/user/thing"
+
+    def expand_path path
+      dir = File.dirname path
+      full_dir = call "cd #{dir} && pwd"
+      File.join full_dir, File.basename(path)
+    end
+
+
+    ##
     # Checks if the given file exists
 
     def file? filepath
@@ -183,9 +195,10 @@ module Sunshine
     def build_rsync_flags options
       flags = @rsync_flags.dup
 
-      rsync_sudo = sudo_cmd 'rsync', options
+      remote_rsync = 'rsync'
+      rsync_sudo = sudo_cmd remote_rsync, options
 
-      unless rsync_sudo == 'rsync'
+      unless rsync_sudo == remote_rsync
         flags << "--rsync-path='#{ rsync_sudo.join(" ") }'"
       end
 

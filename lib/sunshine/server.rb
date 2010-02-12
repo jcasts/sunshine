@@ -121,16 +121,11 @@ module Sunshine
           end if Sunshine::Dependencies.exist?(@name)
 
           # Pass server_name to binding
-          binder = Binder.new self
-          binder.forward(*BINDER_METHODS)
-          binder.set :deploy_server, deploy_server
-          binder.set :server_name,   (@server_name || deploy_server.host)
 
-          binder_sudo = pick_sudo(deploy_server)
-          binder.set :sudo, binder_sudo
+          binder = config_binding deploy_server
 
           deploy_server.call "mkdir -p #{remote_dirs.join(" ")}",
-            :sudo => binder_sudo
+            :sudo => binder.sudo
 
           yield(deploy_server, binder) if block_given?
 
@@ -290,6 +285,23 @@ module Sunshine
 
 
     private
+
+    def config_binding deploy_server
+      binder = Binder.new self
+      binder.forward(*BINDER_METHODS)
+
+      binder.set :deploy_server, deploy_server
+      binder.set :server_name,   (@server_name || deploy_server.host)
+
+      binder_sudo = pick_sudo(deploy_server)
+      binder.set :sudo, binder_sudo
+
+      binder.set :expand_path do |path|
+        deploy_server.expand_path path
+      end
+
+      binder
+    end
 
     def pick_sudo deploy_server
       case deploy_server.sudo

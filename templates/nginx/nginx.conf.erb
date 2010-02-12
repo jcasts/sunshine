@@ -1,11 +1,11 @@
 <% darwin = deploy_server.os_name =~ /^darwin$/i %>
 
-<% if sudo %>
+<% if sudo == true || sudo == 'root' %>
 user nobody nobody;
 <% end %>
 worker_processes  <%= processes %>;
-pid               <%= pid %>;
-error_log         <%= log_file :stderr %> info;
+pid               <%= expand_path pid %>;
+error_log         <%= expand_path log_file(:stderr) %> info;
 
 events {
   worker_connections  1024;
@@ -30,11 +30,11 @@ http {
                       '"$request" $status $body_bytes_sent "$http_referer" '
                       '"$http_user_agent" "$http_cookie" $request_time '
                       '$upstream_http_x_urid';
-  access_log <%= log_file :stdout %> atti_main;
+  access_log <%= expand_path log_file(:stdout) %> atti_main;
 
   
   # This should be some other include file
-  include  <%= config_path %>/nginx_optimize.conf;
+  include  <%= expand_path config_path %>/nginx_optimize.conf;
   
   
   ##
@@ -74,18 +74,20 @@ http {
     passenger_enabled on;
     <% end %>
 
-    root <%= app.current_path %>/public;
+    root <%= expand_path app.current_path %>/public;
 
     log_format partner_api '$remote_addr - $remote_user [$time_local] '
                            '"$request" $status $body_bytes_sent "$http_referer" '
                            '"$http_user_agent" "$http_cookie" $request_time '
                            '$upstream_status $upstream_response_time';
 
+    <% if log_file(:impressions) %>
     location = /images/li.gif {
       empty_gif;
-      access_log <%= log_file :impressions %> atti_main;
+      access_log <%= expand_path log_file(:impressions) %> atti_main;
       break;
     }
+    <% end %>
 
     location ~* /images/(accepted_li|logging_impressions|logging_clicks|logging_requests|xlc|xlr|xli|api_result|lni).gif$ {
       empty_gif;
@@ -118,7 +120,7 @@ http {
         break;
       }
 
-      include  <%= config_path %>/nginx_proxy.conf;
+      include  <%= expand_path config_path %>/nginx_proxy.conf;
       expires -1;
 
       if (!-f $request_filename) {
@@ -127,7 +129,7 @@ http {
       }
       error_page   500 502 503 504  /500.html;
       location = /500.html {
-        root <%= app.current_path %>/public;
+        root <%= expand_path app.current_path %>/public;
       }
     }
   }

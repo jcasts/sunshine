@@ -30,7 +30,7 @@ __END__
     :type: svn
     :url:  svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/tags/200912.2-WAT-235-release
 
-  :deploy_path: ~/envoy
+  :deploy_path: ~nextgen/envoy
 
   :deploy_servers:
     - - jcastagna@jcast.np.wc1.yellowpages.com
