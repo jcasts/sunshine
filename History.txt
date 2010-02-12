@@ -5,6 +5,12 @@
   * Support for :sudo option on Sunshine::App, Sunshine::Server, and
     Sunshine::DeployServer constructors, and attr_accessor :sudo
 
+  * Settler Dependency classes support a default sudo value:
+      Sunshine::Dependencies::Gem.sudo = true   # use sudo
+      Sunshine::Dependencies::Gem.sudo = "usr"  # use sudo -u usr
+      Sunshine::Dependencies::Gem.sudo = false  # ensure sudo is off
+      Sunshine::Dependencies::Gem.sudo = nil    # use :call obj precedence
+
 * App supports passing a (yml) file object to the constructor.
   Useful for passing file DATA if desired:
     app = Sunshine::App.new Sunshine::DATA
@@ -12,22 +18,19 @@
     __END__
     #yaml for app goes here...
 
-* Changed the format of the App#checkout_path directory
+* App class changes:
 
-* Changed how the app source gets to the deploy servers:
+  * Changed the format of the App#checkout_path directory
 
-  * Checks for repo information.
-
-  * Checks out code if necessary.
-
-  * If no repo information is available or if the :source_path app config
-    is set uses either the pwd or the set source_path value.
+  * Logrotate setup now has to be called explicitely
 
 * Commands functionality expanded:
 
   * Support for --sudo and --sudo=user on all Sunshine commands
 
   * Added --format option for control commands. Supports txt, yml, json.
+
+  * Sunshine list of installed apps moved to /root/.sunshine_list
 
 * Control scripts generated on the remote server now keep deploy-time
   shell_env variables:

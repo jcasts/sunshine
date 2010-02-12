@@ -12,9 +12,10 @@ lib/commands/rm.rb
 lib/commands/start.rb
 lib/commands/stop.rb
 lib/settler.rb
-lib/settler/atti_tpkg.rb
+lib/settler/apt_get.rb
 lib/settler/dependency.rb
 lib/settler/gem.rb
+lib/settler/tpkg.rb
 lib/settler/yum.rb
 lib/sunshine.rb
 lib/sunshine/app.rb
@@ -28,6 +29,7 @@ lib/sunshine/exceptions.rb
 lib/sunshine/healthcheck.rb
 lib/sunshine/output.rb
 lib/sunshine/repo.rb
+lib/sunshine/repos/git_repo.rb
 lib/sunshine/repos/svn_repo.rb
 lib/sunshine/server.rb
 lib/sunshine/servers/nginx.rb
@@ -42,6 +44,7 @@ templates/tasks/app.rake
 templates/tasks/common.rake
 templates/tasks/tpkg.rake
 templates/unicorn/unicorn.conf.erb
+test/buzz_deploy_test.rb
 test/envoy_deploy_test.rb
 test/fixtures/app_configs/test_app.yml
 test/fixtures/sunshine_test/test_upload
