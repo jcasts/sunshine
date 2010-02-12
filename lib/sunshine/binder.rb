@@ -17,12 +17,20 @@ module Sunshine
     ##
     # Set the binding instance variable and accessor method.
 
-    def set name, value
+    def set name, value=nil, &block
+      value ||= block if block_given?
+
       instance_variable_set("@#{name}", value)
 
-      instance_eval <<-STR
+      instance_eval <<-STR, __FILE__, __LINE__ + 1
         undef #{name} if defined?(#{name})
-        def #{name}; @#{name};end
+        def #{name}(*args)
+          if Proc === @#{name}
+            @#{name}.call(*args)
+          else
+            @#{name}
+          end
+        end
       STR
     end
 
@@ -32,7 +40,7 @@ module Sunshine
 
     def forward *method_names
       method_names.each do |method_name|
-        instance_eval <<-STR
+        instance_eval <<-STR, __FILE__, __LINE__ + 1
         undef #{method_name} if defined?(#{method_name})
         def #{method_name}(*args, &block)
           @target.#{method_name}(*args, &block)
