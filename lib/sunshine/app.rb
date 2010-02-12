@@ -80,7 +80,7 @@ module Sunshine
       @health = Healthcheck.new @shared_path, @deploy_servers
 
       deploy_options[:shell_env] ||= {
-        "PATH"      => "/home/t/bin:$PATH",
+        "PATH"      => "/home/t/bin:/home/ypc/sbin:$PATH",
         "RACK_ENV"  => @deploy_env.to_s,
         "RAILS_ENV" => @deploy_env.to_s
       }
@@ -107,14 +107,13 @@ module Sunshine
         @deploy_servers.connect
       end
 
-      make_app_directory
+      make_app_directories
       checkout_codebase
       symlink_current_dir
 
       yield(self) if block_given?
 
       run_post_user_lambdas
-      setup_logrotate
       build_control_scripts
       make_deploy_info_file
       remove_old_deploys
@@ -264,6 +263,15 @@ module Sunshine
 
 
     ##
+    # An array of all directories used by the app.
+    # Does not include symlinked directories
+
+    def directories
+      [@deploy_path, @deploys_dir, @shared_path, @log_path, @checkout_path]
+    end
+
+
+    ##
     # Install dependencies defined as a Sunshine dependency object:
     #   rake   = Sunshine::Dependencies.gem 'rake', :version => '~>0.8'
     #   apache = Sunshine::Dependencies.yum 'apache'
@@ -285,12 +293,13 @@ module Sunshine
       d_servers = [*(options[:servers] || @deploy_servers)]
 
       Sunshine.logger.info :app,
-        "Installing dependencies: #{deps.map{|d| d.to_s}.join(" ")}"
+        "Installing dependencies: #{deps.map{|d| d.to_s}.join(" ")}" do
 
-      d_servers.each do |deploy_server|
-        deps.each do |d|
-          d = Sunshine::Dependencies[d] if String === d
-          d.install! :call => deploy_server
+        d_servers.each do |deploy_server|
+          deps.each do |d|
+            d = Sunshine::Dependencies[d] if String === d
+            d.install! :call => deploy_server
+          end
         end
       end
     end
@@ -318,11 +327,11 @@ module Sunshine
 
 
     ##
-    # Creates the base application directory.
+    # Creates the required application directories.
 
-    def make_app_directory(d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Creating #{@name} base directory" do
-        d_servers.call "mkdir -p #{@deploy_path}"
+    def make_app_directories(d_servers = @deploy_servers)
+      Sunshine.logger.info :app, "Creating #{@name} directories" do
+        d_servers.call "mkdir -p #{directories.join(" ")}"
       end
 
     rescue => e

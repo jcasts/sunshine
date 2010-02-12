@@ -68,7 +68,7 @@ class TestApp < Test::Unit::TestCase
         "#{@app.repo.scm_flags} #{@app.repo.url} #{@app.checkout_path}"
 
     run_results = [
-      "mkdir -p #{@app.deploy_path}",
+      "mkdir -p #{@app.directories.join(" ")}",
       setup_cmd,
       checkout_cmd,
       "ln -sfT #{@app.checkout_path} #{@app.current_path}"
@@ -269,11 +269,11 @@ class TestApp < Test::Unit::TestCase
   end
 
 
-  def test_make_app_directory
-    @app.make_app_directory
+  def test_make_app_directories
+    @app.make_app_directories
 
     each_deploy_server do |ds|
-      assert_ssh_call "mkdir -p #{@app.deploy_path}"
+      assert_ssh_call "mkdir -p #{@app.directories.join(" ")}"
     end
   end
 
