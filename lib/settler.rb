@@ -36,6 +36,15 @@ require 'open4'
 
 class Settler
 
+  ##
+  # Array of all dependency classes. Appended to automatically when
+  # Settler::Dependency is inherited.
+
+  def self.dependency_types
+    @dependency_types ||= []
+  end
+
+
   require 'settler/dependency'
   require 'settler/yum'
   require 'settler/apt_get'
@@ -44,19 +53,19 @@ class Settler
 
 
   ##
-  # Hash of 'name' => object dependencies
-
-  def self.dependencies
-    @dependencies ||= {}
-  end
-
-
-  ##
   # Returns a single dependency by name:
   #   Settler['name'] #=> dependency object
 
   def self.[](key)
     (@dependencies ||= {})[key]
+  end
+
+
+  ##
+  # Hash of 'name' => object dependencies
+
+  def self.dependencies
+    @dependencies ||= {}
   end
 
 
@@ -92,5 +101,15 @@ class Settler
   def self.uninstall(*deps)
     options = Hash === deps.last ? deps.delete_at(deps.length - 1) : {}
     deps.each{|dep| self.dependencies[dep].uninstall! options }
+  end
+
+
+  ##
+  # Define if sudo should be used
+
+  def self.sudo= value
+    dependency_types.each do |dep_class|
+      dep_class.sudo = value
+    end
   end
 end

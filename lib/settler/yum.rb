@@ -18,8 +18,8 @@ class Settler
       super(dependency_lib, name, options) do
         pkg_name = build_pkg_name @pkg.dup, options
 
-        install    "sudo yum install -y #{pkg_name}"
-        uninstall  "sudo yum remove -y #{pkg_name}"
+        install    "yum install -y #{pkg_name}"
+        uninstall  "yum remove -y #{pkg_name}"
         check_test "yum list installed #{pkg_name} | grep -c #{@pkg}", '-ge 1'
 
         instance_eval(&block) if block_given?

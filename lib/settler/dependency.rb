@@ -48,6 +48,23 @@ class Settler
 
   class Dependency
 
+    ##
+    # Check if sudo should be used
+
+    def self.sudo
+      @sudo ||= nil
+    end
+
+
+    ##
+    # Assign a sudo value. A value of nil means 'don't assign sudo',
+    # true means sudo, string means sudo -u, false means, explicitely
+    # don't use sudo.
+
+    def self.sudo= value
+      @sudo = value
+    end
+
 
     attr_reader :name, :pkg, :parents, :children
 
@@ -95,10 +112,8 @@ class Settler
     #
     #   dep.check "test -s 'yum list installed depname'"
 
-    def check cmd_str=nil, &block
-      @check = cmd_str || block
-      @check = proc{|cmd| cmd.call(cmd_str) && true rescue false } if
-        String === @check
+    def check cmd_str=nil
+      @check = cmd_str
     end
 
 
@@ -117,8 +132,8 @@ class Settler
     #
     #   dep.install "yum install depname"
 
-    def install cmd=nil, &block
-      @install = cmd || block
+    def install cmd
+      @install = cmd
     end
 
 
@@ -175,7 +190,7 @@ class Settler
 
     def installed? options={}
       run_command @check, options
-    rescue CmdError => e
+    rescue => e
       false
     end
 
@@ -229,8 +244,8 @@ class Settler
     #
     #   dep.uninstall "yum remove depname"
 
-    def uninstall cmd=nil, &block
-      @uninstall = cmd || block
+    def uninstall cmd
+      @uninstall = cmd
     end
 
 
@@ -285,16 +300,19 @@ class Settler
     def run_command(command, options={})
       cmd = options[:call] || @cmd
 
-      if String === command
-        cmd.call(command)
+      unless self.class.sudo.nil?
+        cmd.call command, :sudo => self.class.sudo
       else
-        command.call(cmd)
+        cmd.call command
       end
     end
 
 
-    def run_local(str)
+    def run_local str, options={}
       result = nil
+
+      str = "sudo #{str}" if options[:sudo] == true
+      str = "sudo -u #{options[:sudo]} #{str}" if String === options[:sudo]
 
       Open4.popen4(str) do |pid, stdin, stdout, stderr|
         stderr = stderr.read
@@ -319,6 +337,8 @@ class Settler
         dependencies[name] = #{class_name}.new(self, name, options, &block)
       end
       STR
+
+      Settler.dependency_types << subclass
     end
 
     inherited self

@@ -26,8 +26,8 @@ class Settler
           install_opts = "#{install_opts} -- #{options[:opts]}"
         end
 
-        install   "sudo gem install #{@pkg}#{version}#{source}#{install_opts}"
-        uninstall "sudo gem uninstall #{@pkg}#{version}"
+        install   "gem install #{@pkg}#{version}#{source}#{install_opts}"
+        uninstall "gem uninstall #{@pkg}#{version}"
         check     "gem list #{@pkg} -i#{version}"
 
         requires(*options[:require].to_a) if options[:require]
