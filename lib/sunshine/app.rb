@@ -165,7 +165,7 @@ module Sunshine
               "#{@deploys_dir}/#{last_deploy}", @current_path
 
             started = StartCommand.exec [@name],
-              'servers' => @deploy_servers, 'force' => true
+              'servers' => [deploy_server], 'force' => true
 
             Sunshine.logger.info :app,
               "#{deploy_server.host}: Reverted to #{last_deploy}"
