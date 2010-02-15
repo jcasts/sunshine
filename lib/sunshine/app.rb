@@ -158,7 +158,7 @@ module Sunshine
           deploy_server.call "rm -rf #{@checkout_path}"
 
           last_deploy =
-            deploy_server.call("ls -1 #{@deploys_dir}").split("\n").last
+            deploy_server.call("ls -rc1 #{@deploys_dir}").split("\n").last
 
           if last_deploy && !last_deploy.empty?
             deploy_server.symlink \

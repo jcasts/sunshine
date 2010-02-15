@@ -1,3 +1,11 @@
+=== 0.0.5 / 2010-02-26
+
+* App updates:
+
+  * Constuctor supports :deploy_name option for nameable deploys.
+    Defaults to the timestamp.
+
+
 === 0.0.4 / 2010-02-12
 
 * Added sudo functionality:
