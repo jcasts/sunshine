@@ -49,7 +49,7 @@ module Sunshine
 
     attr_reader :name, :repo, :deploy_servers, :crontab, :health, :sudo
     attr_reader :deploy_path, :checkout_path, :current_path
-    attr_reader :deploys_dir, :shared_path, :log_path
+    attr_reader :deploys_dir, :shared_path, :log_path, :deploy_name
     attr_accessor :deploy_env, :scripts, :info, :source_path
 
 
@@ -57,34 +57,36 @@ module Sunshine
       config_file    = args.shift unless Hash === args.first
       config_file  ||= Sunshine::DATA if defined?(Sunshine::DATA)
 
-      deploy_options = args.empty? ? {} : args.first.dup
-      deploy_options[:deploy_env] ||= Sunshine.deploy_env
+      options = args.empty? ? {} : args.first.dup
+      options[:deploy_env] ||= Sunshine.deploy_env
 
-      deploy_options = merge_config_file config_file, deploy_options
+      options = merge_config_file config_file, options
 
 
-      set_deploy_paths deploy_options[:deploy_path]
+      @name        = options[:name]
+      @crontab     = Crontab.new @name
+      @deploy_env  = options[:deploy_env]
 
-      @name       = deploy_options[:name]
-      @crontab    = Crontab.new @name
-      @deploy_env = deploy_options[:deploy_env]
+      @deploy_name = options[:deploy_name] || Time.now.to_i
 
-      set_repo deploy_options[:repo]
+      set_deploy_paths options[:deploy_path]
 
-      @source_path = deploy_options[:source_path] || Dir.pwd
+      set_repo options[:repo]
 
-      set_deploy_servers deploy_options[:deploy_servers]
+      @source_path = options[:source_path] || Dir.pwd
 
-      self.sudo = deploy_options[:sudo] || Sunshine.sudo
+      set_deploy_servers options[:deploy_servers]
+
+      self.sudo = options[:sudo] || Sunshine.sudo
 
       @health = Healthcheck.new @shared_path, @deploy_servers
 
-      deploy_options[:shell_env] ||= {
+      options[:shell_env] ||= {
         "PATH"      => "/home/t/bin:/home/ypc/sbin:$PATH",
         "RACK_ENV"  => @deploy_env.to_s,
         "RAILS_ENV" => @deploy_env.to_s
       }
-      shell_env deploy_options[:shell_env]
+      shell_env options[:shell_env]
 
       @scripts = Hash.new{|h, k| h[k] = []}
 
@@ -560,7 +562,7 @@ module Sunshine
       @deploys_dir   = "#{@deploy_path}/deploys"
       @shared_path   = "#{@deploy_path}/shared"
       @log_path      = "#{@shared_path}/log"
-      @checkout_path = "#{@deploys_dir}/#{Time.now.to_i}"
+      @checkout_path = "#{@deploys_dir}/#{@deploy_name}"
     end
 
 
@@ -595,12 +597,12 @@ module Sunshine
 
 
     ##
-    # Load and merge a yml config file with the app's deploy_options hash
+    # Load and merge a yml config file with the app's deploy options hash
 
-    def merge_config_file config_file, deploy_options
-      return deploy_options unless config_file
-      env = deploy_options[:deploy_env]
-      load_config_for(env, config_file).merge deploy_options
+    def merge_config_file config_file, options
+      return options unless config_file
+      env = options[:deploy_env]
+      load_config_for(env, config_file).merge options
     end
 
 

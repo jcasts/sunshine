@@ -13,6 +13,8 @@ Sunshine::Dependencies.yum 'libxslt-devel'
 Sunshine::Dependencies.yum 'sqlite'
 Sunshine::Dependencies.yum 'sqlite-devel'
 
+Sunshine::Dependencies::Yum.sudo = true
+Sunshine::Dependencies::Gem.sudo = true
 
 # Deploy!
 
@@ -23,8 +25,6 @@ Sunshine::App.deploy do |app|
 
   app.rake 'newb'
 
-
-  app.upload_tasks 'tpkg'
   app.deploy_servers.call "cd #{app.deploy_path} && tpkg"
 
   app.health.enable
@@ -42,6 +42,8 @@ __END__
 
 :default:
   :name: webbuzz
+  :deploy_name: first_deploy
+
   :repo:
     :type:  git
     :url:   git://buzzdotcom.np.wc1.yellowpages.com/buzz.git
@@ -50,5 +52,5 @@ __END__
   :deploy_path: ~nextgen/buzz
 
   :deploy_servers:
-    - - jcastagna@jcast.np.wc1.yellowpages.com
+    - - jcast.np.wc1.yellowpages.com
       - :roles: web db app
