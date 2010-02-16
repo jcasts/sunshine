@@ -242,7 +242,7 @@ module Sunshine
     # Checks out the app's codebase to one or all deploy servers.
 
     def checkout_codebase(d_servers = @deploy_servers)
-      repo_info = {}
+      repo_info = nil
 
       Sunshine.logger.info :app, "Checking out codebase" do
         d_servers.each do |deploy_server|
@@ -250,9 +250,7 @@ module Sunshine
         end
       end
 
-      @info[:scm_url]    = repo_info[:url]
-      @info[:scm_rev]    = repo_info[:revision]
-      @info[:scm_branch] = repo_info[:branch]
+      @info[:scm] = repo_info
     rescue => e
       raise CriticalDeployError, e
     end
