@@ -41,7 +41,9 @@ module Sunshine
         dependency.install! :call => deploy_server if dependency
 
         deploy_server.call "test -d #{path} && rm -rf #{path} || echo false"
-        deploy_server.call "mkdir -p #{path} && #{checkout_cmd(path)}"
+        deploy_server.call "mkdir -p #{path}"
+
+        do_checkout deploy_server, path
 
         get_repo_info deploy_server, path
       end
@@ -54,10 +56,10 @@ module Sunshine
     end
 
     ##
-    # Command to run to checkout the repo - implemented by subclass
-    def checkout_cmd path
+    # Checkout the repo - implemented by subclass
+    def do_checkout deploy_server, path
       raise RepoError,
-        "The 'checkout_cmd' method must be implemented by child classes"
+        "The 'do_checkout' method must be implemented by child classes"
     end
 
     ##

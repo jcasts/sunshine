@@ -37,8 +37,10 @@ module Sunshine
     end
 
 
-    def checkout_cmd path
-      "cd #{path} && git clone #{@url} #{scm_flags} . && git checkout #{@tree}"
+    def do_checkout deploy_server, path
+      cmd = "cd #{path} && git clone #{@url} #{scm_flags} . && "+
+        "git checkout #{@tree}"
+      deploy_server.call cmd
     end
 
 

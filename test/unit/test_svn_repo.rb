@@ -27,7 +27,7 @@ class TestSvnRepo < Test::Unit::TestCase
     @svn.checkout_to @ds, path
 
     assert_ssh_call "test -d #{path} && rm -rf #{path} || echo false"
-    assert_ssh_call "mkdir -p #{path} && "+
-      "svn checkout #{@svn.scm_flags} #{@svn.url} #{path}"
+    assert_ssh_call "mkdir -p #{path}"
+    assert_ssh_call "svn checkout #{@svn.scm_flags} #{@svn.url} #{path}"
   end
 end

@@ -64,12 +64,15 @@ class TestApp < Test::Unit::TestCase
      "test -d #{@app.checkout_path} && rm -rf #{@app.checkout_path}"+
      " || echo false"
 
-    checkout_cmd = "mkdir -p #{@app.checkout_path} && svn checkout " +
-        "#{@app.repo.scm_flags} #{@app.repo.url} #{@app.checkout_path}"
+    mkdir_cmd = "mkdir -p #{@app.checkout_path}"
+
+    checkout_cmd = "svn checkout " +
+      "#{@app.repo.scm_flags} #{@app.repo.url} #{@app.checkout_path}"
 
     run_results = [
       "mkdir -p #{@app.directories.join(" ")}",
       setup_cmd,
+      mkdir_cmd,
       checkout_cmd,
       "ln -sfT #{@app.checkout_path} #{@app.current_path}"
     ]
@@ -158,7 +161,7 @@ class TestApp < Test::Unit::TestCase
 
   def test_revert
     set_mock_response_for @app, 0,
-      "ls -1 #{@app.deploys_dir}" => [:out, "last_deploy_dir"]
+      "ls -rc1 #{@app.deploys_dir}" => [:out, "last_deploy_dir"]
 
     @app.revert!
 
@@ -167,7 +170,7 @@ class TestApp < Test::Unit::TestCase
 
       assert_ssh_call "rm -rf #{@app.checkout_path}"
 
-      assert_ssh_call "ls -1 #{@app.deploys_dir}"
+      assert_ssh_call "ls -rc1 #{@app.deploys_dir}"
 
       last_deploy =  "#{@app.deploys_dir}/last_deploy_dir"
       assert_ssh_call "ln -sfT #{last_deploy} #{@app.current_path}"
@@ -219,7 +222,7 @@ class TestApp < Test::Unit::TestCase
       url   = @app.repo.url
       flags = @app.repo.scm_flags
       checkout_cmd =
-        "mkdir -p #{path} && svn checkout #{flags} #{url} #{path}"
+        "svn checkout #{flags} #{url} #{path}"
 
       assert_ssh_call setup_cmd
       assert_ssh_call checkout_cmd

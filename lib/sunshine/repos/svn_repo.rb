@@ -21,8 +21,8 @@ module Sunshine
     end
 
 
-    def checkout_cmd path
-      "svn checkout #{scm_flags} #{url} #{path}"
+    def do_checkout deploy_server, path
+      deploy_server.call "svn checkout #{scm_flags} #{url} #{path}"
     end
 
 
