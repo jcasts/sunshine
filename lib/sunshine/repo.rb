@@ -45,7 +45,7 @@ module Sunshine
 
         do_checkout deploy_server, path
 
-        get_repo_info(deploy_server, path).merge(:type => @name)
+        get_repo_info(deploy_server, path).merge(:type => @name, :url => @url)
       end
     end
 
