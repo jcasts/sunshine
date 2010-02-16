@@ -92,8 +92,6 @@ module Sunshine
 
       @post_user_lambdas = []
 
-      @deploy_successful = false
-
       @info = {
         :ports => Hash.new{|h,k| h[k] = {}}
       }
@@ -105,6 +103,8 @@ module Sunshine
     # call user's post-deploy code.
 
     def deploy!(&block)
+      @deploy_successful = false
+
       Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
         @deploy_servers.connect
       end
