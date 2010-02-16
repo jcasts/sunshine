@@ -1,5 +1,7 @@
-
 Sunshine::Dependencies::Gem.sudo = true
+
+##
+# Deploy!
 
 Sunshine::App.deploy do |app|
 
@@ -13,7 +15,6 @@ Sunshine::App.deploy do |app|
   app.install_gems
 
   app.upload_tasks 'app', 'common', 'tpkg'
-  # app.rake 'db:migrate', app.deploy_servers.find(:role => :db)
 
   rainbows.restart
   nginx.restart

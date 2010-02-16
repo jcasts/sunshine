@@ -67,7 +67,7 @@ module Sunshine
       @crontab     = Crontab.new @name
       @deploy_env  = options[:deploy_env]
 
-      @deploy_name = options[:deploy_name] || Time.now.to_i
+      @deploy_name = options[:deploy_name] || Time.now.to_i.to_s
 
       set_deploy_paths options[:deploy_path]
 
@@ -173,6 +173,8 @@ module Sunshine
             Sunshine.logger.error :app, "Failed starting #{@name}" if !started
 
           else
+            @crontab.delete! deploy_server
+
             Sunshine.logger.info :app,
               "#{deploy_server.host}: No previous deploy to revert to."
           end
