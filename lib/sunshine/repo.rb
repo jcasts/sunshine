@@ -37,14 +37,14 @@ module Sunshine
     #
     #   Repo.new_of_type(*Repo.detect("path/to/repo"))
 
-    def self.detect path="."
+    def self.detect path=".", console=nil
 
-      if SvnRepo.valid? path
-        info = SvnRepo.get_info path
+      if SvnRepo.valid? path, console
+        info = SvnRepo.get_info path, console
         [:svn, info[:url], info]
 
-      elsif GitRepo.valid? path
-        info = GitRepo.get_info path
+      elsif GitRepo.valid? path, console
+        info = GitRepo.get_info path, console
         [:git, info[:url], info]
       end
     end

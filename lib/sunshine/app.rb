@@ -588,11 +588,16 @@ module Sunshine
     #   set_repo :type => :svn, :url => "myurl"
 
     def set_repo repo_def
-      @repo = if Sunshine::Repo === repo_def
-        repo_def
-      elsif repo_def
-        Sunshine::Repo.new_of_type repo_def[:type], repo_def[:url], repo_def
-      end
+      @repo = case repo_def
+              when Sunshine::Repo
+                repo_def
+              when Hash
+                Sunshine::Repo.new_of_type repo_def[:type],
+                  repo_def[:url], repo_def
+              else
+                repo_info = Sunshine::Repo.detect
+                Sunshine::Repo.new_of_type(*repo_info) if repo_info
+              end
     end
 
 
