@@ -41,8 +41,8 @@ class Sunshine::Dependencies < Settler
 
   gem 'geminstaller', :version => "~>0.5"
 
-  gem 'unicorn', :version => "=>0.9"
+  gem 'unicorn', :version => ">=0.9"
 
-  gem 'rainbows', :version => ">=0.6.0"
+  gem 'rainbows', :version => ">=0.90.2"
 
 end
