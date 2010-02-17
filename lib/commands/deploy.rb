@@ -71,11 +71,16 @@ module Sunshine
     def self.with_load_path path
       path = File.expand_path path
 
+      # TODO: Find a better way to make file path accessible to App objects.
+      Sunshine.const_set "PATH", path
+
       added = unless $:.include? path
                 $: << path && true
               end
 
       yield
+
+      Sunshine.send :remove_const, "PATH"
 
       $:.delete path if added
     end
