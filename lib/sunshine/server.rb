@@ -77,6 +77,7 @@ module Sunshine
       @port        = options[:port] || 80
       @sudo        = options[:sudo]
       @timeout     = options[:timeout] || 0
+      @dep_name    = options[:dep_name] || @name
       @processes   = options[:processes] || 1
       @server_name = options[:server_name]
 
@@ -114,11 +115,11 @@ module Sunshine
         @deploy_servers.each do |deploy_server|
 
           begin
-            @app.install_deps @name, :server => deploy_server
+            @app.install_deps @dep_name, :server => deploy_server
           rescue => e
-            raise DependencyError,
-             "Failed installing dependency #{@name} => #{e.class}: #{e.message}"
-          end if Sunshine::Dependencies.exist?(@name)
+            raise DependencyError.new(e,
+              "Failed installing dependency #{@dep_name}")
+          end if Sunshine::Dependencies.exist?(@dep_name)
 
           # Pass server_name to binding
 
