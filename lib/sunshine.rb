@@ -87,6 +87,7 @@ module Sunshine
   require 'sunshine/repo'
   require 'sunshine/repos/svn_repo'
   require 'sunshine/repos/git_repo'
+  require 'sunshine/repos/rsync_repo'
 
   require 'sunshine/server'
   require 'sunshine/servers/nginx'

@@ -30,6 +30,7 @@ lib/sunshine/healthcheck.rb
 lib/sunshine/output.rb
 lib/sunshine/repo.rb
 lib/sunshine/repos/git_repo.rb
+lib/sunshine/repos/rsync_repo.rb
 lib/sunshine/repos/svn_repo.rb
 lib/sunshine/server.rb
 lib/sunshine/servers/nginx.rb
