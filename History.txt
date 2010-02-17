@@ -1,9 +1,22 @@
 === 0.0.5 / 2010-02-26
 
-* App updates:
+* Sunshine::App:
 
   * Constuctor supports :deploy_name option for nameable deploys.
     Defaults to the timestamp.
+
+* Sunshine::Repo:
+
+  * Added support for detecting a repo type based on a path:
+      Repo.detect [path [, console_or_deploy_server]]
+        #=> [:git, "git://url/of/git/repo", {:tree => "master", ...}]
+
+  * Moved info instance methods to the class
+
+  * Support for git-svn:
+      SvnRepo.git_svn? path
+
+  * Changed the checkout_to method signature
 
 
 === 0.0.4 / 2010-02-12

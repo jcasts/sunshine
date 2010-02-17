@@ -15,7 +15,7 @@ class TestApp < Test::Unit::TestCase
 
     @tmpdir = File.join Dir.tmpdir, "test_sunshine_#{$$}"
 
-    mock_svn_response @app.repo
+    mock_svn_response @app.repo.url
   end
 
   def teardown

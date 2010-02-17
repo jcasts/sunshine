@@ -29,7 +29,9 @@ def mock_deploy_server host=nil
 end
 
 
-def mock_svn_response repo
+def mock_svn_response url=nil
+  url ||= "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
+
   svn_response = <<-STR
     <?xml version="1.0"?>
     <log>
@@ -42,9 +44,11 @@ def mock_svn_response repo
     </log>
   STR
 
-  repo.extend(MockObject) unless repo.is_a?(MockObject)
+  Sunshine::SvnRepo.extend(MockObject) unless
+    Sunshine::SvnRepo.is_a?(MockObject)
 
-  repo.mock :svn_log, :return => svn_response
+  Sunshine::SvnRepo.mock :svn_log, :return => svn_response
+  Sunshine::SvnRepo.mock :get_svn_url, :return => url
 end
 
 

@@ -4,7 +4,7 @@ module Sunshine
   # A standard sunshine exception
   class Exception < StandardError
     def initialize input=nil, message=nil
-      if Exception === input
+      if ::Exception === input
         message = [message, input.message].compact.join(": ")
         super(message)
         self.set_backtrace(input.backtrace)

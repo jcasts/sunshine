@@ -14,11 +14,50 @@ module Sunshine
   class Repo
 
     ##
-    # Creates a new repo subclass object
+    # Creates a new repo subclass object:
+    #   Repo.new_of_type :svn, "https://path/to/repo/tags/releasetag"
+    #   Repo.new_of_type :git, "user@gitbox.com:repo/path"
+
     def self.new_of_type repo_type, url, options={}
       repo = "#{repo_type.to_s.capitalize}Repo"
       Sunshine.const_get(repo).new(url, options)
     end
+
+
+    ##
+    # Looks for .git and .svn directories and determines if the passed path
+    # is a recognized repo. Does not check for RsyncRepo since it's a
+    # special case:
+    #   Repo.detect "path/to/svn/repo/dir"
+    #     #=> [:svn, "svn://url/of/checked/out/repo"]
+    #   Repo.detect "path/to/git/repo/dir"
+    #     #=> [:git, "git://url/of/git/repo", {:tree => "master"}]
+    #   Repo.detect "invalid/repo/path"
+    #     #=> nil
+    #
+    #   Repo.new_of_type(*Repo.detect("path/to/repo"))
+
+    def self.detect path="."
+
+      if SvnRepo.valid? path
+        info = SvnRepo.get_info path
+        [:svn, info[:url], info]
+
+      elsif GitRepo.valid? path
+        info = GitRepo.get_info path
+        [:git, info[:url], info]
+      end
+    end
+
+
+    ##
+    # Gets repo information for the specified dir - Implemented by subclass
+
+    def self.get_info path=".", console=nil
+      raise RepoError,
+        "The 'get_info' method must be implemented by child classes"
+    end
+
 
     attr_reader :url
 
@@ -29,44 +68,54 @@ module Sunshine
       @flags = [*options[:flags]].compact
     end
 
+
     ##
     # Checkout code to a deploy_server and return an info log hash:
     #   repo.chekout_to server, "some/path"
     #   #=> {:revision => 123, :committer => 'someone', :date => time_obj ...}
-    def checkout_to deploy_server, path
+
+    def checkout_to path, console=nil
+      console ||= Sunshine.console
+
       Sunshine.logger.info @name,
-        "Checking out to #{deploy_server.host} #{path}" do
+        "Checking out to #{console.host} #{path}" do
 
         dependency = Sunshine::Dependencies[@name]
-        dependency.install! :call => deploy_server if dependency
+        dependency.install! :call => console if dependency
 
-        deploy_server.call "test -d #{path} && rm -rf #{path} || echo false"
-        deploy_server.call "mkdir -p #{path}"
+        console.call "test -d #{path} && rm -rf #{path} || echo false"
+        console.call "mkdir -p #{path}"
 
-        do_checkout deploy_server, path
-
-        get_repo_info(deploy_server, path).merge(:type => @name, :url => @url)
+        do_checkout   path, console
+        get_repo_info path, console
       end
     end
 
+
     ##
     # Returns the set scm flags as a string
+
     def scm_flags
       @flags.join(" ")
     end
 
+
     ##
     # Checkout the repo - implemented by subclass
-    def do_checkout deploy_server, path
+
+    def do_checkout path, console
       raise RepoError,
         "The 'do_checkout' method must be implemented by child classes"
     end
 
+
     ##
-    # Returns the repo information - Implemented by subclass
-    def get_repo_info deploy_server, path
-      raise RepoError,
-        "The 'get_repo_info' method must be implemented by child classes"
+    # Returns the repo information as a hash.
+
+    def get_repo_info path=".", console=nil
+      defaults = {:type => @name, :url => @url, :path => path}
+
+      defaults.merge self.class.get_info(path, console)
     end
   end
 end

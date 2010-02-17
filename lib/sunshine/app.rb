@@ -246,7 +246,7 @@ module Sunshine
 
       Sunshine.logger.info :app, "Checking out codebase" do
         d_servers.each do |deploy_server|
-          repo_info = @repo.checkout_to(deploy_server, @checkout_path)
+          repo_info = @repo.checkout_to @checkout_path, deploy_server
         end
       end
 

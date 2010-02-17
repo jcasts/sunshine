@@ -5,8 +5,8 @@ module Sunshine
 
   class RsyncRepo < Repo
 
-    def get_repo_info deploy_server, path
-      {:flags => @flags}
+    def self.get_info path=".", console=nil
+      {:flags => scm_flags}
     end
 
 

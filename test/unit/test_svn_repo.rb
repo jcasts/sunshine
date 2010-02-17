@@ -5,11 +5,11 @@ class TestSvnRepo < Test::Unit::TestCase
   def setup
     @svn = Sunshine::SvnRepo.new("svn://someurl/somebranch")
     @ds = mock_deploy_server
-    mock_svn_response @svn
+    mock_svn_response @svn.url
   end
 
   def test_get_repo_info
-    info = @svn.get_repo_info @ds, "path/to/checkout"
+    info = @svn.get_repo_info "path/to/checkout", @ds
 
     assert_equal "786",        info[:revision]
     assert_equal "jcastagna",  info[:committer]
@@ -24,7 +24,7 @@ class TestSvnRepo < Test::Unit::TestCase
   def test_checkout_to
     path = "/test/checkout/path"
 
-    @svn.checkout_to @ds, path
+    @svn.checkout_to path, @ds
 
     assert_ssh_call "test -d #{path} && rm -rf #{path} || echo false"
     assert_ssh_call "mkdir -p #{path}"
