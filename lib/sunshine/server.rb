@@ -16,6 +16,16 @@ module Sunshine
       :processes, :config_path, :log_file, :timeout
     ]
 
+
+    ##
+    # Turn camelcase into underscore. Used for server.name.
+
+    def self.underscore str
+      str.gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+       gsub(/([a-z\d])([A-Z])/,'\1_\2').downcase
+    end
+
+
     attr_reader :app, :name, :target, :server_name
 
     attr_accessor :bin, :pid, :port, :processes, :timeout,
@@ -70,7 +80,7 @@ module Sunshine
     def initialize app, options={}
       @app    = app
       @target = options[:point_to] || @app
-      @name   = self.class.to_s.split("::").last.downcase
+      @name   = self.class.underscore self.class.to_s.split("::").last
 
       @pid         = options[:pid] || "#{@app.shared_path}/pids/#{@name}.pid"
       @bin         = options[:bin] || @name
@@ -276,6 +286,7 @@ module Sunshine
         end
       end
     end
+
 
     ##
     # Get the array of local config template files needed by the server.

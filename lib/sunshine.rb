@@ -93,6 +93,7 @@ module Sunshine
   require 'sunshine/servers/nginx'
   require 'sunshine/servers/unicorn'
   require 'sunshine/servers/rainbows'
+  require 'sunshine/servers/ar_sendmail'
 
   require 'sunshine/crontab'
 

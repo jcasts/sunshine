@@ -20,6 +20,10 @@ Sunshine::Dependencies::Gem.sudo = true
 
 Sunshine::App.deploy do |app|
 
+  app.shell_env "ORACLE_HOME" => "/usr/lib/oracle/10.2.0.3/client64",
+                "NLS_LANG"    => "American_America.UTF8",
+                "TNS_ADMIN"   => "#{app.current_path}/config"
+
   app.install_deps 'libxml2-devel', 'libxslt-devel',
                    'sqlite', 'sqlite-devel', 'isolate'
 
@@ -27,14 +31,18 @@ Sunshine::App.deploy do |app|
 
   app.deploy_servers.call "cd #{app.deploy_path} && tpkg"
 
-  app.health.enable
 
+  mail    = Sunshine::ARSendmail.new app
+  mail.restart
 
   unicorn = Sunshine::Unicorn.new app, :port => 10001
-  nginx   = Sunshine::Nginx.new app, :point_to => unicorn, :port => 10000
-
   unicorn.restart
+
+  nginx   = Sunshine::Nginx.new app, :point_to => unicorn, :port => 10000
   nginx.restart
+
+
+  app.health.enable
 end
 
 
@@ -53,4 +61,4 @@ __END__
 
   :deploy_servers:
     - - jcast.np.wc1.yellowpages.com
-      - :roles: web db app
+      - :roles: web db app mail

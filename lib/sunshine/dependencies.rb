@@ -45,4 +45,6 @@ class Sunshine::Dependencies < Settler
 
   gem 'rainbows', :version => ">=0.90.2"
 
+  gem 'ar_mailer', :version => ">=1.5.0"
+
 end

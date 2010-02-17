@@ -33,6 +33,7 @@ lib/sunshine/repos/git_repo.rb
 lib/sunshine/repos/rsync_repo.rb
 lib/sunshine/repos/svn_repo.rb
 lib/sunshine/server.rb
+lib/sunshine/servers/ar_sendmail.rb
 lib/sunshine/servers/nginx.rb
 lib/sunshine/servers/rainbows.rb
 lib/sunshine/servers/unicorn.rb
