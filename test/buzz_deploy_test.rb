@@ -17,12 +17,12 @@ Sunshine::Dependencies.gem 'isolate'
 
 # Deploy!
 
-Sunshine::App.deploy do |app|
+Sunshine::AttiApp.deploy do |app|
 
   app.shell_env "NLS_LANG"        => "American_America.UTF8",
                 "TNS_ADMIN"       => "#{app.current_path}/config",
                 "ORACLE_HOME"     => "/usr/lib/oracle/10.2.0.3/client64",
-                "LD_LIBRARY_PATH" => "/usr/lib/oracle/10.2.0.3/client64/lib/"
+                "LD_LIBRARY_PATH" => "/usr/lib/oracle/10.2.0.3/client64/lib"
 
   app.install_deps 'libxml2-devel', 'libxslt-devel', 'sqlite', 'sqlite-devel',
                    'isolate', 'activerecord-oracle_enhanced-adapter'
@@ -42,6 +42,8 @@ Sunshine::App.deploy do |app|
   sass_yml_file = "#{app.checkout_path}/config/asset_packages.yml"
   sass_yml      = cdn_servers.first.call "cat #{sass_yml_file}"
   sass_files    = YAML.load(sass_yml)['stylesheets'][0]['all']
+
+  sass_files.delete_if{|s| s=~ /^960\//}
 
   app.sass sass_files, cdn_servers
   app.rake 'asset:packager:build_all', cdn_servers
@@ -65,7 +67,6 @@ __END__
 
 :default:
   :name: webbuzz
-  :deploy_name: first_deploy
 
   :repo:
     :type:  git

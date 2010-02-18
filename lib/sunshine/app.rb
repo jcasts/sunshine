@@ -81,11 +81,11 @@ module Sunshine
 
       @health = Healthcheck.new @shared_path, @deploy_servers
 
-      options[:shell_env] ||= {
-        "PATH"      => "/home/t/bin:/home/ypc/sbin:$PATH",
+      options[:shell_env] = {
         "RACK_ENV"  => @deploy_env.to_s,
         "RAILS_ENV" => @deploy_env.to_s
-      }
+      }.merge(options[:shell_env] || {})
+
       shell_env options[:shell_env]
 
       @scripts = Hash.new{|h, k| h[k] = []}
@@ -180,6 +180,17 @@ module Sunshine
           end
         end
       end
+    end
+
+
+    ##
+    # Add paths the the shell $PATH env.
+
+    def add_shell_paths(*paths)
+      path = @shell_env["PATH"] || "$PATH"
+      paths << path
+
+      shell_env "PATH" => paths.join(":")
     end
 
 

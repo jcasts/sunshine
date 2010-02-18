@@ -3,7 +3,7 @@ require 'sunshine/presets/atti'
 ##
 # Deploy!
 
-Sunshine::App.deploy do |app|
+Sunshine::AttiApp.deploy do |app|
 
   rainbows = Sunshine::Rainbows.new(app, :port => 5001)
 
