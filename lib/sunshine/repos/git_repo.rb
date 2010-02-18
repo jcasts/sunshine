@@ -89,7 +89,7 @@ module Sunshine
 
     def initialize url, options={}
       super
-      @tree = options[:tree] || "master"
+      @tree = options[:branch] || options[:tree] || "master"
     end
 
 

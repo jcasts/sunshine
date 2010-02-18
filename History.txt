@@ -5,6 +5,11 @@
   * Constuctor supports :deploy_name option for nameable deploys.
     Defaults to the timestamp.
 
+  * Auto-detects if the script's directory is a checked out repo and uses it
+    if no repo information was given.
+
+  * Support for running sass.
+
 * Sunshine::Repo:
 
   * Added support for detecting a repo type based on a path:
@@ -18,6 +23,9 @@
 
   * Changed the checkout_to method signature
 
+* Sunshine::Server:
+
+  * Added support for ar_sendmail server.
 
 === 0.0.4 / 2010-02-12
 

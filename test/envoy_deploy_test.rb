@@ -1,4 +1,4 @@
-Sunshine::Dependencies::Gem.sudo = true
+require 'sunshine/presets/atti'
 
 ##
 # Deploy!

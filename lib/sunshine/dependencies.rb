@@ -15,25 +15,27 @@ class Sunshine::Dependencies < Settler
 
   yum 'logrotate'
 
-  yum 'ruby', :pkg => 'ruby-ypc'
+  yum 'ruby'
 
   yum 'ruby-devel'
 
   yum 'irb', :pkg => 'ruby-irb'
 
-  yum 'rubygems', :version => '1.3.5'
+  yum 'rubygems', :version => '1.3.5' do
+    requires 'ruby', 'ruby-devel'
+  end
 
   yum 'logrotate'
 
   yum 'curl-devel'
 
   gem 'mogwai_logpush',
-    :version => "~>0.0.2",
+    :version => ">=0.0.2",
     :source  => "http://gems.atti.wc1.yellowpages.com" do
     requires 'curl-devel'
   end
 
-  gem 'rake', :version => "~>0.8"
+  gem 'rake', :version => ">=0.8"
 
   gem 'passenger', :version => "~>2.2"
 
@@ -46,5 +48,7 @@ class Sunshine::Dependencies < Settler
   gem 'rainbows', :version => ">=0.90.2"
 
   gem 'ar_mailer', :version => ">=1.5.0"
+
+  gem 'haml'
 
 end
