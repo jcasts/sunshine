@@ -369,6 +369,7 @@ module Sunshine
 
         d_servers.each do |deploy_server|
           contents[:deployed_as] ||= deploy_server.call "whoami"
+          contents[:roles] = deploy_server.roles
 
           deploy_server.make_file "#{@checkout_path}/info", contents.to_yaml
           deploy_server.symlink "#{@current_path}/info", "#{@deploy_path}/info"

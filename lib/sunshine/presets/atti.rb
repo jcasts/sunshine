@@ -25,8 +25,8 @@ module Sunshine
     # Get the 2-3 letter representation of the datacenter to use
     # based on the deploy_env.
 
-    def datacenter
-      dc_name = @deploy_env.to_s =~ /^prod.*_([a-z0-9]{2,})/ && $1
+    def datacenter env=@deploy_env
+      dc_name = env.to_s =~ /^prod.*_([a-z0-9]{2,})/ && $1
       dc_name || "np"
     end
 
@@ -35,7 +35,16 @@ module Sunshine
     # Get the name of the db yml file to use based on the deploy_env.
 
     def db_setup_file secure=false
-      secure ? "database.yml" : "database-#{datacenter}.yml.gpg"
+      secure ? "config/database.yml" : "config/database-#{datacenter}.yml.gpg"
+    end
+
+
+    ##
+    # Gpg decrypt the database yml file
+
+    def decrypt_db_yml gpg_file=nil
+      gpg_file ||= db_setup_file true
+      gpg_decrypt gpg_file
     end
 
 
@@ -46,7 +55,7 @@ module Sunshine
     # :servers:: arr - the deploy servers to run the command on
 
     def gpg_decrypt gpg_file, options={}
-      output_file = options[:output] || gpg_file.gsub /\.gpg$/, ''
+      output_file = options[:output] || gpg_file.gsub(/\.gpg$/, '')
 
       passphrase   = options[:passphrase]
       passphrase ||= Sunshine.console.ask("Enter gpg passphrase:") do |q|

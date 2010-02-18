@@ -2,6 +2,8 @@
 
 * Sunshine::App:
 
+  * Added AttiApp class for ATTi app deployment.
+
   * Constuctor supports :deploy_name option for nameable deploys.
     Defaults to the timestamp.
 
@@ -26,6 +28,7 @@
 * Sunshine::Server:
 
   * Added support for ar_sendmail server.
+
 
 === 0.0.4 / 2010-02-12
 

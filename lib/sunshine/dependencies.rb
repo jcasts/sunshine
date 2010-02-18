@@ -29,6 +29,24 @@ class Sunshine::Dependencies < Settler
 
   yum 'curl-devel'
 
+  yum 'libxml2-devel'
+
+  yum 'libxslt-devel'
+
+  yum 'sqlite'
+
+  yum 'sqlite-devel'
+
+  yum 'libaio'
+
+  gem 'ruby-oci8'
+
+  gem 'activerecord-oracle_enhanced-adapter' do
+    requires 'libaio', 'ruby-oci8'
+  end
+
+  gem 'isolate'
+
   gem 'mogwai_logpush',
     :version => ">=0.0.2",
     :source  => "http://gems.atti.wc1.yellowpages.com" do

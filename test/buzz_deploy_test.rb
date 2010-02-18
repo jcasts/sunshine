@@ -1,39 +1,30 @@
 require 'sunshine/presets/atti'
 
-# Dependencies for Buzz
-
-Sunshine::Dependencies.yum 'libxml2-devel'
-Sunshine::Dependencies.yum 'libxslt-devel'
-Sunshine::Dependencies.yum 'sqlite'
-Sunshine::Dependencies.yum 'sqlite-devel'
-
-Sunshine::Dependencies.gem 'ruby-oci8'
-Sunshine::Dependencies.gem 'activerecord-oracle_enhanced-adapter' do
-  requires 'ruby-oci8'
-end
-
-Sunshine::Dependencies.gem 'isolate'
-
-
-# Deploy!
 
 Sunshine::AttiApp.deploy do |app|
 
   app.shell_env "NLS_LANG"        => "American_America.UTF8",
                 "TNS_ADMIN"       => "#{app.current_path}/config",
-                "ORACLE_HOME"     => "/usr/lib/oracle/10.2.0.3/client64",
-                "LD_LIBRARY_PATH" => "/usr/lib/oracle/10.2.0.3/client64/lib"
+                "ORACLE_HOME"     => "/usr/lib/oracle/11.2/client64",
+                "LD_LIBRARY_PATH" => "/usr/lib/oracle/11.2/client64/lib"
 
   app.install_deps 'libxml2-devel', 'libxslt-devel', 'sqlite', 'sqlite-devel',
-                   'isolate', 'activerecord-oracle_enhanced-adapter'
+                   'libaio', 'isolate', 'activerecord-oracle_enhanced-adapter'
 
   app.deploy_servers.call "cd #{app.deploy_path} && tpkg"
 
-
-  #app.rake 'newb'
   app.install_gems
 
-  app.rake 'config/database.yml'
+  # Don't decrypt the db yml file for these environments
+  secure_db = !%w{cruise integration test development}.include?(app.deploy_env)
+
+  if secure_db
+    app.decrypt_db_yml
+  else
+    app.rake "config/database.yml"
+  end
+
+
   app.rake 'db:migrate', app.deploy_servers.find(:role => :db)
 
 
@@ -49,13 +40,16 @@ Sunshine::AttiApp.deploy do |app|
   app.rake 'asset:packager:build_all', cdn_servers
 
 
-  mail    = Sunshine::ARSendmail.new app
+  delayed_job = Sunshine::DelayedJob.new app
+  delayed_job.restart
+
+  mail = Sunshine::ARSendmail.new app
   mail.restart
 
   unicorn = Sunshine::Unicorn.new app, :port => 10001, :processes => 8
   unicorn.restart
 
-  nginx   = Sunshine::Nginx.new app, :point_to => unicorn, :port => 10000
+  nginx = Sunshine::Nginx.new app, :point_to => unicorn, :port => 10000
   nginx.restart
 
 
@@ -77,4 +71,4 @@ __END__
 
   :deploy_servers:
     - - jcast.np.wc1.yellowpages.com
-      - :roles: web db app cdn mail
+      - :roles: web db app cdn mail dj
