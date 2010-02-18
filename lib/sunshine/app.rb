@@ -374,6 +374,8 @@ module Sunshine
     # Run a rake task on any or all deploy servers.
 
     def rake(command, d_servers = @deploy_servers)
+      d_servers = [d_servers] unless Array === d_servers
+
       Sunshine.logger.info :app, "Running Rake task '#{command}'" do
         d_servers.each do |deploy_server|
           self.install_deps 'rake', :servers => deploy_server
@@ -422,6 +424,29 @@ module Sunshine
 
     def run_post_user_lambdas
       @post_user_lambdas.each{|l| l.call self}
+    end
+
+
+    ##
+    # Run a sass task on any or all deploy servers.
+
+    def sass(sass_names, d_servers = @deploy_servers)
+      sass_names = [*sass_names]
+      d_servers  = [d_servers] unless Array === d_servers
+
+      Sunshine.logger.info :app, "Running Sass for #{sass_names.join(' ')}" do
+
+        sass_names.each do |name|
+          sass_file = "public/stylesheets/sass/#{name}.sass"
+          css_file  = "public/stylesheets/#{name}.css"
+          sass_cmd  = "cd #{@checkout_path} && sass #{sass_file} #{css_file}"
+
+          d_servers.each do |deploy_server|
+            self.install_deps 'haml', :servers => deploy_server
+            deploy_server.call sass_cmd
+          end
+        end
+      end
     end
 
 
