@@ -13,6 +13,9 @@ class Settler
 
   class Gem < Dependency
 
+    self.sudo = true
+
+
     def initialize(dependency_lib, name, options={}, &block)
       super(dependency_lib, name, options) do
         version = options[:version] ? " --version '#{options[:version]}'" : ""
@@ -40,14 +43,8 @@ class Settler
     private
 
     def run_command(command, options={})
-      @dependency_lib.install 'ruby', options if
-        @dependency_lib.exist?('ruby')
-
       @dependency_lib.install 'rubygems', options if
         @dependency_lib.exist?('rubygems')
-
-      @dependency_lib.install 'ruby-devel', options if
-        @dependency_lib.exist?('ruby-devel')
 
       super
     end

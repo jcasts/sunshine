@@ -59,7 +59,7 @@ class Settler
     ##
     # Assign a sudo value. A value of nil means 'don't assign sudo',
     # true means sudo, string means sudo -u, false means, explicitely
-    # don't use sudo.
+    # don't use sudo. Yum and Gem dependency types default to sudo=true.
 
     def self.sudo= value
       @sudo = value

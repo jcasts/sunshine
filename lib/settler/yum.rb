@@ -14,6 +14,9 @@ class Settler
 
   class Yum < Dependency
 
+    self.sudo = true
+
+
     def initialize(dependency_lib, name, options={}, &block)
       super(dependency_lib, name, options) do
         pkg_name = build_pkg_name @pkg.dup, options

@@ -6,6 +6,7 @@ class Settler
       super(dependency_lib, name, options) do
         pkg_name = @pkg.dup
         pkg_name << "-#{options[:version]}" if options[:version]
+        pkg_name << "-#{options[:rel]}" if options[:rel]
         pkg_name << (options[:arch] ? "-#{options[:arch]}" : "-$(uname -p)")
 
         install    "tpkg -n -i #{pkg_name}"
