@@ -342,7 +342,7 @@ module Sunshine
         restart = restart_cmd ? restart_cmd : [stop_cmd, start_cmd]
         app.scripts[:restart].concat [*restart]
 
-        app.info[:ports][@pid] = @port
+        app.info[:ports][@pid] = @port if @port
       end
     end
   end

@@ -2,11 +2,14 @@ module Sunshine
 
   ##
   # Simple server wrapper for ar_sendmail setup and control.
+  # By default, uses deploy servers with the :mail role.
 
   class ARSendmail < Server
 
     def initialize app, options={}
       super
+
+      @port = nil
 
       @dep_name = options[:dep_name] || 'ar_mailer'
 
