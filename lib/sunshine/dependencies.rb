@@ -69,4 +69,6 @@ class Sunshine::Dependencies < Settler
 
   gem 'haml'
 
+  gem 'daemons-gem', :pkg => 'daemons'
+
 end

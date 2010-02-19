@@ -15,15 +15,16 @@ Sunshine::AttiApp.deploy do |app|
 
   app.install_gems
 
+
   # Don't decrypt the db yml file for these environments
-  secure_db = !%w{cruise integration test development}.include?(app.deploy_env)
+  non_secure_envs = %w{cruise integration test development}
+  secure_db = !non_secure_envs.include?(app.deploy_env)
 
   if secure_db
     app.decrypt_db_yml
   else
     app.rake "config/database.yml"
   end
-
 
   app.rake 'db:migrate', app.deploy_servers.find(:role => :db)
 

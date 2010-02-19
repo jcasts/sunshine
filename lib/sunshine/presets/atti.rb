@@ -62,14 +62,16 @@ module Sunshine
         q.echo = false
       end
 
-      passphrase_file = "#{@deploy_path}/tmp/.gpg_passphrase"
+      passphrase_file = "#{@deploy_path}/tmp/gpg_passphrase"
 
       gpg_cmd = "gpg --batch --no-tty --yes --output #{output_file} "+
         "--passphrase-file #{passphrase_file} --decrypt #{gpg_file}"
 
-      d_servers = [*options[:servers]] || @deploy_servers
+      d_servers   = [*options[:servers]] if options[:servers]
+      d_servers ||= @deploy_servers
 
       d_servers.each do |deploy_server|
+        deploy_server.call "mkdir -p #{File.dirname(passphrase_file)}"
         deploy_server.make_file passphrase_file, passphrase
         deploy_server.call "cd #{@checkout_path} && #{gpg_cmd}"
         deploy_server.call "rm -f #{passphrase_file}"
