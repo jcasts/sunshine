@@ -65,7 +65,7 @@ module Sunshine
 
       @name        = options[:name]
       @crontab     = Crontab.new @name
-      @deploy_env  = options[:deploy_env]
+      @deploy_env  = options[:deploy_env].to_s
 
       @deploy_name = options[:deploy_name] || Time.now.to_i.to_s
 
@@ -448,13 +448,14 @@ module Sunshine
 
       Sunshine.logger.info :app, "Running Sass for #{sass_names.join(' ')}" do
 
-        sass_names.each do |name|
-          sass_file = "public/stylesheets/sass/#{name}.sass"
-          css_file  = "public/stylesheets/#{name}.css"
-          sass_cmd  = "cd #{@checkout_path} && sass #{sass_file} #{css_file}"
+        d_servers.each do |deploy_server|
+          self.install_deps 'haml', :servers => deploy_server
 
-          d_servers.each do |deploy_server|
-            self.install_deps 'haml', :servers => deploy_server
+          sass_names.each do |name|
+            sass_file = "public/stylesheets/sass/#{name}.sass"
+            css_file  = "public/stylesheets/#{name}.css"
+            sass_cmd  = "cd #{@checkout_path} && sass #{sass_file} #{css_file}"
+
             deploy_server.call sass_cmd
           end
         end

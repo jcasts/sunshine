@@ -94,6 +94,7 @@ module Sunshine
   require 'sunshine/servers/unicorn'
   require 'sunshine/servers/rainbows'
   require 'sunshine/servers/ar_sendmail'
+  require 'sunshine/servers/delayed_job'
 
   require 'sunshine/crontab'
 
@@ -125,7 +126,7 @@ module Sunshine
   # See App#deploy_env for app specific deploy environments.
 
   def self.deploy_env
-    @config['deploy_env']
+    @config['deploy_env'].to_s
   end
 
 

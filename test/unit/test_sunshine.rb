@@ -12,7 +12,7 @@ class TestSunshine < Test::Unit::TestCase
 
     assert Sunshine::Console === Sunshine.console
 
-    assert_equal config['deploy_env'], Sunshine.deploy_env
+    assert_equal config['deploy_env'].to_s, Sunshine.deploy_env
 
     assert_equal !config['auto'], Sunshine.interactive?
 
