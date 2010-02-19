@@ -15,7 +15,7 @@ module Sunshine
 
     class ConnectionError < FatalDeployError; end
 
-    LOGIN_LOOP = "echo ready; for (( ; ; )); do sleep 100; done"
+    LOGIN_LOOP = "echo ready; for (( ; ; )); do sleep 10; done"
 
     attr_reader :host, :user
     attr_accessor :roles, :ssh_flags, :rsync_flags
@@ -107,11 +107,12 @@ module Sunshine
     def disconnect
       return unless connected?
 
-      kill_process @pid, "HUP"
-
       @inn.close rescue nil
       @out.close rescue nil
       @err.close rescue nil
+
+      kill_process @pid, "HUP"
+
       @pid = nil
     end
 

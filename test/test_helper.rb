@@ -58,12 +58,14 @@ def mock_deploy_server_popen4
 end
 
 
-def set_mock_response_for obj, code, stream_vals={}
+def set_mock_response_for obj, code, stream_vals={}, options={}
   case obj
   when Sunshine::App then
-    obj.deploy_servers.each{|ds| ds.set_mock_response code, stream_vals}
+    obj.deploy_servers.each do |ds|
+      ds.set_mock_response code, stream_vals, options
+    end
   when Sunshine::DeployServer then
-    obj.set_mock_response code, stream_vals
+    obj.set_mock_response code, stream_vals, options
   end
 end
 

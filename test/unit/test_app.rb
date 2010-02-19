@@ -234,6 +234,8 @@ class TestApp < Test::Unit::TestCase
     nginx_dep = Sunshine::Dependencies['nginx']
     ruby_dep  = Sunshine::Dependencies['ruby']
 
+    yum_sudo = Sunshine::Dependencies::Yum.sudo
+
     check_nginx = "test \"$(yum list installed #{nginx_dep.pkg} | "+
       "grep -c #{nginx_dep.pkg})\" -ge 1"
     check_ruby = "test \"$(yum list installed #{ruby_dep.pkg} | "+
@@ -241,10 +243,12 @@ class TestApp < Test::Unit::TestCase
 
 
     set_mock_response_for @app, 1,
-      check_nginx => [:err, ""],
-      check_ruby  => [:err, ""]
+      {check_nginx => [:err, ""],
+      check_ruby  => [:err, ""]},
+      {:sudo => yum_sudo}
 
     @app.install_deps 'ruby', nginx_dep
+
 
     each_deploy_server do |ds|
       [nginx_dep, ruby_dep].each do |dep|
@@ -252,8 +256,8 @@ class TestApp < Test::Unit::TestCase
           "test \"$(yum list installed #{dep.pkg} | grep -c #{dep.pkg})\" -ge 1"
         install = dep.instance_variable_get "@install"
 
-        assert_ssh_call check
-        assert_ssh_call install
+        assert_ssh_call check, ds, :sudo => yum_sudo
+        assert_ssh_call install, ds, :sudo => yum_sudo
       end
     end
   end

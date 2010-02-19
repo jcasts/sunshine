@@ -57,7 +57,7 @@ module MockOpen4
     return :out, "some_value"
   end
 
-  def set_mock_response code, stream_vals={}
+  def set_mock_response code, stream_vals={}, options={}
     @mock_output ||= {}
     @mock_output[nil] ||= []
     new_stream_vals = {}
@@ -68,7 +68,7 @@ module MockOpen4
         next
       end
 
-      key = ssh_cmd(key).join(" ") if Sunshine::DeployServer === self
+      key = ssh_cmd(key, options).join(" ") if Sunshine::DeployServer === self
 
       new_stream_vals[key] = (val.dup << code)
     end

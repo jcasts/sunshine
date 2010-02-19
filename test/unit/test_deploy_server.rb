@@ -17,7 +17,7 @@ class TestDeployServer < Test::Unit::TestCase
   end
 
   def test_connect
-    assert_ssh_call "echo ready; for (( ; ; )); do sleep 100; done"
+    assert_ssh_call "echo ready; for (( ; ; )); do sleep 10; done"
     assert @deploy_server.connected?
   end
 
