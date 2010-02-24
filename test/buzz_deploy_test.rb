@@ -11,7 +11,7 @@ Sunshine::AttiApp.deploy do |app|
   app.install_deps 'libxml2-devel', 'libxslt-devel', 'sqlite', 'sqlite-devel',
                    'libaio', 'isolate', 'activerecord-oracle_enhanced-adapter'
 
-  app.deploy_servers.call "cd #{app.checkout_path} && tpkg"
+  #app.deploy_servers.call "cd #{app.checkout_path} && tpkg"
 
   app.install_gems
 

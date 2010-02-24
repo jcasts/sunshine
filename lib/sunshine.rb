@@ -10,6 +10,7 @@ require 'erb'
 require 'logger'
 require 'optparse'
 require 'time'
+require 'fileutils'
 
 ##
 # Sunshine is an object oriented deploy tool for rack applications.
