@@ -71,7 +71,7 @@ class TestServer < Test::Unit::TestCase
     assert_ssh_call "mkdir -p #{server.send(:remote_dirs).join(" ")}"
 
     assert_rsync(/rainbows\.conf/, "jcast.np.wc1.yellowpages.com:"+
-      "/usr/local/nextgen/envoy/current/server_configs/rainbows/rainbows.conf")
+      "/usr/local/nextgen/envoy/current/daemons/rainbows/rainbows.conf")
   end
 
 
@@ -238,7 +238,7 @@ class TestServer < Test::Unit::TestCase
       :processes => 1,
       :server_name => nil,
       :config_file => "server.conf",
-      :config_path => "#{@app.current_path}/server_configs/server",
+      :config_path => "#{@app.current_path}/daemons/server",
       :config_template => "templates/server/*",
       :deploy_servers => @app.deploy_servers.find(:role => :web),
       :stderr => "#{@app.log_path}/server_stderr.log",

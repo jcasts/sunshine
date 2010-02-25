@@ -90,12 +90,13 @@ module Sunshine
   require 'sunshine/repos/git_repo'
   require 'sunshine/repos/rsync_repo'
 
-  require 'sunshine/server'
-  require 'sunshine/servers/nginx'
-  require 'sunshine/servers/unicorn'
-  require 'sunshine/servers/rainbows'
-  require 'sunshine/servers/ar_sendmail'
-  require 'sunshine/servers/delayed_job'
+  require 'sunshine/daemon'
+  require 'sunshine/daemons/server'
+  require 'sunshine/daemons/nginx'
+  require 'sunshine/daemons/unicorn'
+  require 'sunshine/daemons/rainbows'
+  require 'sunshine/daemons/ar_sendmail'
+  require 'sunshine/daemons/delayed_job'
 
   require 'sunshine/crontab'
 

@@ -33,7 +33,8 @@ Sunshine::AttiApp.deploy do |app|
 
   sass_yml_file = "#{app.checkout_path}/config/asset_packages.yml"
   sass_yml      = cdn_servers.first.call "cat #{sass_yml_file}"
-  sass_files    = YAML.load(sass_yml)['stylesheets'][0]['all']
+  sass_files    = YAML.load(sass_yml)['stylesheets']
+  sass_files    = sass_files[0]['all'].concat sass_files[1]['brochure']
 
   sass_files.delete_if{|s| s=~ /^960\//}
 

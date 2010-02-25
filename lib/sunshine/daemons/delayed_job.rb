@@ -1,23 +1,20 @@
 module Sunshine
 
   ##
-  # Simple server wrapper for delayed_job daemon setup and control.
+  # Simple daemon wrapper for delayed_job daemon setup and control.
   # By default, uses deploy servers with the :dj role. Supports
   # the :processes option.
 
-  class DelayedJob < Server
+  class DelayedJob < Daemon
 
     def initialize app, options={}
-      super
+      options[:deploy_servers] ||= app.deploy_servers.find(:role => :dj)
 
-      @port = nil
+      super app, options
 
       @pid = "#{@app.current_path}/tmp/pids/delayed_job.pid"
 
       @dep_name = options[:dep_name] || "daemons-gem"
-
-      @deploy_servers = options[:deploy_servers] ||
-        @app.deploy_servers.find(:role => :dj)
     end
 
 

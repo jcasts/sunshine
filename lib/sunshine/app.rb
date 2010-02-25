@@ -118,8 +118,8 @@ module Sunshine
       run_post_user_lambdas
       build_control_scripts
       make_deploy_info_file
-      remove_old_deploys
       register_as_deployed
+      remove_old_deploys
 
       @deploy_successful = true
 
