@@ -179,9 +179,9 @@ class TestApp < Test::Unit::TestCase
 
 
   def test_build_control_scripts
-    @app.scripts[:start]  << "start script"
-    @app.scripts[:stop]   << "stop script"
-    @app.scripts[:custom] << "custom script"
+    @app.add_to_script :start, "start script"
+    @app.add_to_script :stop, "stop script"
+    @app.add_to_script :custom, "custom script"
 
     @app.build_control_scripts
 

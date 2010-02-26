@@ -37,7 +37,7 @@ module Sunshine
 
     attr_accessor :config_template, :config_path, :config_file
 
-    attr_writer :start_cmd, :stop_cmd, :restart_cmd
+    attr_writer :start_cmd, :stop_cmd, :restart_cmd, :status_cmd
 
 
     # Daemon objects need only an App object to be instantiated but many options
@@ -99,7 +99,9 @@ module Sunshine
         :stdout => "#{log_path}/#{@name}_stdout.log"
       }
 
-      @start_cmd = @stop_cmd = @restart_cmd = nil
+
+      @start_cmd = @stop_cmd = @restart_cmd = @status_cmd = nil
+
 
       register_after_user_script
     end
@@ -138,7 +140,7 @@ module Sunshine
       end
 
     rescue => e
-      raise FatalDeployError.new(e, "Could not setup #{@name}")
+      raise CriticalDeployError.new(e, "Could not setup #{@name}")
     end
 
 
@@ -155,7 +157,7 @@ module Sunshine
 
             yield(deploy_server) if block_given?
           rescue => e
-            raise FatalDeployError.new(e, "Could not start #{@name}")
+            raise CriticalDeployError.new(e, "Could not start #{@name}")
           end
         end
       end
@@ -174,7 +176,7 @@ module Sunshine
 
             yield(deploy_server) if block_given?
           rescue => e
-            raise FatalDeployError.new(e, "Could not stop #{@name}")
+            raise CriticalDeployError.new(e, "Could not stop #{@name}")
           end
         end
       end
@@ -186,23 +188,18 @@ module Sunshine
     # If restart_cmd is not provided, calls stop and start.
 
     def restart
-      if restart_cmd
-        self.setup
+      self.setup
 
-        Sunshine.logger.info @name, "Starting #{@name} daemon" do
+      Sunshine.logger.info @name, "Restarting #{@name} daemon" do
+        @deploy_servers.each do |deploy_server|
           begin
-            @deploy_servers.each do |deploy_server|
-              deploy_server.call @restart_cmd, :sudo => pick_sudo(deploy_server)
-            end
+            deploy_server.call restart_cmd, :sudo => pick_sudo(deploy_server)
 
+            yield(deploy_server) if block_given?
           rescue => e
-            raise FatalDeployError.new(e, "Could not restart #{@name}")
+            raise CriticalDeployError.new(e, "Could not restart #{@name}")
           end
         end
-
-      else
-        self.stop
-        self.start
       end
     end
 
@@ -231,7 +228,15 @@ module Sunshine
     # Gets the command that restarts the daemon.
 
     def restart_cmd
-      @restart_cmd
+      @restart_cmd || [stop_cmd, start_cmd].map{|c| "(#{c})"}.join(" && ")
+    end
+
+
+    ##
+    # Get the command to check if the daemon is running.
+
+    def status_cmd
+      @status_cmd || "test -f #{@pid}"
     end
 
 
@@ -330,12 +335,10 @@ module Sunshine
 
     def register_after_user_script
       @app.after_user_script do |app|
-        app.scripts[:start]  << start_cmd
-        app.scripts[:stop]   << stop_cmd
-        app.scripts[:status] << "test -f #{@pid}"
-
-        restart = restart_cmd ? restart_cmd : [stop_cmd, start_cmd]
-        app.scripts[:restart].concat [*restart]
+        app.add_to_script :start,   start_cmd,   :servers => @deploy_servers
+        app.add_to_script :stop,    stop_cmd,    :servers => @deploy_servers
+        app.add_to_script :restart, restart_cmd, :servers => @deploy_servers
+        app.add_to_script :status,  status_cmd,  :servers => @deploy_servers
       end
     end
   end

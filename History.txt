@@ -2,6 +2,9 @@
 
 * Sunshine::App:
 
+  * Fixed control script creation to be deploy_server specific
+    (takes roles into account)
+
   * Added AttiApp class for ATTi app deployment.
 
   * Constuctor supports :deploy_name option for nameable deploys.

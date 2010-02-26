@@ -104,8 +104,7 @@ class TestServer < Test::Unit::TestCase
 
     server.restart
 
-    assert server.method_called?(:stop)
-    assert server.method_called?(:start)
+    assert_ssh_call server.restart_cmd
   end
 
 
@@ -191,12 +190,14 @@ class TestServer < Test::Unit::TestCase
 
     @app.run_post_user_lambdas
 
-    assert @app.scripts[:start].include?(server.start_cmd)
-    assert @app.scripts[:stop].include?(server.stop_cmd)
-    assert @app.scripts[:status].include?("test -f #{server.pid}")
-    assert @app.scripts[:restart].include?(server.start_cmd)
-    assert @app.scripts[:restart].include?(server.stop_cmd)
-    assert_equal server.port, @app.info[:ports][server.pid]
+    @app.deploy_servers.each do |ds|
+
+      assert @app.scripts[ds][:start].include?(server.start_cmd)
+      assert @app.scripts[ds][:stop].include?(server.stop_cmd)
+      assert @app.scripts[ds][:status].include?(server.status_cmd)
+      assert @app.scripts[ds][:restart].include?(server.restart_cmd)
+      assert_equal server.port, @app.info[:ports][server.pid]
+    end
   end
 
 

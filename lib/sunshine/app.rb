@@ -88,7 +88,10 @@ module Sunshine
 
       shell_env options[:shell_env]
 
-      @scripts = Hash.new{|h, k| h[k] = []}
+      #@scripts = Hash.new{|h, k| h[k] = []}
+      @scripts = Hash.new do |hash, key|
+        hash[key] = Hash.new{|h, k| h[k] = [] }
+      end
 
       @post_user_lambdas = []
 
@@ -195,6 +198,20 @@ module Sunshine
 
 
     ##
+    # Add a command to a control script to be generated on deploy servers:
+    #   add_to_script :start, "do this on start"
+    #   add_to_script :start, "start_mail",
+    #     :servers => deploy_servers.find(:role => :mail)
+
+    def add_to_script name, script, options={}
+      d_servers = options[:servers] ? [*options[:servers]] : @deploy_servers
+      d_servers.each do |deploy_server|
+        @scripts[deploy_server][name] << script
+      end
+    end
+
+
+    ##
     # Define lambdas to run right after the user's yield.
     #   app.after_user_script do |app|
     #     ...
@@ -206,36 +223,49 @@ module Sunshine
 
 
     ##
-    # Creates and uploads a control script for the application with
-    # start/stop/restart commands. To add to, or define a control script,
-    # use the app's script attribute:
-    #   app.script[:start] << "do this for app startup"
-    #   app.script[:custom] << "this is my own script"
+    # Creates and uploads all control scripts for the application.
+    # To add to, or define a control script, see App#add_to_script.
 
-    def build_control_scripts(d_servers = @deploy_servers)
+    def build_control_scripts
       Sunshine.logger.info :app, "Building control scripts" do
 
-        chmod = '--chmod=ugo=rwx'
+        build_env_control_script
 
-        bash = make_env_bash_script
-        d_servers.make_file "#{@checkout_path}/env", bash, :flags => chmod
-        d_servers.symlink "#{@current_path}/env", "#{@deploy_path}/env"
+        @scripts.each do |deploy_server, server_scripts|
 
-        if @scripts[:restart].empty? &&
-          !@scripts[:start].empty? && !@scripts[:stop].empty?
-          @scripts[:restart] << "#{@deploy_path}/stop"
-          @scripts[:restart] << "#{@deploy_path}/start"
-        end
+          if server_scripts[:restart].empty? &&
+            !server_scripts[:start].empty? && !server_scripts[:stop].empty?
+            server_scripts[:restart] << "#{@deploy_path}/stop"
+            server_scripts[:restart] << "#{@deploy_path}/start"
+          end
 
-        @scripts.each do |name, cmds|
-          Sunshine.logger.warn :app, "#{name} script is empty" if cmds.empty?
-          bash = make_bash_script name, cmds
+          server_scripts.each do |name, cmds|
+            if cmds.empty?
+              Sunshine.logger.warn deploy_server.host, "#{name} script is empty"
+            end
 
-          d_servers.make_file "#{@checkout_path}/#{name}", bash, :flags => chmod
-          d_servers.symlink "#{@current_path}/#{name}",
-            "#{@deploy_path}/#{name}"
+            bash = make_bash_script name, cmds
+
+            deploy_server.make_file "#{@checkout_path}/#{name}", bash,
+              :flags => '--chmod=ugo=rwx'
+
+            deploy_server.symlink "#{@current_path}/#{name}",
+              "#{@deploy_path}/#{name}"
+          end
         end
       end
+    end
+
+
+    ##
+    # Creates the env control script on all deploy servers
+
+    def build_env_control_script
+      chmod = '--chmod=ugo=rwx'
+      bash  = make_env_bash_script
+
+      @deploy_servers.make_file "#{@checkout_path}/env", bash, :flags => chmod
+      @deploy_servers.symlink "#{@current_path}/env", "#{@deploy_path}/env"
     end
 
 
