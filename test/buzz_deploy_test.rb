@@ -9,7 +9,8 @@ Sunshine::AttiApp.deploy do |app|
                 "LD_LIBRARY_PATH" => "/usr/lib/oracle/11.2/client64/lib"
 
   app.install_deps 'libxml2-devel', 'libxslt-devel', 'sqlite', 'sqlite-devel',
-                   'libaio', 'isolate', 'activerecord-oracle_enhanced-adapter'
+                   'libaio', 'ruby-devel',
+                   'isolate', 'activerecord-oracle_enhanced-adapter'
 
   #app.deploy_servers.call "cd #{app.checkout_path} && tpkg"
 
@@ -73,4 +74,7 @@ __END__
 
   :deploy_servers:
     - - jcast.np.wc1.yellowpages.com
+      - :roles: web db app cdn mail dj
+
+    - - sunny.np.wc1.yellowpages.com
       - :roles: web db app cdn mail dj
