@@ -10,6 +10,7 @@ module Sunshine
     LOCAL_USER = `whoami`.chomp
     LOCAL_HOST = `hostname`.chomp
 
+    SUDO_FAILED = /^Sorry, try again./
     SUDO_PROMPT = /^Password:/
 
     attr_reader :user, :host, :password, :input, :output
@@ -155,7 +156,7 @@ module Sunshine
 
           kill_process(pid) unless Sunshine.interactive?
 
-          send_password_to_stream(inn)
+          send_password_to_stream(inn, data)
 
           data << "\n"
           Sunshine.console << "\n"
@@ -185,7 +186,8 @@ module Sunshine
     end
 
 
-    def send_password_to_stream inn
+    def send_password_to_stream inn, data
+      prompt_for_password if data =~ SUDO_FAILED
       inn.puts @password || prompt_for_password
     end
 
