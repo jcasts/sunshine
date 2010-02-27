@@ -43,6 +43,28 @@ module Sunshine
 
 
     ##
+    # Iterate over all deploy servers but create a thread for each
+    # deploy server. Means you can't return from the passed block!
+
+    def threaded_each(&block)
+      mutex   = Mutex.new
+      threads = []
+
+      return_val = each do |deploy_server|
+        threads << Thread.new do
+          deploy_server.with_mutex mutex do
+            yield deploy_server
+          end
+        end
+      end
+
+      threads.each{|t| t.join }
+
+      return_val
+    end
+
+
+    ##
     # Find deploy servers matching the passed requirements
     # Returns a DeployServerDispatcher object
     #   find :user => 'db'
@@ -81,7 +103,7 @@ module Sunshine
     # deploy server is not connected.
 
     def connected?
-      self.each do |deploy_server|
+      each do |deploy_server|
         return false unless deploy_server.connected?
       end
       true
@@ -126,7 +148,7 @@ module Sunshine
     private
 
     def call_each_method(method_name, *args, &block)
-      self.each do |deploy_server|
+      threaded_each do |deploy_server|
         deploy_server.send(method_name, *args, &block)
       end
     end

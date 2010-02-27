@@ -13,12 +13,14 @@ module Sunshine
     SUDO_FAILED = /^Sorry, try again./
     SUDO_PROMPT = /^Password:/
 
-    attr_reader :user, :host, :password, :input, :output
+    attr_reader :user, :host, :password, :input, :output, :mutex
     attr_accessor :env, :sudo
 
     def initialize output = $stdout, options={}
       @output = output
-      @input = HighLine.new
+
+      $stdin.sync
+      @input = HighLine.new $stdin
 
       @user = LOCAL_USER
       @host = LOCAL_HOST
@@ -26,6 +28,8 @@ module Sunshine
       @sudo     = options[:sudo]
       @env      = options[:env] || {}
       @password = options[:password]
+
+      @mutex = nil
     end
 
 
@@ -41,7 +45,7 @@ module Sunshine
     # Prompt the user for input.
 
     def ask(*args, &block)
-      @input.ask(*args, &block)
+      sync{ @input.ask(*args, &block) }
     end
 
 
@@ -116,6 +120,30 @@ module Sunshine
 
 
     ##
+    # Synchronize a block with the current mutex if it exists.
+
+    def sync
+      if @mutex
+        @mutex.synchronize{ yield }
+      else
+        yield
+      end
+    end
+
+
+    ##
+    # Execute a block while setting the console's mutex.
+    # Sets the mutex to its original value on exit.
+    # Executing commands with a mutex is used for user prompts.
+
+    def with_mutex mutex
+      old_mutex, @mutex = @mutex, mutex
+      yield
+      @mutex = old_mutex
+    end
+
+
+    ##
     # Write string to stdout (by default).
 
     def write str
@@ -148,9 +176,15 @@ module Sunshine
       result, status = process_streams(pid, out, err) do |stream, data|
         stream_name = stream == out ? :out : :err
 
-        Sunshine.logger.send log_methods[stream], ">>", data
 
-        yield(stream_name, data) if block_given?
+        # User blocks should run with sync threads to avoid badness.
+        sync do
+          Sunshine.logger.send log_methods[stream],
+            "#{@host}:#{stream_name}", data
+
+          yield(stream_name, data) if block_given?
+        end
+
 
         if password_required?(stream_name, data) then
 
@@ -158,8 +192,8 @@ module Sunshine
 
           send_password_to_stream(inn, data)
 
-          data << "\n"
-          Sunshine.console << "\n"
+          #data << "\n"
+          #Sunshine.console << "\n"
         end
       end
 
