@@ -622,6 +622,9 @@ module Sunshine
     private
 
 
+    ##
+    # Return a DeployServerDispatcher from an Array or DeployServer
+
     def fetch_dispatcher input
       case input
       when DeployServerDispatcher
@@ -632,6 +635,7 @@ module Sunshine
         nil
       end
     end
+
 
     ##
     # Set all the app paths based on the root deploy path.
