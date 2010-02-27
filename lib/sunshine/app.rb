@@ -157,7 +157,7 @@ module Sunshine
 
     def revert!
       Sunshine.logger.info :app, "Reverting to previous deploy..." do
-        deploy_servers.each do |deploy_server|
+        deploy_servers.threaded_each do |deploy_server|
           deploy_server.call "rm -rf #{@checkout_path}"
 
           last_deploy =
@@ -204,7 +204,7 @@ module Sunshine
     #     :servers => deploy_servers.find(:role => :mail)
 
     def add_to_script name, script, options={}
-      d_servers = options[:servers] ? [*options[:servers]] : @deploy_servers
+      d_servers = fetch_dispatcher(options[:servers]) || @deploy_servers
       d_servers.each do |deploy_server|
         @scripts[deploy_server][name] << script
       end
@@ -286,7 +286,7 @@ module Sunshine
       repo_info = nil
 
       Sunshine.logger.info :app, "Checking out codebase" do
-        d_servers.each do |deploy_server|
+        d_servers.threaded_each do |deploy_server|
           repo_info = @repo.checkout_to @checkout_path, deploy_server
         end
       end
@@ -333,12 +333,12 @@ module Sunshine
 
     def install_deps(*deps)
       options   = Hash === deps[-1] ? deps.delete_at(-1) : {}
-      d_servers = [*(options[:servers] || @deploy_servers)]
+      d_servers = fetch_dispatcher(options[:servers]) || @deploy_servers
 
       Sunshine.logger.info :app,
         "Installing dependencies: #{deps.map{|d| d.to_s}.join(" ")}" do
 
-        d_servers.each do |deploy_server|
+        d_servers.threaded_each do |deploy_server|
           deps.each do |d|
             d = Sunshine::Dependencies[d] if String === d
             d.install! :call => deploy_server
@@ -354,7 +354,7 @@ module Sunshine
 
     def install_gems(d_servers = @deploy_servers)
       Sunshine.logger.info :app, "Installing gems" do
-        d_servers.each do |deploy_server|
+        d_servers.threaded_each do |deploy_server|
 
           run_geminstaller(deploy_server) if
             deploy_server.file?("#{@checkout_path}/config/geminstaller.yml")
@@ -397,7 +397,7 @@ module Sunshine
           :path        => @deploy_path
         }.merge @info
 
-        d_servers.each do |deploy_server|
+        d_servers.threaded_each do |deploy_server|
           contents[:deployed_as] ||= deploy_server.call "whoami"
           contents[:roles] = deploy_server.roles
 
@@ -419,7 +419,7 @@ module Sunshine
       d_servers = [d_servers] unless Array === d_servers
 
       Sunshine.logger.info :app, "Running Rake task '#{command}'" do
-        d_servers.each do |deploy_server|
+        d_servers.threaded_each do |deploy_server|
           self.install_deps 'rake', :servers => deploy_server
           deploy_server.call "cd #{@checkout_path} && rake #{command}"
         end
@@ -445,7 +445,7 @@ module Sunshine
       Sunshine.logger.info :app,
         "Removing old deploys (max = #{Sunshine.max_deploy_versions})" do
 
-        d_servers.each do |deploy_server|
+        d_servers.threaded_each do |deploy_server|
           deploys = deploy_server.call("ls -1 #{@deploys_dir}").split("\n")
 
           if deploys.length > Sunshine.max_deploy_versions
@@ -474,11 +474,11 @@ module Sunshine
 
     def sass(sass_names, d_servers = @deploy_servers)
       sass_names = [*sass_names]
-      d_servers  = [d_servers] unless Array === d_servers
+      d_servers  = fetch_dispatcher d_servers
 
       Sunshine.logger.info :app, "Running Sass for #{sass_names.join(' ')}" do
 
-        d_servers.each do |deploy_server|
+        d_servers.threaded_each do |deploy_server|
           self.install_deps 'haml', :servers => deploy_server
 
           sass_names.each do |name|
@@ -504,7 +504,7 @@ module Sunshine
           "00 * * * * /usr/sbin/logrotate"+
           " --state /dev/null --force #{@current_path}/config/logrotate.conf"
 
-        d_servers.each do |deploy_server|
+        d_servers.threaded_each do |deploy_server|
           self.install_deps 'logrotate', 'mogwai_logpush',
             :servers => deploy_server
 
@@ -538,7 +538,7 @@ module Sunshine
 
       @shell_env.merge!(env_hash)
 
-      @deploy_servers.each do |deploy_server|
+      @deploy_servers.threaded_each do |deploy_server|
         deploy_server.env.merge!(@shell_env)
       end
 
@@ -552,7 +552,7 @@ module Sunshine
     # a username to use 'sudo -u'.
 
     def sudo=(value)
-      @deploy_servers.each do |deploy_server|
+      @deploy_servers.threaded_each do |deploy_server|
         deploy_server.sudo = value
       end
       @sudo = value
@@ -601,7 +601,7 @@ module Sunshine
 
     def upload_tasks *files
       options   = Hash === files[-1] ? files.delete_at(-1) : {}
-      d_servers = [*(options[:servers] || @deploy_servers)]
+      d_servers = fetch_dispatcher(options[:servers]) || @deploy_servers
       path      = options[:path] || "#{@checkout_path}/lib/tasks"
 
       files.map!{|f| "templates/tasks/#{f}.rake"}
@@ -610,7 +610,7 @@ module Sunshine
       Sunshine.logger.info :app, "Uploading tasks: #{files.join(" ")}" do
         files.each do |f|
           remote = File.join(path, File.basename(f))
-          d_servers.each do |deploy_server|
+          d_servers.threaded_each do |deploy_server|
             deploy_server.call "mkdir -p #{path}"
             deploy_server.upload f, remote
           end
@@ -620,6 +620,18 @@ module Sunshine
 
 
     private
+
+
+    def fetch_dispatcher input
+      case input
+      when DeployServerDispatcher
+        input
+      when Array, DeployServer
+        DeployServerDispatcher.new(*input)
+      else
+        nil
+      end
+    end
 
     ##
     # Set all the app paths based on the root deploy path.

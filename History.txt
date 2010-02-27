@@ -2,6 +2,8 @@
 
 * Sunshine::App:
 
+  * Use of DeployServerDispatcher threading
+
   * Fixed control script creation to be deploy_server specific
     (takes roles into account)
 
@@ -14,6 +16,10 @@
     if no repo information was given.
 
   * Support for running sass.
+
+* Sunshine::DeployServerDispatcher:
+
+  * Added threading support
 
 * Sunshine::Repo:
 
