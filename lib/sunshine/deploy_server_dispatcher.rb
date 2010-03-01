@@ -51,11 +51,17 @@ module Sunshine
       threads = []
 
       return_val = each do |deploy_server|
-        threads << Thread.new do
+
+        thread = Thread.new do
           deploy_server.with_mutex mutex do
             yield deploy_server
           end
         end
+
+        # We don't want deploy servers to keep doing things if one fails
+        thread.abort_on_exception = true
+
+        threads << thread
       end
 
       threads.each{|t| t.join }

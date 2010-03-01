@@ -15,7 +15,7 @@ module Sunshine
       Logger::DEBUG   => :cyan,
     }
 
-    attr_reader :logger
+    attr_reader :logger, :indent
 
     def initialize(options={})
       @logger = Logger.new options[:output] || $stdout

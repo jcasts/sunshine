@@ -191,9 +191,6 @@ module Sunshine
           kill_process(pid) unless Sunshine.interactive?
 
           send_password_to_stream(inn, data)
-
-          #data << "\n"
-          #Sunshine.console << "\n"
         end
       end
 

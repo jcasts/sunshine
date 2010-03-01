@@ -146,8 +146,7 @@ module Sunshine
 
   def self.output
     log_level = Logger.const_get(@config['level'].upcase)
-    @logger ||= Sunshine::Output.new :level => log_level,
-      :output => self.console
+    @logger ||= Sunshine::Output.new :level => log_level
   end
 
   def self.logger
