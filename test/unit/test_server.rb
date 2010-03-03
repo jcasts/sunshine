@@ -190,13 +190,14 @@ class TestServer < Test::Unit::TestCase
 
     @app.run_post_user_lambdas
 
-    @app.deploy_servers.each do |ds|
+    server.deploy_servers.each do |ds|
 
-      assert @app.scripts[ds][:start].include?(server.start_cmd)
-      assert @app.scripts[ds][:stop].include?(server.stop_cmd)
-      assert @app.scripts[ds][:status].include?(server.status_cmd)
-      assert @app.scripts[ds][:restart].include?(server.restart_cmd)
-      assert_equal server.port, @app.info[:ports][server.pid]
+      assert ds.scripts[:start].include?(server.start_cmd)
+      assert ds.scripts[:stop].include?(server.stop_cmd)
+      assert ds.scripts[:status].include?(server.status_cmd)
+      assert ds.scripts[:restart].include?(server.restart_cmd)
+
+      assert_equal server.port, ds.info[:ports][server.pid]
     end
   end
 

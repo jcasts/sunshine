@@ -6,8 +6,6 @@ module Sunshine
   # By default, deploy servers use the ControlMaster feature to share
   # socket connections, with the ControlPath = ~/.ssh/sunshine-%r%h:%p
   #
-  # Deploy servers can be assigned any number of roles for classification.
-  #
   # Setting session-persistant environment variables is supported by
   # accessing the @env attribute.
 
@@ -18,7 +16,7 @@ module Sunshine
     LOGIN_LOOP = "echo ready; for (( ; ; )); do sleep 10; done"
 
     attr_reader :host, :user
-    attr_accessor :roles, :ssh_flags, :rsync_flags
+    attr_accessor :ssh_flags, :rsync_flags
 
 
     ##
@@ -28,7 +26,6 @@ module Sunshine
     #   DeployServer.new "host", :user => "user"
     #
     # The constructor also supports the following options:
-    # :roles:: sym|array - roles assigned (web, db, app, etc...)
     # :env:: hash - hash of environment variables to set for the ssh session
     # :password:: string - password for ssh login; if missing the deploy server
     #                      will attempt to prompt the user for a password.
@@ -39,10 +36,6 @@ module Sunshine
       @host, @user = host.split("@").reverse
 
       @user ||= options[:user]
-
-      @roles = options[:roles] || []
-      @roles = @roles.split(" ") if String === @roles
-      @roles = [*@roles].compact.map{|r| r.to_sym }
 
       @rsync_flags = ["-azP"]
       @rsync_flags.concat [*options[:rsync_flags]] if options[:rsync_flags]

@@ -77,6 +77,41 @@ module Sunshine
         deploy_server.call "rm -f #{passphrase_file}"
       end
     end
+
+
+    ##
+    # Upload logrotate config file, install dependencies,
+    # and add to the crontab.
+
+    def setup_logrotate(d_servers = @deploy_servers)
+      Sunshine.logger.info :app, "Setting up log rotation..." do
+
+        @crontab.add "logrotate",
+          "00 * * * * /usr/sbin/logrotate"+
+          " --state /dev/null --force #{@current_path}/config/logrotate.conf"
+
+        d_servers.threaded_each do |deploy_server|
+          self.install_deps 'logrotate', 'mogwai_logpush',
+            :servers => deploy_server
+
+          logrotate_conf =
+            build_erb("templates/logrotate/logrotate.conf.erb", binding)
+
+          config_path    = "#{@checkout_path}/config"
+          logrotate_path = "#{config_path}/logrotate.conf"
+
+          deploy_server.call "mkdir -p #{config_path} #{@log_path}/rotate"
+          deploy_server.make_file logrotate_path, logrotate_conf
+
+          @crontab.write! deploy_server
+        end
+      end
+
+    rescue => e
+      Sunshine.logger.warn :app,
+        "#{e.class} (non-critical): #{e.message}. Failed setting up logrotate."+
+        "Log files may not be rotated or pushed to Mogwai!"
+    end
   end
 end
 

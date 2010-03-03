@@ -194,6 +194,15 @@ class TestApp < Test::Unit::TestCase
   end
 
 
+  def test_build_deploy_info_file
+    @app.build_deploy_info_file
+
+    each_deploy_server do |ds|
+      assert_rsync(/info/, "#{ds.host}:#{@app.checkout_path}/info")
+    end
+  end
+
+
   def test_build_erb
     erb_file = File.join(@tmpdir, "tmp.erb")
 
@@ -285,15 +294,6 @@ class TestApp < Test::Unit::TestCase
   end
 
 
-  def test_make_deploy_info_file
-    @app.make_deploy_info_file
-
-    each_deploy_server do |ds|
-      assert_rsync(/info/, "#{ds.host}:#{@app.checkout_path}/info")
-    end
-  end
-
-
   def test_rake
     @app.rake("test:task")
 
@@ -354,34 +354,6 @@ class TestApp < Test::Unit::TestCase
   end
 
 
-  def test_setup_logrotate
-    @app.crontab.extend MockObject
-
-    config_path = "#{@app.checkout_path}/config"
-
-    cronjob = "00 * * * * /usr/sbin/logrotate"+
-      " --state /dev/null --force #{@app.current_path}/config/logrotate.conf"
-
-    set_mock_response_for @app, 0,
-      'crontab -l' => [:out, " "]
-
-    @app.setup_logrotate
-
-    assert @app.crontab.method_called?(:add, :args => "logrotate")
-    assert @app.crontab.method_called?(:write!, :exactly => 1)
-
-    new_crontab = @app.crontab.build
-
-    assert_equal [cronjob], @app.crontab.jobs["logrotate"]
-
-    each_deploy_server do |ds|
-      assert_ssh_call "echo '#{new_crontab}' | crontab"
-      assert_ssh_call "mkdir -p #{config_path} #{@app.log_path}/rotate"
-      assert_rsync(/logrotate/, "#{ds.host}:#{config_path}/logrotate.conf")
-    end
-  end
-
-
   def test_shell_env
     new_env = {
       "PATH"      => "/etc/lib:$PATH",
@@ -408,8 +380,8 @@ class TestApp < Test::Unit::TestCase
     path = "/path/to/tasks"
 
     @app.upload_tasks 'common', 'tpkg',
-      :servers => @app.deploy_servers,
-      :path    => path
+      :host => 'jcast.np.wc1.yellowpages.com',
+      :remote_path => path
 
     each_deploy_server do |ds|
       assert_ssh_call "mkdir -p /path/to/tasks"
@@ -454,12 +426,6 @@ class TestApp < Test::Unit::TestCase
 
   private
 
-  def each_deploy_server app=@app
-    app.deploy_servers.each do |ds|
-      use_deploy_server ds
-      yield(ds) if block_given?
-    end
-  end
 
   def assert_attributes_equal(attr_hash, app)
     assert_equal attr_hash[:name], app.name

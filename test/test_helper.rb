@@ -15,17 +15,22 @@ unless defined? TEST_APP_CONFIG_FILE
 end
 
 
+def mock_app
+  Sunshine::App.new(TEST_APP_CONFIG_FILE).extend MockObject
+end
+
+
 def mock_deploy_server host=nil
-    host ||= "jcastagna@jcast.np.wc1.yellowpages.com"
-    deploy_server = Sunshine::DeployServer.new host
+  host ||= "jcastagna@jcast.np.wc1.yellowpages.com"
+  deploy_server = Sunshine::DeployServer.new host
 
-    deploy_server.extend MockOpen4
-    deploy_server.extend MockObject
+  deploy_server.extend MockOpen4
+  deploy_server.extend MockObject
 
-    use_deploy_server deploy_server
+  use_deploy_server deploy_server
 
-    deploy_server.connect
-    deploy_server
+  deploy_server.connect
+  deploy_server
 end
 
 
@@ -70,6 +75,43 @@ def set_mock_response_for obj, code, stream_vals={}, options={}
 end
 
 
+def assert_dep_install dep_name
+  dep = Sunshine::Dependencies[dep_name]
+
+  assert dep.method_called?(:install!, :args => [{:call => @deploy_server}]),
+    "#{dep_name} install was not called."
+end
+
+
+def assert_not_called *args
+  assert !@deploy_server.method_called?(:call, :args => [*args]),
+    "Command called by #{@deploy_server.host} but should't have:\n #{args[0]}"
+end
+
+
+def assert_server_call *args
+  assert @deploy_server.method_called?(:call, :args => [*args]),
+    "Command was not called by #{@deploy_server.host}:\n #{args[0]}"
+end
+
+
+def assert_bash_script name, cmds, check_value
+  cmds = cmds.map{|cmd| "(#{cmd})" }
+  cmds << "echo true"
+
+  bash = <<-STR
+#!/bin/bash
+if [ "$1" == "--no-env" ]; then
+  #{cmds.flatten.join(" && ")}
+else
+  #{@app.deploy_path}/env #{@app.deploy_path}/#{name} --no-env
+fi
+  STR
+
+  assert_equal bash, check_value
+end
+
+
 def assert_ssh_call expected, ds=@deploy_server, options={}
   expected = ds.send(:ssh_cmd, expected, options).join(" ")
 
@@ -110,15 +152,27 @@ def assert_rsync from, to, ds=@deploy_server, sudo=false
   end
 end
 
+
 def use_deploy_server deploy_server
   @deploy_server = deploy_server
 end
 
 
+def each_deploy_server app=@app
+  app.deploy_servers.each do |ds|
+    use_deploy_server ds
+    yield(ds) if block_given?
+  end
+end
 
 Sunshine.setup
 
-Sunshine.console.extend MockObject
-Sunshine.console.mock :<<, :return => nil
-Sunshine.console.mock :write, :return => nil
+unless MockObject === Sunshine.console
+  Sunshine.console.extend MockObject
+  Sunshine.console.mock :<<, :return => nil
+  Sunshine.console.mock :write, :return => nil
+end
 
+unless MockObject === Settler::Dependency
+  Settler::Dependency.send(:include, MockObject)
+end

@@ -50,7 +50,7 @@ module Sunshine
     attr_reader :name, :repo, :deploy_servers, :crontab, :health, :sudo
     attr_reader :deploy_path, :checkout_path, :current_path
     attr_reader :deploys_dir, :shared_path, :log_path, :deploy_name
-    attr_accessor :deploy_env, :scripts, :info, :source_path
+    attr_accessor :deploy_env
 
 
     def initialize(*args)
@@ -73,30 +73,19 @@ module Sunshine
 
       set_repo options[:repo]
 
-      @source_path = options[:source_path] || Dir.pwd
-
       set_deploy_servers options[:deploy_servers]
 
       self.sudo = options[:sudo] || Sunshine.sudo
 
       @health = Healthcheck.new @shared_path, @deploy_servers
 
-      options[:shell_env] = {
+      @shell_env = {
         "RACK_ENV"  => @deploy_env.to_s,
         "RAILS_ENV" => @deploy_env.to_s
-      }.merge(options[:shell_env] || {})
-
+      }
       shell_env options[:shell_env]
 
-      @scripts = Hash.new do |hash, key|
-        hash[key] = Hash.new{|h, k| h[k] = [] }
-      end
-
       @post_user_lambdas = []
-
-      @info = {
-        :ports => Hash.new{|h,k| h[k] = {}}
-      }
     end
 
 
@@ -118,8 +107,11 @@ module Sunshine
       yield(self) if block_given?
 
       run_post_user_lambdas
+
       build_control_scripts
-      make_deploy_info_file
+      build_deploy_info_file
+      @health.enable
+
       register_as_deployed
       remove_old_deploys
 
@@ -155,33 +147,9 @@ module Sunshine
     # the current deploy directory.
 
     def revert!
-      Sunshine.logger.info :app, "Reverting to previous deploy..." do
-        deploy_servers.threaded_each do |deploy_server|
-          deploy_server.call "rm -rf #{@checkout_path}"
-
-          last_deploy =
-            deploy_server.call("ls -rc1 #{@deploys_dir}").split("\n").last
-
-          if last_deploy && !last_deploy.empty?
-            deploy_server.symlink \
-              "#{@deploys_dir}/#{last_deploy}", @current_path
-
-            started = StartCommand.exec [@name],
-              'servers' => [deploy_server], 'force' => true
-
-            Sunshine.logger.info :app,
-              "#{deploy_server.host}: Reverted to #{last_deploy}"
-
-            Sunshine.logger.error :app, "Failed starting #{@name}" if !started
-
-          else
-            @crontab.delete! deploy_server
-
-            Sunshine.logger.info :app,
-              "#{deploy_server.host}: No previous deploy to revert to."
-          end
-        end
-      end
+      with_server_apps :all,
+        :msg  => "Reverting to previous deploy.",
+        :send => :revert!
     end
 
 
@@ -199,13 +167,11 @@ module Sunshine
     ##
     # Add a command to a control script to be generated on deploy servers:
     #   add_to_script :start, "do this on start"
-    #   add_to_script :start, "start_mail",
-    #     :servers => deploy_servers.find(:role => :mail)
+    #   add_to_script :start, "start_mail", :role => :mail
 
-    def add_to_script name, script, options={}
-      d_servers = fetch_dispatcher(options[:servers]) || @deploy_servers
-      d_servers.each do |deploy_server|
-        @scripts[deploy_server][name] << script
+    def add_to_script name, script, options=nil
+      with_server_apps options do |server_app|
+        server_app.scripts[name] << script
       end
     end
 
@@ -226,45 +192,21 @@ module Sunshine
     # To add to, or define a control script, see App#add_to_script.
 
     def build_control_scripts
-      Sunshine.logger.info :app, "Building control scripts" do
-
-        build_env_control_script
-
-        @scripts.each do |deploy_server, server_scripts|
-
-          if server_scripts[:restart].empty? &&
-            !server_scripts[:start].empty? && !server_scripts[:stop].empty?
-            server_scripts[:restart] << "#{@deploy_path}/stop"
-            server_scripts[:restart] << "#{@deploy_path}/start"
-          end
-
-          server_scripts.each do |name, cmds|
-            if cmds.empty?
-              Sunshine.logger.warn deploy_server.host, "#{name} script is empty"
-            end
-
-            bash = make_bash_script name, cmds
-
-            deploy_server.make_file "#{@checkout_path}/#{name}", bash,
-              :flags => '--chmod=ugo=rwx'
-
-            deploy_server.symlink "#{@current_path}/#{name}",
-              "#{@deploy_path}/#{name}"
-          end
-        end
-      end
+      with_server_apps :all,
+        :msg  => "Building control scripts",
+        :send => :build_control_scripts
     end
 
 
     ##
-    # Creates the env control script on all deploy servers
+    # Creates a yaml file with deploy information. To add custom information
+    # to the info file, use the app's info hash attribute:
+    #   app.info[:key] = "some value"
 
-    def build_env_control_script
-      chmod = '--chmod=ugo=rwx'
-      bash  = make_env_bash_script
-
-      @deploy_servers.make_file "#{@checkout_path}/env", bash, :flags => chmod
-      @deploy_servers.symlink "#{@current_path}/env", "#{@deploy_path}/env"
+    def build_deploy_info_file options=nil
+      with_server_apps options,
+        :msg  => "Creating info file",
+        :send => :build_deploy_info_file
     end
 
 
@@ -281,16 +223,11 @@ module Sunshine
     ##
     # Checks out the app's codebase to one or all deploy servers.
 
-    def checkout_codebase(d_servers = @deploy_servers)
-      repo_info = nil
+    def checkout_codebase options=nil
+      with_server_apps options,
+        :msg  => "Checking out codebase",
+        :send => :checkout_codebase
 
-      Sunshine.logger.info :app, "Checking out codebase" do
-        d_servers.threaded_each do |deploy_server|
-          repo_info = @repo.checkout_to @checkout_path, deploy_server
-        end
-      end
-
-      @info[:scm] = repo_info
     rescue => e
       raise CriticalDeployError, e
     end
@@ -320,30 +257,21 @@ module Sunshine
     #   app.install_deps rake, apache
     #
     # Deploy servers can also be specified as a dispatcher, array, or single
-    # deploy server, by passing the :servers option:
+    # deploy server, by passing standard 'find' options:
     #   postgres = Sunshine::Dependencies.yum 'postgresql'
     #   pgserver = Sunshine::Dependencies.yum 'postgresql-server'
-    #   app.install_deps postgres, pgserver,
-    #     :servers => app.deploy_servers.find(:role => 'db')
+    #   app.install_deps postgres, pgserver, :role => 'db'
     #
     # If a dependency was already defined in the Sunshine dependency tree,
     # the dependency name may be passed instead of the object:
     #   app.install_deps 'nginx', 'ruby'
 
     def install_deps(*deps)
-      options   = Hash === deps[-1] ? deps.delete_at(-1) : {}
-      d_servers = fetch_dispatcher(options[:servers]) || @deploy_servers
+      options = Hash === deps[-1] ? deps.delete_at(-1) : {}
 
-      Sunshine.logger.info :app,
-        "Installing dependencies: #{deps.map{|d| d.to_s}.join(" ")}" do
-
-        d_servers.threaded_each do |deploy_server|
-          deps.each do |d|
-            d = Sunshine::Dependencies[d] if String === d
-            d.install! :call => deploy_server
-          end
-        end
-      end
+      with_server_apps options,
+        :msg  => "Installing dependencies: #{deps.map{|d| d.to_s}.join(" ")}",
+        :send => [:install_deps, *deps]
     end
 
 
@@ -351,17 +279,10 @@ module Sunshine
     # Install gem dependencies defined by the app's checked-in
     # bundler or geminstaller config.
 
-    def install_gems(d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Installing gems" do
-        d_servers.threaded_each do |deploy_server|
-
-          run_geminstaller(deploy_server) if
-            deploy_server.file?("#{@checkout_path}/config/geminstaller.yml")
-
-          run_bundler(deploy_server) if
-            deploy_server.file?("#{@checkout_path}/Gemfile")
-        end
-      end
+    def install_gems options=nil
+      with_server_apps options,
+        :msg  => "Installing gems",
+        :send => :install_gems
 
     rescue => e
       raise CriticalDeployError, e
@@ -371,10 +292,10 @@ module Sunshine
     ##
     # Creates the required application directories.
 
-    def make_app_directories(d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Creating #{@name} directories" do
-        d_servers.call "mkdir -p #{directories.join(" ")}"
-      end
+    def make_app_directories options=nil
+      with_server_apps options,
+        :msg  => "Creating #{@name} directories",
+        :send => :make_app_directories
 
     rescue => e
       raise FatalDeployError, e
@@ -382,57 +303,22 @@ module Sunshine
 
 
     ##
-    # Creates a yaml file with deploy information. To add custom information
-    # to the info file, use the app's info hash attribute:
-    #   app.info[:key] = "some value"
-
-    def make_deploy_info_file(d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Creating info file" do
-
-        contents = {
-          :deployed_at => Time.now,
-          :deployed_by => Sunshine.console.user,
-          :deploy_name => File.basename(@checkout_path),
-          :path        => @deploy_path
-        }.merge @info
-
-        d_servers.threaded_each do |deploy_server|
-          contents[:deployed_as] = deploy_server.call "whoami"
-          contents[:roles]       = deploy_server.roles
-
-          deploy_server.make_file "#{@checkout_path}/info", contents.to_yaml
-          deploy_server.symlink "#{@current_path}/info", "#{@deploy_path}/info"
-        end
-      end
-
-    rescue => e
-      Sunshine.logger.warn :app,
-        "#{e.class} (non-critical): #{e.message}. Failed creating info file"
-    end
-
-
-    ##
     # Run a rake task on any or all deploy servers.
 
-    def rake(command, d_servers = @deploy_servers)
-      d_servers = [d_servers] unless Array === d_servers
-
-      Sunshine.logger.info :app, "Running Rake task '#{command}'" do
-        d_servers.threaded_each do |deploy_server|
-          self.install_deps 'rake', :servers => deploy_server
-          deploy_server.call "cd #{@checkout_path} && rake #{command}"
-        end
-      end
+    def rake command, options=nil
+      with_server_apps options,
+        :msg  => "Running Rake task '#{command}'",
+        :send => [:rake, command]
     end
 
 
     ##
     # Adds the app to the deploy servers deployed-apps list
 
-    def register_as_deployed(d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Registering app with deploy servers" do
-        AddCommand.exec @deploy_path, 'servers' => d_servers
-      end
+    def register_as_deployed options=nil
+      with_server_apps options,
+        :msg  => "Registering app with deploy servers",
+        :send => :register_as_deployed
     end
 
 
@@ -440,22 +326,10 @@ module Sunshine
     # Removes old deploys from the checkout_dir
     # based on Sunshine's max_deploy_versions.
 
-    def remove_old_deploys(d_servers = @deploy_servers)
-      Sunshine.logger.info :app,
-        "Removing old deploys (max = #{Sunshine.max_deploy_versions})" do
-
-        d_servers.threaded_each do |deploy_server|
-          deploys = deploy_server.call("ls -1 #{@deploys_dir}").split("\n")
-
-          if deploys.length > Sunshine.max_deploy_versions
-            lim = Sunshine.max_deploy_versions + 1
-            rm_deploys = deploys[0..-lim]
-            rm_deploys.map!{|d| "#{@deploys_dir}/#{d}"}
-
-            deploy_server.call("rm -rf #{rm_deploys.join(" ")}")
-          end
-        end
-      end
+    def remove_old_deploys options=nil
+      with_server_apps options,
+        :msg  => "Removing old deploys (max = #{Sunshine.max_deploy_versions})",
+        :send => :remove_old_deploys
     end
 
 
@@ -471,59 +345,12 @@ module Sunshine
     ##
     # Run a sass task on any or all deploy servers.
 
-    def sass(sass_names, d_servers = @deploy_servers)
-      sass_names = [*sass_names]
-      d_servers  = fetch_dispatcher d_servers
+    def sass *sass_names
+      options = sass_names.delete_at(-1) if Hash === sass_names.last
 
-      Sunshine.logger.info :app, "Running Sass for #{sass_names.join(' ')}" do
-
-        d_servers.threaded_each do |deploy_server|
-          self.install_deps 'haml', :servers => deploy_server
-
-          sass_names.each do |name|
-            sass_file = "public/stylesheets/sass/#{name}.sass"
-            css_file  = "public/stylesheets/#{name}.css"
-            sass_cmd  = "cd #{@checkout_path} && sass #{sass_file} #{css_file}"
-
-            deploy_server.call sass_cmd
-          end
-        end
-      end
-    end
-
-
-    ##
-    # Upload logrotate config file, install dependencies,
-    # and add to the crontab.
-
-    def setup_logrotate(d_servers = @deploy_servers)
-      Sunshine.logger.info :app, "Setting up log rotation..." do
-
-        @crontab.add "logrotate",
-          "00 * * * * /usr/sbin/logrotate"+
-          " --state /dev/null --force #{@current_path}/config/logrotate.conf"
-
-        d_servers.threaded_each do |deploy_server|
-          self.install_deps 'logrotate', 'mogwai_logpush',
-            :servers => deploy_server
-
-          logrotate_conf =
-            build_erb("templates/logrotate/logrotate.conf.erb", binding)
-
-          config_path    = "#{@checkout_path}/config"
-          logrotate_path = "#{config_path}/logrotate.conf"
-
-          deploy_server.call "mkdir -p #{config_path} #{@log_path}/rotate"
-          deploy_server.make_file logrotate_path, logrotate_conf
-
-          @crontab.write! deploy_server
-        end
-      end
-
-    rescue => e
-      Sunshine.logger.warn :app,
-        "#{e.class} (non-critical): #{e.message}. Failed setting up logrotate."+
-        "Log files may not be rotated or pushed to Mogwai!"
+      with_server_apps options,
+        :msg  => "Running Sass for #{sass_names.join(' ')}",
+        :send => [:sass, *sass_names]
     end
 
 
@@ -533,15 +360,14 @@ module Sunshine
 
     def shell_env env_hash=nil
       env_hash ||= {}
-      @shell_env ||= {}
 
       @shell_env.merge!(env_hash)
 
-      @deploy_servers.threaded_each do |deploy_server|
-        deploy_server.env.merge!(@shell_env)
+      with_server_apps :all,
+        :msg => "Shell env: #{@shell_env.inspect}" do |server_app|
+        server_app.env.merge!(@shell_env)
       end
 
-      Sunshine.logger.info :app, "Shell env: #{@shell_env.inspect}"
       @shell_env.dup
     end
 
@@ -551,22 +377,22 @@ module Sunshine
     # a username to use 'sudo -u'.
 
     def sudo=(value)
-      @deploy_servers.threaded_each do |deploy_server|
-        deploy_server.sudo = value
+      with_server_apps :all,
+        :msg => "Using sudo = #{value.inspect}" do |server_app|
+        server_app.sudo = value
       end
+
       @sudo = value
-      Sunshine.logger.info :app, "Using sudo = #{value.inspect}"
     end
 
 
     ##
     # Creates a symlink to the app's checkout path.
 
-    def symlink_current_dir(d_servers = @deploy_servers)
-      Sunshine.logger.info :app,
-        "Symlinking #{@checkout_path} -> #{@current_path}" do
-        d_servers.symlink(@checkout_path, @current_path)
-      end
+    def symlink_current_dir options=nil
+      with_server_apps options,
+        :msg  => "Symlinking #{@checkout_path} -> #{@current_path}",
+        :send => :symlink_current_dir
 
     rescue => e
       raise CriticalDeployError, e
@@ -574,47 +400,24 @@ module Sunshine
 
 
     ##
-    # Uploads the app's source to deploy servers.
-
-    def upload_source(d_servers = @deploy_servers)
-      Sunshine.logger.info :app,
-        "Uploading #{@name} source: #{@source_path}" do
-        d_servers.upload @source_path, @current_path
-      end
-
-    rescue => e
-      raise FatalDeployError, e
-    end
-
-
-    ##
     # Upload common rake tasks from the sunshine lib.
     #   app.upload_tasks
     #     #=> upload all tasks
-    #   app.upload_tasks 'tpkg', 'common', ...
+    #   app.upload_tasks 'tpkg', 'common', :role => :web
     #     #=> upload tpkg and common rake files
     #
-    # Allows options:
-    # :servers:: ary - a deploy_server, a deploy server dispatcher/array
-    # :path:: str - the remote absolute path to upload the files to
+    # Allows standard DeployServerDispatcher#find options, plus:
+    # :remote_path:: str - the remote absolute path to upload the files to
 
     def upload_tasks *files
-      options   = Hash === files[-1] ? files.delete_at(-1) : {}
-      d_servers = fetch_dispatcher(options[:servers]) || @deploy_servers
-      path      = options[:path] || "#{@checkout_path}/lib/tasks"
+      options = Hash === files.last ? files.last.dup : {}
 
-      files.map!{|f| "templates/tasks/#{f}.rake"}
-      files = Dir.glob("templates/tasks/*") if files.empty?
+      options.delete(:remote_path)
+      options = :all if options.empty?
 
-      Sunshine.logger.info :app, "Uploading tasks: #{files.join(" ")}" do
-        files.each do |f|
-          remote = File.join(path, File.basename(f))
-          d_servers.threaded_each do |deploy_server|
-            deploy_server.call "mkdir -p #{path}"
-            deploy_server.upload f, remote
-          end
-        end
-      end
+      with_server_apps options,
+        :msg  => "Uploading tasks: #{files.join(" ")}",
+        :send => [:upload_tasks, *files]
     end
 
 
@@ -622,16 +425,36 @@ module Sunshine
 
 
     ##
-    # Return a DeployServerDispatcher from an Array or DeployServer
+    # Calls a method for deploy_server_apps found with the passed options,
+    # and with an optional log message. Supports all DeployServerDispatcher#find
+    # options, plus:
+    # :no_threads:: bool - disable threaded execution
+    # :msg:: "some message" - log message
 
-    def fetch_dispatcher input
-      case input
-      when DeployServerDispatcher
-        input
-      when Array, DeployServer
-        DeployServerDispatcher.new(*input)
+    def with_server_apps search_options, options={}
+      d_servers = @deploy_servers.find search_options
+
+      message = options.delete(:msg)
+      method  = options[:no_threads] ? :each : :threaded_each
+
+      block = lambda do
+        d_servers.send(method) do |server_app|
+
+          if block_given?
+            yield(server_app)
+
+          elsif options[:send]
+            server_app.send(*options[:send])
+          end
+        end
+      end
+
+
+      if message
+        Sunshine.logger.info(:app, message, &block)
+
       else
-        nil
+        block.call
       end
     end
 
@@ -657,9 +480,19 @@ module Sunshine
     #   set_deploy_servers d_servers
 
     def set_deploy_servers d_servers
+
       @deploy_servers = if DeployServerDispatcher === d_servers
         d_servers
       else
+
+        d_servers = d_servers.map do |ds|
+          if DeployServer === ds
+            ds
+          else
+            DeployServerApp.new(*[self,*ds])
+          end
+        end
+
         DeployServerDispatcher.new(*d_servers)
       end
     end
@@ -730,52 +563,6 @@ module Sunshine
       end
 
       new_config.merge main_config # Two merges important for inheritance order
-    end
-
-
-    ##
-    # Makes an array of bash commands into a script that
-    # echoes 'true' on success.
-
-    def make_bash_script name, cmds
-      cmds = cmds.map{|cmd| "(#{cmd})" }
-      cmds << "echo true"
-      bash = <<-STR
-#!/bin/bash
-if [ "$1" == "--no-env" ]; then
-  #{cmds.flatten.join(" && ")}
-else
-  #{@deploy_path}/env #{@deploy_path}/#{name} --no-env
-fi
-      STR
-    end
-
-
-    ##
-    # Creates the one-off env script that will be used by other scripts
-    # to correctly set their env variables.
-
-    def make_env_bash_script
-      env_str = @shell_env.map{|e| e.join("=")}.join(" ")
-      "#!/bin/bash\nenv #{env_str} \"$@\""
-    end
-
-
-    ##
-    # Run geminstaller on a given deploy server.
-
-    def run_geminstaller deploy_server
-      self.install_deps 'geminstaller', :servers => deploy_server
-      deploy_server.call "cd #{@checkout_path} && geminstaller -e"
-    end
-
-
-    ##
-    # Run bundler on a given deploy server.
-
-    def run_bundler deploy_server
-       self.install_deps 'bundler', :servers => deploy_server
-      deploy_server.call "cd #{@checkout_path} && gem bundle"
     end
   end
 end

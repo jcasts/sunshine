@@ -54,8 +54,13 @@ module Sunshine
 
     def register_after_user_script
       super
+
       @app.after_user_script do |app|
-        app.info[:ports][@pid] = @port if @port
+        next unless @port
+
+        @deploy_servers.each do |server_app|
+          server_app.info[:ports][@pid] = @port
+        end
       end
     end
   end

@@ -104,6 +104,8 @@ module Sunshine
 
   require 'sunshine/deploy_server_dispatcher'
   require 'sunshine/deploy_server'
+
+  require 'sunshine/deploy_server_app'
   require 'sunshine/app'
 
   require 'commands/default'

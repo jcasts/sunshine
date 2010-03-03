@@ -12,8 +12,6 @@ Sunshine::AttiApp.deploy do |app|
                    'libaio', 'ruby-devel',
                    'isolate', 'activerecord-oracle_enhanced-adapter'
 
-  #app.deploy_servers.call "cd #{app.checkout_path} && tpkg"
-
   app.install_gems
 
 
@@ -24,23 +22,21 @@ Sunshine::AttiApp.deploy do |app|
   if secure_db
     app.decrypt_db_yml
   else
-    app.rake "config/database.yml"
+    app.rake "config/database.yml", :role => :db
   end
 
-  app.rake 'db:migrate', app.deploy_servers.find(:role => :db)
+  app.rake 'db:migrate', :role => :db
 
-
-  cdn_servers = app.deploy_servers.find :role => :cdn
 
   sass_yml_file = "#{app.checkout_path}/config/asset_packages.yml"
-  sass_yml      = cdn_servers.first.call "cat #{sass_yml_file}"
+  sass_yml      = app.deploy_servers.first.call "cat #{sass_yml_file}"
   sass_files    = YAML.load(sass_yml)['stylesheets']
   sass_files    = sass_files[0]['all'].concat sass_files[1]['brochure']
 
   sass_files.delete_if{|s| s=~ /^960\//}
 
-  app.sass sass_files, cdn_servers
-  app.rake 'asset:packager:build_all', cdn_servers
+  app.sass sass_files, :role => :cdn
+  app.rake 'asset:packager:build_all', :role => :cdn
 
 
   delayed_job = Sunshine::DelayedJob.new app
@@ -54,9 +50,6 @@ Sunshine::AttiApp.deploy do |app|
 
   nginx = Sunshine::Nginx.new app, :point_to => unicorn, :port => 10000
   nginx.restart
-
-
-  app.health.enable
 end
 
 

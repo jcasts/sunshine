@@ -4,7 +4,13 @@ class TestDeployServerDispatcher < Test::Unit::TestCase
 
   def setup
     mock_deploy_server_popen4
-    @dsd = Sunshine::DeployServerDispatcher.new "svr1.com", "svr2.com"
+
+    @app = mock_app
+
+    svr1 = Sunshine::DeployServerApp.new @app, "svr1.com"
+    svr2 = Sunshine::DeployServerApp.new @app, "svr2.com"
+
+    @dsd = Sunshine::DeployServerDispatcher.new svr1, svr2
     @dsd.each{|ds| ds.extend MockObject}
   end
 
@@ -54,16 +60,18 @@ class TestDeployServerDispatcher < Test::Unit::TestCase
 
 
   def test_find
-    @dsd << Sunshine::DeployServer.new("test1.com", :user => "bob")
-    @dsd << Sunshine::DeployServer.new("test1.com", :roles => :web)
-    @dsd << Sunshine::DeployServer.new("test2.com",
+    @dsd << Sunshine::DeployServerApp.new(@app, "s1.com", :user => "bob")
+    @dsd << Sunshine::DeployServerApp.new(@app, "s2.com", :roles => :web)
+    @dsd << Sunshine::DeployServerApp.new(@app, "test2.com")
+    @dsd << Sunshine::DeployServerApp.new(@app, "test2.com",
       :roles => :web, :user => "bob")
 
-    assert_equal 2, @dsd.find(:role => :web).length
     assert_equal 2, @dsd.find(:user => "bob").length
-    assert_equal 2, @dsd.find(:host => "test1.com").length
+    assert_equal 2, @dsd.find(:host => "test2.com").length
+    assert_equal 2, @dsd.find(:role => :web).length
     assert_equal 1, @dsd.find(:role => :web, :user => "bob").length
   end
+
 
   def test_not_connected
     assert !@dsd.connected?
