@@ -421,20 +421,27 @@ module Sunshine
     end
 
 
-    private
-
-
     ##
     # Calls a method for deploy_server_apps found with the passed options,
     # and with an optional log message. Supports all DeployServerDispatcher#find
     # options, plus:
     # :no_threads:: bool - disable threaded execution
     # :msg:: "some message" - log message
+    #
+    #   app.with_server_apps :all, :msg => "doing something" do |server_app|
+    #     # do something here
+    #   end
+    #
+    #   app.with_server_apps :role => :db, :user => "bob" do |server_app|
+    #     # do something here
+    #   end
 
     def with_server_apps search_options, options={}
       d_servers = @deploy_servers.find search_options
 
-      message = options.delete(:msg)
+      options = search_options.merge options if Hash === search_options
+
+      message = options[:msg]
       method  = options[:no_threads] ? :each : :threaded_each
 
       block = lambda do
@@ -457,6 +464,9 @@ module Sunshine
         block.call
       end
     end
+
+
+    private
 
 
     ##
