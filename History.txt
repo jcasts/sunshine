@@ -122,12 +122,12 @@
   * Changed how deploy server yaml is parsed. Should parse to be valid on:
       DeployServer.new *parsed_yaml
     Example Given:
-      :deploy_servers:
+      :deploy_servers :
         - server1.com
         - - server2.com
         - - server3.com
-          - :roles: web db other
-            :ssh_flags: '-o ControlMaster=auto'
+          - :roles : web db other
+            :ssh_flags : '-o ControlMaster=auto'
 
 
 === 0.0.2 / 2010-01-15

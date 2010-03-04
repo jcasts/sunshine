@@ -93,7 +93,7 @@ Yaml files are read on a deploy-environment basis so its format reflects this:
       - qa2.servers.com
 
   # Prod inherits top level values from :qa
-  :prod:
+  :prod :
     :inherits : :qa
     :deploy_servers :
       - prod1.servers.com
