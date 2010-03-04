@@ -71,31 +71,31 @@ Yaml files are read on a deploy-environment basis so its format reflects this:
 
   ---
   # Default is always inherited by all environments
-  :default:
-    :name: app_name
-    :repo:
-      :type: svn
-      :url:  svn://subversion/app_name/branches/continuous_integration
+  :default :
+    :name : app_name
+    :repo :
+      :type : svn
+      :url :  svn://subversion/app_name/branches/continuous_integration
 
-    :deploy_path: /usr/local/app_name
+    :deploy_path : /usr/local/app_name
 
-    :deploy_servers:
+    :deploy_servers :
       - - localhost
-        - :roles: web db app
+        - :roles : web db app
 
   # Setup for qa environment
-  :qa:
-    :repo:
-      :type: svn
-      :url:  svn://subversion/app_name/tags/release_0001
-    :deploy_servers:
+  :qa :
+    :repo :
+      :type : svn
+      :url :  svn://subversion/app_name/tags/release_0001
+    :deploy_servers :
       - qa1.servers.com
       - qa2.servers.com
 
   # Prod inherits top level values from :qa
   :prod:
-    :inherits: :qa
-    :deploy_servers:
+    :inherits : :qa
+    :deploy_servers :
       - prod1.servers.com
       - prod2.servers.com
 
@@ -184,8 +184,7 @@ Sunshine::App#install_deps to install on all the app's deploy servers:
 
     app.install_deps 'nginx', 'rubygems'
 
-    app.install_deps 'postgres', 'pgserver',
-      :servers => app.deploy_servers.find(:role => 'db')
+    app.install_deps 'postgres', 'pgserver', :role => 'db'
 
 
 == Deployed Application Control
