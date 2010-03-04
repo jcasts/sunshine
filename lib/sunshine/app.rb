@@ -251,6 +251,24 @@ module Sunshine
 
 
     ##
+    # Decrypt a file using gpg. Allows all DeployServerDispatcher#find
+    # options, plus:
+    # :output:: str - the path the output file should go to
+    # :passphrase:: str - the passphrase gpg should use
+
+    def gpg_decrypt gpg_file, options={}
+      options[:passphrase] ||=
+        Sunshine.console.ask("Enter gpg passphrase:") do |q|
+        q.echo = false
+      end
+
+      with_server_apps options,
+        :msg  => "Gpg decrypt: #{gpg_file}",
+        :send => [:gpg_decrypt, gpg_file, options]
+    end
+
+
+    ##
     # Install dependencies defined as a Sunshine dependency object:
     #   rake   = Sunshine::Dependencies.gem 'rake', :version => '~>0.8'
     #   apache = Sunshine::Dependencies.yum 'apache'

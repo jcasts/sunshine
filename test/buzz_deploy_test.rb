@@ -20,7 +20,7 @@ Sunshine::AttiApp.deploy do |app|
   secure_db = !non_secure_envs.include?(app.deploy_env)
 
   if secure_db
-    app.decrypt_db_yml
+    app.decrypt_db_yml :role => :db
   else
     app.rake "config/database.yml", :role => :db
   end

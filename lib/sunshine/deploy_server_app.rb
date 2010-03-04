@@ -9,7 +9,7 @@ module Sunshine
   class DeployServerApp < DeployServer
 
 
-    attr_accessor :app, :roles, :scripts, :info, :crontab
+    attr_accessor :app, :roles, :scripts, :info
 
     def initialize app, host, options={}
 
@@ -18,8 +18,6 @@ module Sunshine
       @roles = options[:roles] || []
       @roles = @roles.split(" ") if String === @roles
       @roles = [*@roles].compact.map{|r| r.to_sym }
-
-      @crontab = Crontab.new @app.name
 
       @scripts = Hash.new{|h, k| h[k] = []}
       @info    = {:ports => {}}
@@ -102,6 +100,29 @@ module Sunshine
         :roles       => @roles,
         :path        => @app.deploy_path
       }.merge @info
+    end
+
+
+    ##
+    # Decrypt a file using gpg. Allows options:
+    # :output:: str - the path the output file should go to
+    # :passphrase:: str - the passphrase gpg should use
+
+    def gpg_decrypt gpg_file, options={}
+      output_file     = options[:output] || gpg_file.gsub(/\.gpg$/, '')
+
+      passphrase      = options[:passphrase]
+      passphrase_file = "#{@app.deploy_path}/tmp/gpg_passphrase"
+
+      gpg_cmd = "gpg --batch --no-tty --yes --output #{output_file} "+
+        "--passphrase-file #{passphrase_file} --decrypt #{gpg_file}"
+
+      call "mkdir -p #{File.dirname(passphrase_file)}"
+
+      make_file passphrase_file, passphrase
+
+      call "cd #{@app.checkout_path} && #{gpg_cmd}"
+      call "rm -f #{passphrase_file}"
     end
 
 
@@ -220,7 +241,7 @@ fi
         Sunshine.logger.error @host, "Failed starting #{@name}" if !started
 
       else
-        @crontab.delete! self
+        @app.crontab.delete! self
 
         Sunshine.logger.info @host, "No previous deploy to revert to."
       end

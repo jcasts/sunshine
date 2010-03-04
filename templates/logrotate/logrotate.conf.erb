@@ -4,7 +4,7 @@ rotate 168
 compress
 delaycompress
 olddir <%= log_path %>/rotate
-create 0666 <%= deploy_server.user %>
+create 0666 <%= server_app.user %>
 lastaction
   logpush <%= log_path %>/rotate/*
 endscript

@@ -244,7 +244,7 @@ class TestDeployServerApp < Test::Unit::TestCase
 
 
   def test_no_previous_revert!
-    @dsa.crontab.extend MockObject
+    @dsa.app.crontab.extend MockObject
 
     @dsa.mock :call,
       :args    => ["ls -rc1 #{@app.deploys_dir}"],
@@ -255,7 +255,7 @@ class TestDeployServerApp < Test::Unit::TestCase
     assert_server_call "rm -rf #{@app.checkout_path}"
     assert_server_call "ls -rc1 #{@app.deploys_dir}"
 
-    assert @dsa.crontab.method_called?(:delete!, :args => [@dsa])
+    assert @dsa.app.crontab.method_called?(:delete!, :args => [@dsa])
   end
 
 

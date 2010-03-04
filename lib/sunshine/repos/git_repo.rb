@@ -12,7 +12,7 @@ module Sunshine
       ":committer: %cn",
       ":date: %cd",
       ":message: %s",
-      ":refs: %d",
+      ":refs: '%d'",
       ":tree: %t"
     ].join("%n")
 
