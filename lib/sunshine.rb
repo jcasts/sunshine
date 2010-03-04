@@ -74,7 +74,7 @@ require 'fileutils'
 
 module Sunshine
 
-  VERSION = '0.0.4'
+  VERSION = '0.0.5'
 
   require 'sunshine/exceptions'
 
