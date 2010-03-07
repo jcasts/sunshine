@@ -16,7 +16,7 @@ module Sunshine
     end
 
 
-    def do_checkout deploy_server, path
+    def do_checkout path, deploy_server
       deploy_server.upload @url, path, :flags => @flags
     end
   end

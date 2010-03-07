@@ -13,7 +13,7 @@ module Sunshine
 
     class ConnectionError < FatalDeployError; end
 
-    LOGIN_LOOP = "echo ready; for (( ; ; )); do sleep 10; done"
+    LOGIN_LOOP = "; echo ready; for (( ; ; )); do sleep 10; done"
 
     attr_reader :host, :user
     attr_accessor :ssh_flags, :rsync_flags
@@ -70,7 +70,7 @@ module Sunshine
 
       cmd = ssh_cmd LOGIN_LOOP, :sudo => false
 
-      @pid, @inn, @out, @err = popen4(*cmd)
+      @pid, @inn, @out, @err = popen4(cmd.join(" "))
       @inn.sync = true
 
       data  = ""
