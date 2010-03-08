@@ -100,6 +100,15 @@ module Sunshine
     end
 
 
+    NAME_MATCH = /\/([^\/]+)\.git/
+
+    def name
+      @url.match(NAME_MATCH)[1]
+    rescue
+      raise RepoError, "Git url must match #{NAME_MATCH.inspect}"
+    end
+
+
     private
 
     def self.parse_branch response

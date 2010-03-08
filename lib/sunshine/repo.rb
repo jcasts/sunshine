@@ -62,7 +62,7 @@ module Sunshine
     attr_reader :url
 
     def initialize url, options={}
-      @name = self.class.name.split("::").last.sub('Repo', '').downcase
+      @scm = self.class.name.split("::").last.sub('Repo', '').downcase
 
       @url   = url
       @flags = [*options[:flags]].compact
@@ -77,10 +77,10 @@ module Sunshine
     def checkout_to path, console=nil
       console ||= Sunshine.console
 
-      Sunshine.logger.info @name,
+      Sunshine.logger.info @scm,
         "Checking out to #{console.host} #{path}" do
 
-        dependency = Sunshine::Dependencies[@name]
+        dependency = Sunshine::Dependencies[@scm]
         dependency.install! :call => console if dependency
 
         console.call "test -d #{path} && rm -rf #{path} || echo false"
@@ -89,14 +89,6 @@ module Sunshine
         do_checkout   path, console
         get_repo_info path, console
       end
-    end
-
-
-    ##
-    # Returns the set scm flags as a string
-
-    def scm_flags
-      @flags.join(" ")
     end
 
 
@@ -110,10 +102,27 @@ module Sunshine
 
 
     ##
+    # Get the name of the specified repo - implemented by subclass
+
+    def name
+      raise RepoError,
+        "The 'name' method must be implemented by child classes"
+    end
+
+
+    ##
+    # Returns the set scm flags as a string
+
+    def scm_flags
+      @flags.join(" ")
+    end
+
+
+    ##
     # Returns the repo information as a hash.
 
     def get_repo_info path=".", console=nil
-      defaults = {:type => @name, :url => @url, :path => path}
+      defaults = {:type => @scm, :url => @url, :path => path}
 
       defaults.merge self.class.get_info(path, console)
     end

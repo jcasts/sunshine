@@ -63,15 +63,15 @@ module Sunshine
       options = merge_config_file config_file, options
 
 
-      @name        = options[:name]
+      set_repo options[:repo]
+
+      @name        = options[:name] || @repo.name
       @crontab     = Crontab.new @name
       @deploy_env  = options[:deploy_env].to_s
 
       @deploy_name = options[:deploy_name] || Time.now.to_i.to_s
 
       set_deploy_paths options[:deploy_path]
-
-      set_repo options[:repo]
 
       set_deploy_servers options[:deploy_servers]
 

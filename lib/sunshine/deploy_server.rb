@@ -81,9 +81,8 @@ module Sunshine
 
       until ready || @out.eof?
         data << @out.readpartial(1024)
-        puts data
         ready = data =~ /ready/
-        puts ready.inspect
+
         raise TimeoutError if timed_out?(start_time)
       end
 

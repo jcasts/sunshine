@@ -3,7 +3,7 @@ require 'test/test_helper'
 class TestSvnRepo < Test::Unit::TestCase
 
   def setup
-    @svn = Sunshine::SvnRepo.new("svn://someurl/somebranch")
+    @svn = Sunshine::SvnRepo.new("svn://someurl/proj_name/somebranch")
     @ds = mock_deploy_server
     mock_svn_response @svn.url
   end
@@ -29,5 +29,27 @@ class TestSvnRepo < Test::Unit::TestCase
     assert_ssh_call "test -d #{path} && rm -rf #{path} || echo false"
     assert_ssh_call "mkdir -p #{path}"
     assert_ssh_call "svn checkout #{@svn.scm_flags} #{@svn.url} #{path}"
+  end
+
+
+  def test_name
+    svn = Sunshine::SvnRepo.new "svn://myrepo/project/trunk"
+    assert_equal "project", svn.name
+
+    svn = Sunshine::SvnRepo.new "svn://myrepo/project/branches/blah"
+    assert_equal "project", svn.name
+
+    svn = Sunshine::SvnRepo.new "svn://myrepo/project/tags/blah"
+    assert_equal "project", svn.name
+  end
+
+
+  def test_invalid_name
+    svn = Sunshine::SvnRepo.new "svn://myrepo/project"
+    svn.name
+    raise "SvnRepo didn't catch invalid naming scheme: #{svn.url}"
+  rescue => e
+    assert_equal "SVN url must match #{Sunshine::SvnRepo::NAME_MATCH.inspect}",
+      e.message
   end
 end

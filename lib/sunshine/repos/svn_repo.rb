@@ -65,5 +65,14 @@ module Sunshine
     def do_checkout path, console
       console.call "svn checkout #{scm_flags} #{@url} #{path}"
     end
+
+
+    NAME_MATCH = /([^\/]+\/)+([^\/]+)\/(trunk|branches|tags)/
+
+    def name
+      @url.match(NAME_MATCH)[2]
+    rescue
+      raise RepoError, "SVN url must match #{NAME_MATCH.inspect}"
+    end
   end
 end

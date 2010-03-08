@@ -4,10 +4,10 @@ class TestApp < Test::Unit::TestCase
 
   def setup
     mock_deploy_server_popen4
-    svn_url = "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
+    @svn_url = "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
 
     @config = {:name => "parity",
-               :repo => {:type => "svn", :url => svn_url},
+               :repo => {:type => "svn", :url => @svn_url},
                :deploy_servers => ["jcastagna@jcast.np.wc1.yellowpages.com"],
                :deploy_path => "/usr/local/nextgen/parity"}
 
@@ -20,6 +20,14 @@ class TestApp < Test::Unit::TestCase
 
   def teardown
     FileUtils.rm_f @tmpdir
+  end
+
+
+  def test_initialize_without_name
+    app = Sunshine::App.new :repo => {:type => "svn", :url => @svn_url},
+            :deploy_servers => ["jcastagna@jcast.np.wc1.yellowpages.com"]
+
+    assert_equal "parity", app.name
   end
 
 

@@ -19,6 +19,11 @@ module Sunshine
     def do_checkout path, deploy_server
       deploy_server.upload @url, path, :flags => @flags
     end
+
+
+    def name
+      File.basename @url
+    end
   end
 end
 
