@@ -216,6 +216,13 @@ module Sunshine
   TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
   FileUtils.mkdir_p TMP_DIR
 
+  ##
+  # Path where sunshine assumes repo information can be found if missing.
+  PATH = Dir.getwd
+
+  ##
+  # File DATA from sunshine deploy files.
+  DATA = ::DATA if defined?(::DATA)
 
   ##
   # Cleanup after sunshine has run, remove temp dirs, etc...

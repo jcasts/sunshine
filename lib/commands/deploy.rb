@@ -1,7 +1,7 @@
 module Sunshine
 
   ##
-  # Run a sunshine deploy script.
+  # Run one or more sunshine deploy scripts.
   #
   # Usage: sunshine deploy [deploy_file] [options]
   #
@@ -72,6 +72,7 @@ module Sunshine
       path = File.expand_path path
 
       # TODO: Find a better way to make file path accessible to App objects.
+      Sunshine.send :remove_const, "PATH" if defined?(Sunshine::PATH)
       Sunshine.const_set "PATH", path
 
       added = unless $:.include? path
