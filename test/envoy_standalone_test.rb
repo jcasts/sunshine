@@ -1,5 +1,5 @@
 require 'sunshine'
-Sunshine.setup 'sudo' => 'nextgen'
+Sunshine.setup 'sudo' => 'nextgen', 'trace' => true
 
 require 'sunshine/presets/atti'
 

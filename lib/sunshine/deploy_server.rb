@@ -13,7 +13,9 @@ module Sunshine
 
     class ConnectionError < FatalDeployError; end
 
-    LOGIN_LOOP = "; echo ready; for (( ; ; )); do sleep 10; done"
+    ##
+    # The loop to keep the ssh connection open.
+    LOGIN_LOOP = "echo connected; echo ready; for (( ; ; )); do sleep 10; done"
 
     attr_reader :host, :user
     attr_accessor :ssh_flags, :rsync_flags
@@ -74,7 +76,16 @@ module Sunshine
       @inn.sync = true
 
       data  = ""
-      ready = @out.readline == "ready\n"
+      ready = nil
+      start_time = Time.now.to_i
+
+      until ready || @out.eof?
+        data << @out.readpartial(1024)
+        puts data
+        ready = data =~ /ready/
+        puts ready.inspect
+        raise TimeoutError if timed_out?(start_time)
+      end
 
       unless ready
         disconnect

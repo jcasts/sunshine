@@ -7,6 +7,12 @@ module Sunshine
 
     include Open4
 
+    class TimeoutError < FatalDeployError; end
+
+    ##
+    # Time to wait with no activity until giving up on a command.
+    TIMEOUT = 30
+
     LOCAL_USER = `whoami`.chomp
     LOCAL_HOST = `hostname`.chomp
 
@@ -28,6 +34,8 @@ module Sunshine
       @sudo     = options[:sudo]
       @env      = options[:env] || {}
       @password = options[:password]
+
+      @cmd_activity = nil
 
       @mutex = nil
     end
@@ -128,6 +136,22 @@ module Sunshine
       else
         yield
       end
+    end
+
+
+    ##
+    # Checks if timeout occurred.
+
+    def timed_out? start_time=@cmd_activity
+      Time.now.to_i - start_time.to_i > TIMEOUT
+    end
+
+
+    ##
+    # Update the time of the last command activity
+
+    def update_timeout
+      @cmd_activity = Time.now
     end
 
 
@@ -234,6 +258,7 @@ module Sunshine
 
     def process_streams pid, *streams
       result = Hash.new{|h,k| h[k] = []}
+      update_timeout
 
       # Handle process termination ourselves
       status = nil
@@ -245,9 +270,13 @@ module Sunshine
         # don't busy loop
         selected, = select streams, nil, nil, 0.1
 
+        raise TimeoutError if timed_out?
+
         next if selected.nil? or selected.empty?
 
         selected.each do |stream|
+
+          update_timeout
 
           if stream.eof? then
             streams.delete stream if status # we've quit, so no more writing
