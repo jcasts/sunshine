@@ -222,6 +222,15 @@ fi
 
 
     ##
+    # Run the app's restart script
+
+    def restart
+      call "#{@app.deploy_path}/restart"
+    end
+
+
+
+    ##
     # Symlink current directory to previous checkout and remove
     # the current deploy directory.
 
@@ -268,6 +277,14 @@ fi
 
 
     ##
+    # Check if the app pids are present.
+
+    def running?
+      call "#{@app.deploy_path}/status"
+    end
+
+
+    ##
     # Run a sass task on any or all deploy servers.
 
     def sass *sass_names
@@ -288,6 +305,23 @@ fi
 
     def shell_env
       @env
+    end
+
+
+    ##
+    # Run the app's start script
+
+    def start force=false
+      stop if running? && force
+      call "#{@app.deploy_path}/start"
+    end
+
+
+    ##
+    # Run the app's stop script
+
+    def stop
+      call "#{@app.deploy_path}/stop"
     end
 
 
