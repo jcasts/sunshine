@@ -1,7 +1,7 @@
 class Settler
 
   ##
-  # The AptGet dependency class supports basic apt-get features:
+  # The Apt dependency class supports basic apt-get features:
   #
   #   class MyDeps < Settler
   #     apt_get "ruby", :version => '1.9'
@@ -9,7 +9,7 @@ class Settler
   #
   # See the Dependency class for more info.
 
-  class AptGet < Dependency
+  class Apt < Dependency
 
     def initialize(dependency_lib, name, options={}, &block)
       super(dependency_lib, name, options) do
@@ -36,8 +36,8 @@ class Settler
 
 
     def run_command(command, options={})
-      if @dependency_lib.exist?('apt-get')
-        @dependency_lib.install 'apt-get', options
+      if @dependency_lib.exist?('apt')
+        @dependency_lib.install 'apt', options
       end
       super
     end

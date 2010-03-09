@@ -84,7 +84,7 @@ class Settler
 
       @cmd = method(:run_local).to_proc
 
-      requires(*options[:require]) if options[:require]
+      requires(*options[:requires]) if options[:requires]
 
       instance_eval(&block) if block_given?
     end

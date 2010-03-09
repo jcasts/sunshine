@@ -46,8 +46,8 @@ class Settler
 
 
   require 'settler/dependency'
+  require 'settler/apt'
   require 'settler/yum'
-  require 'settler/apt_get'
   require 'settler/gem'
   require 'settler/tpkg'
 
