@@ -165,7 +165,7 @@ def each_deploy_server app=@app
   end
 end
 
-Sunshine.setup
+Sunshine.setup({}, true)
 
 unless MockObject === Sunshine.console
   Sunshine.console.extend MockObject
