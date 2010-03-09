@@ -15,7 +15,7 @@ module Sunshine
 
       @app = app
 
-      @roles = options[:roles] || []
+      @roles = options[:roles] || [:all]
       @roles = @roles.split(" ") if String === @roles
       @roles = [*@roles].compact.map{|r| r.to_sym }
 

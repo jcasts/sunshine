@@ -68,8 +68,10 @@ class TestDeployServerDispatcher < Test::Unit::TestCase
 
     assert_equal 2, @dsd.find(:user => "bob").length
     assert_equal 2, @dsd.find(:host => "test2.com").length
-    assert_equal 2, @dsd.find(:role => :web).length
-    assert_equal 1, @dsd.find(:role => :web, :user => "bob").length
+
+    # servers without roles are assigned all roles by default
+    assert_equal 6, @dsd.find(:role => :web).length
+    assert_equal 2, @dsd.find(:role => :web, :user => "bob").length
   end
 
 

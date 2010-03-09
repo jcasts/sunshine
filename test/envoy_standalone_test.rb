@@ -34,5 +34,4 @@ __END__
     :url:  svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/tags/200912.2-WAT-235-release
 
   :deploy_servers:
-    - - jcastagna@jcast.np.wc1.yellowpages.com
-      - :roles: web db app
+    - jcast.np.wc1.yellowpages.com

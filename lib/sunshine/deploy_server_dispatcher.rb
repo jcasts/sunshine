@@ -82,7 +82,11 @@ module Sunshine
       results = self.select do |ds|
         next unless ds.user == query[:user] if query[:user]
         next unless ds.host == query[:host] if query[:host]
-        next unless ds.roles.include?(query[:role]) if query[:role]
+
+        if query[:role]
+          next unless ds.roles.include?(query[:role]) || ds.roles.include?(:all)
+        end
+
         true
       end
       self.class.new(*results)

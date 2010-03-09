@@ -25,7 +25,7 @@ class TestDeployServerApp < Test::Unit::TestCase
     assert Sunshine::DeployServer === @dsa
     assert_equal @app, @dsa.app
     assert_equal Hash.new, @dsa.scripts
-    assert_equal Array.new, @dsa.roles
+    assert_equal [:all], @dsa.roles
   end
 
 
