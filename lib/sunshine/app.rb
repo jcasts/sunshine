@@ -539,8 +539,7 @@ module Sunshine
                 Sunshine::Repo.new_of_type repo_def[:type],
                   repo_def[:url], repo_def
               else
-                repo_info = Sunshine::Repo.detect Sunshine::PATH
-                Sunshine::Repo.new_of_type(*repo_info) if repo_info
+                Sunshine::Repo.detect Sunshine::PATH
               end
     end
 

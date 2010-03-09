@@ -21,15 +21,12 @@ Sunshine::AttiApp.deploy do |app|
 
   rainbows.restart
   nginx.restart
-
-  app.health.enable
 end
 
 
 __END__
 
 :default:
-  :name: envoy
   :repo:
     :type: svn
     :url:  svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/tags/200912.2-WAT-235-release

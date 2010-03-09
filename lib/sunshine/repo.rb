@@ -27,25 +27,23 @@ module Sunshine
     ##
     # Looks for .git and .svn directories and determines if the passed path
     # is a recognized repo. Does not check for RsyncRepo since it's a
-    # special case:
+    # special case. Returns the appropriate repo object:
     #   Repo.detect "path/to/svn/repo/dir"
-    #     #=> [:svn, "svn://url/of/checked/out/repo"]
+    #     #=> <SvnRepo @url="svn://url/of/checked/out/repo">
     #   Repo.detect "path/to/git/repo/dir"
-    #     #=> [:git, "git://url/of/git/repo", {:tree => "master"}]
+    #     #=> <GitRepo, @url="git://url/of/git/repo", @branch="master">
     #   Repo.detect "invalid/repo/path"
     #     #=> nil
-    #
-    #   Repo.new_of_type(*Repo.detect("path/to/repo"))
 
     def self.detect path=".", console=nil
 
       if SvnRepo.valid? path, console
         info = SvnRepo.get_info path, console
-        [:svn, info[:url], info]
+        SvnRepo.new info[:url], info
 
       elsif GitRepo.valid? path, console
         info = GitRepo.get_info path, console
-        [:git, info[:url], info]
+        GitRepo.new info[:url], info
       end
     end
 
