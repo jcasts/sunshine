@@ -135,6 +135,16 @@ module Sunshine
 
 
   ##
+  # The default directory where apps should be deployed to:
+  # '/var/www' by default. Overridden in the ~/.sunshine config file.
+  # See also App#deploy_path.
+
+  def self.web_directory
+    @config['web_directory']
+  end
+
+
+  ##
   # Should sunshine ever ask for user input? True by default; overridden with
   # the -a option.
 
@@ -207,7 +217,8 @@ module Sunshine
     'level'               => 'info',
     'deploy_env'          => :development,
     'auto'                => false,
-    'max_deploy_versions' => 5
+    'max_deploy_versions' => 5,
+    'web_directory'       => '/var/www'
   }
 
   ##

@@ -491,7 +491,7 @@ module Sunshine
     # Set all the app paths based on the root deploy path.
 
     def set_deploy_paths path
-      @deploy_path   = path
+      @deploy_path   = path || File.join(Sunshine.web_directory, @name)
       @current_path  = "#{@deploy_path}/current"
       @deploys_dir   = "#{@deploy_path}/deploys"
       @shared_path   = "#{@deploy_path}/shared"
