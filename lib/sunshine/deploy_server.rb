@@ -88,7 +88,8 @@ module Sunshine
 
       unless ready
         disconnect
-        raise ConnectionError, "Can't connect to #{@user}@#{@host}"
+        host_info = [@user, @host].compact.join("@")
+        raise ConnectionError, "Can't connect to #{host_info}"
       end
 
       @inn.close

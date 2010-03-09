@@ -5,6 +5,14 @@ module Sunshine
   #
   # Deploy servers can be assigned any number of roles for classification.
   # :roles:: sym|array - roles assigned (web, db, app, etc...)
+  # By default deploy server apps get the special :all role which will
+  # always be returned when calling the likes of:
+  #   DeployServerDispatcher#find :role => :some_role
+  #
+  # Deploy server apps also support host names with placeholder values %e
+  # and %n which will respectively be replaced with @app.deploy_env and
+  # @app.name:
+  #   DeployServerApp.new app, "%e-%n.myserver.com"
 
   class DeployServerApp < DeployServer
 
@@ -21,6 +29,10 @@ module Sunshine
 
       @scripts = Hash.new{|h, k| h[k] = []}
       @info    = {:ports => {}}
+
+
+      host.gsub!('%e', @app.deploy_env)
+      host.gsub!('%n', @app.name)
 
       super host, options
     end

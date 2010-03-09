@@ -12,6 +12,8 @@
 
   * DeployServerApp instances with unspecified roles get all roles by default.
 
+  * DeployServerApp supports host names with placeholder syntax %e and %n.
+
 * Bugfixes:
 
   * RsyncRepo#do_checkout fixed to match standard Repo#do_checkout methods.

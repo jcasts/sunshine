@@ -38,6 +38,12 @@ class TestDeployServerApp < Test::Unit::TestCase
   end
 
 
+  def test_init_placeholder_host
+    dsa = Sunshine::DeployServerApp.new @app, "%e-%n.host.com"
+    assert_equal "#{@app.deploy_env}-#{@app.name}.host.com", dsa.host
+  end
+
+
   def test_add_shell_paths
     @dsa.add_shell_paths "test/path1", "test/path2"
     assert_equal "test/path1:test/path2:$PATH", @dsa.shell_env['PATH']
