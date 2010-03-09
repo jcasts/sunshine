@@ -1,3 +1,25 @@
+=== 0.0.6 / 2010-03-19
+
+* Improvements:
+
+  * App#name gets auto-assigned by repo info if not provided.
+
+  * Sunshine::web_directory used to determine App#deploy_path when missing.
+
+  * Repo#detect now returns a Repo object instead of an array.
+
+  * Added start/stop/restart/status methods to DeployServerApp.
+
+  * DeployServerApp instances with unspecified roles get all roles by default.
+
+* Bugfixes:
+
+  * RsyncRepo#do_checkout fixed to match standard Repo#do_checkout methods.
+
+  * Sunshine::DATA and Sunshine::PATH are now set when running standalone
+    ruby deploy files.
+
+
 === 0.0.5 / 2010-02-26
 
 * Sunshine::App:
