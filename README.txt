@@ -2,7 +2,7 @@
 
 == Description
 
-Sunshine is a deployment gem that provides a light, consistant api for
+Sunshine provides a light, consistant, object-oriented api for rack 
 application deployment.
 
 
@@ -20,7 +20,7 @@ by calling the sunshine command:
 
 == Deploy Scripts
 
-Writing a Sunshine config script is easy:
+Writing a Sunshine script is easy:
 
   options = {
     :name => 'myapp',
