@@ -17,6 +17,8 @@ module Sunshine
     # The loop to keep the ssh connection open.
     LOGIN_LOOP = "echo connected; echo ready; for (( ; ; )); do sleep 10; done"
 
+    LOGIN_TIMEOUT = 30
+
     attr_reader :host, :user
     attr_accessor :ssh_flags, :rsync_flags
 
@@ -83,7 +85,7 @@ module Sunshine
         data << @out.readpartial(1024)
         ready = data =~ /ready/
 
-        raise TimeoutError if timed_out?(start_time)
+        raise TimeoutError if timed_out?(start_time, LOGIN_TIMEOUT)
       end
 
       unless ready

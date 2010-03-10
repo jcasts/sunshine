@@ -11,7 +11,7 @@ module Sunshine
 
     ##
     # Time to wait with no activity until giving up on a command.
-    TIMEOUT = 30
+    TIMEOUT = 120
 
     LOCAL_USER = `whoami`.chomp
     LOCAL_HOST = `hostname`.chomp
@@ -142,8 +142,8 @@ module Sunshine
     ##
     # Checks if timeout occurred.
 
-    def timed_out? start_time=@cmd_activity
-      Time.now.to_i - start_time.to_i > TIMEOUT
+    def timed_out? start_time=@cmd_activity, max_time=TIMEOUT
+      Time.now.to_i - start_time.to_i > max_time
     end
 
 
