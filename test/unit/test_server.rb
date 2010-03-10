@@ -63,8 +63,10 @@ class TestServer < Test::Unit::TestCase
       assert_equal @rainbows.send(:pick_sudo, ds), binder.sudo
     end
 
-    args = ["rainbows", {:server => @deploy_server}]
-    assert @app.method_called?(:install_deps, :args => args)
+    args = ["rainbows"]
+    server.deploy_servers.each do |ds|
+      assert ds.method_called?(:install_deps, :args => args)
+    end
 
     assert server.method_called?(:upload_config_files)
 

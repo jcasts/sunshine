@@ -49,8 +49,7 @@ module Sunshine
 
     attr_reader :name, :repo, :deploy_servers, :crontab, :health, :sudo
     attr_reader :deploy_path, :checkout_path, :current_path
-    attr_reader :deploys_dir, :shared_path, :log_path, :deploy_name
-    attr_accessor :deploy_env
+    attr_reader :deploys_dir, :shared_path, :log_path, :deploy_name, :deploy_env
 
 
     def initialize(*args)
