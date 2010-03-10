@@ -121,7 +121,7 @@ module Sunshine
         @deploy_servers.each do |deploy_server|
 
           begin
-            @app.install_deps @dep_name, :server => deploy_server
+            deploy_server.install_deps @dep_name
           rescue => e
             raise DependencyError.new(e,
               "Failed installing dependency #{@dep_name}")

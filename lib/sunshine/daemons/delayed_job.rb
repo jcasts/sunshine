@@ -14,7 +14,7 @@ module Sunshine
 
       @pid = "#{@app.current_path}/tmp/pids/delayed_job.pid"
 
-      @dep_name = options[:dep_name] || "daemons-gem"
+      @dep_name = options[:dep_name] || "daemons"
     end
 
 

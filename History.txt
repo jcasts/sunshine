@@ -14,6 +14,9 @@
 
   * DeployServerApp supports host names with placeholder syntax %e and %n.
 
+  * Added support to bundler for defining multiple dependencies with the same
+    name, and different package managers.
+
 * Bugfixes:
 
   * RsyncRepo#do_checkout fixed to match standard Repo#do_checkout methods.

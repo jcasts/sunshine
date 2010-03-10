@@ -7,16 +7,22 @@ class Sunshine::Dependencies < Settler
 
   yum 'tpkg'
 
+  apt 'svn', :pkg => 'subversion'
   yum 'svn', :pkg => 'subversion'
 
+  apt 'git', :pkg => 'git-core'
   yum 'git', :pkg => 'git-core'
 
+  apt 'nginx'
   yum 'nginx'
 
+  apt 'logrotate'
   yum 'logrotate'
 
+  apt 'ruby', :pkg => 'ruby-full'
   yum 'ruby'
 
+  apt 'ruby-devel', :pkg => 'ruby-dev'
   yum 'ruby-devel'
 
   yum 'irb', :pkg => 'ruby-irb'
@@ -37,23 +43,15 @@ class Sunshine::Dependencies < Settler
 
   yum 'sqlite-devel'
 
-  yum 'libaio'
+  gem 'bundler', :version => ">=0.9"
 
-  gem 'ruby-oci8'
-
-  gem 'activerecord-oracle_enhanced-adapter' do
-    requires 'libaio', 'ruby-oci8'
-  end
-
-  gem 'isolate'
+  gem 'isolate', :version => ">=1.3.0"
 
   gem 'rake', :version => ">=0.8"
 
-  gem 'passenger', :version => "~>2.2"
+  gem 'passenger', :version => ">=2.2"
 
-  gem 'bundler', :version => "~>0.7"
-
-  gem 'geminstaller', :version => "~>0.5"
+  gem 'geminstaller', :version => ">=0.5"
 
   gem 'unicorn', :version => ">=0.9"
 
@@ -63,6 +61,6 @@ class Sunshine::Dependencies < Settler
 
   gem 'haml'
 
-  gem 'daemons-gem', :pkg => 'daemons'
+  gem 'daemons'
 
 end
