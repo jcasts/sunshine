@@ -53,11 +53,19 @@ class Settler
 
 
   ##
-  # Returns a single dependency by name:
-  #   Settler['name'] #=> dependency object
+  # Returns a dependency hash by type:
+  #   Settler['name'] #=> {:yum => <Yum...>, :apt => <Apt...>, ...}
 
   def self.[](key)
-    (@dependencies ||= {})[key]
+    self.dependencies[key]
+  end
+
+
+  ##
+  # Add a dependency to the dependencies hash.
+
+  def self.add dep
+    (self.dependencies[dep.name] ||= []).unshift dep
   end
 
 
@@ -65,7 +73,7 @@ class Settler
   # Hash of 'name' => object dependencies
 
   def self.dependencies
-    @dependencies ||= {}
+    @dependencies ||= Hash.new
   end
 
 
@@ -73,7 +81,43 @@ class Settler
   # Checks for the existance of a dependency by name
 
   def self.exist?(key)
-    self.dependencies.has_key?(key)
+    self.dependencies.has_key? key
+  end
+
+
+  ##
+  # Get a dependency object by name. Supports passing :type => :pkg_manager
+  # if dependencies with the same name but different package managers exist:
+  #   Dependencies.get 'daemon', :type => Settler::Gem
+  #   #=> <Gem @name="daemon"...>
+  #
+  # For an 'nginx' dependency defined for both apt and yum, where the yum
+  # dependency object was added to the tree last:
+  #   Dependencies.get 'nginx'
+  #   #=> <Yum @name="nginx"...>
+  #
+  #   Dependencies.get 'nginx', :type => Settler::Apt
+  #   #=> <Apt @name="nginx"...>
+  #
+  # Use the :prefer option if a certain dependency type is prefered but
+  # will fall back to whatever first dependency is available:
+  #   Dependencies.yum 'my_dep'
+  #   Dependencies.get 'my_dep', :prefer => Settler::Apt
+  #   #=> <Yum @name="my_dep"...>
+
+  def self.get name, options={}
+    return unless self.dependencies.has_key? name
+
+    deps     = self.dependencies[name]
+    dep_type = options[:type] || options[:prefer]
+
+    return deps.first unless dep_type
+
+    deps.each do |dep|
+      return dep if dep_type === dep
+    end
+
+    return deps.first unless options[:type]
   end
 
 
@@ -82,11 +126,10 @@ class Settler
   #
   #   Dependencies.install 'dep1', 'dep2', options_hash
   #
-  # See Dependency#install! for supported options.
+  # See Settler::get and Dependency#install! for supported options.
 
   def self.install(*deps)
-    options = Hash === deps.last ? deps.delete_at(deps.length - 1) : {}
-    deps.each{|dep| self.dependencies[dep].install! options }
+    send_each(:install!, *deps)
   end
 
 
@@ -95,12 +138,27 @@ class Settler
   #
   #   Dependencies.uninstall 'dep1', 'dep2', options_hash
   #
-  # See Dependency#uninstall! for supported options.
-
+  # See Settler::get and Dependency#uninstall! for supported options.
 
   def self.uninstall(*deps)
-    options = Hash === deps.last ? deps.delete_at(deps.length - 1) : {}
-    deps.each{|dep| self.dependencies[dep].uninstall! options }
+    send_each(:uninstall!, *deps)
+  end
+
+
+  ##
+  # Get and call method on each dependency passed
+
+  def self.send_each(method, *deps)
+    options = Hash === deps.last ? deps.delete_at(deps.length - 1).dup : {}
+
+    #if options[:call].respond_to? :pkg_manager
+    #  options[:prefer] ||= options[:call].pkg_manager
+    #end
+
+    deps.each do |dep|
+      dep = self.get(dep, options) if String === dep
+      dep.send method, options
+    end
   end
 
 

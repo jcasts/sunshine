@@ -175,7 +175,7 @@ class Settler
 
     def install_parents! options={}
       @parents.each do |dep|
-        @dependency_lib.dependencies[dep].install!(options)
+        @dependency_lib.get(dep, options).install!(options)
       end
     end
 
@@ -207,7 +207,7 @@ class Settler
     def missing_parents? options={}
       missing = []
       @parents.each do |dep|
-        parent_dep = @dependency_lib.dependencies[dep]
+        parent_dep = @dependency_lib.get dep, options
 
         missing << dep unless parent_dep.installed?(options)
 
@@ -234,7 +234,7 @@ class Settler
     def requires *deps
       @parents.concat(deps).uniq!
       deps.each do |dep|
-        @dependency_lib.dependencies[dep].add_child(@name)
+        @dependency_lib.dependencies[dep].each{|d| d.add_child(@name) }
       end
     end
 
@@ -282,7 +282,7 @@ class Settler
         options.delete(:remove_children) unless
           options[:remove_children] == :recursive
 
-        @dependency_lib.dependencies[dep].uninstall!(options)
+        @dependency_lib.get(dep, options).uninstall!(options)
       end
     end
 
@@ -327,14 +327,24 @@ class Settler
     end
 
 
+    def self.short_class_name str
+      str.to_s.split(":").last
+    end
+
+
+    def self.underscore str
+      str.gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+        gsub(/([a-z\d])([A-Z])/,'\1_\2').downcase
+    end
+
+
     def self.inherited(subclass)
-      class_name  = subclass.to_s.split(":").last
-      method_name = class_name.gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
-       gsub(/([a-z\d])([A-Z])/,'\1_\2').downcase
+      class_name  = short_class_name subclass.to_s
+      method_name = underscore class_name
 
       Settler.class_eval <<-STR, __FILE__, __LINE__ + 1
       def self.#{method_name}(name, options={}, &block)
-        dependencies[name] = #{class_name}.new(self, name, options, &block)
+        self.add #{class_name}.new(self, name, options, &block)
       end
       STR
 

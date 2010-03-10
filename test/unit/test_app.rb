@@ -248,8 +248,8 @@ class TestApp < Test::Unit::TestCase
 
 
   def test_install_deps
-    nginx_dep = Sunshine::Dependencies['nginx']
-    ruby_dep  = Sunshine::Dependencies['ruby']
+    nginx_dep = Sunshine::Dependencies.get 'nginx'
+    ruby_dep  = Sunshine::Dependencies.get 'ruby'
 
     yum_sudo = Sunshine::Dependencies::Yum.sudo
 

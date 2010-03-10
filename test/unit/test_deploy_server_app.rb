@@ -120,7 +120,7 @@ class TestDeployServerApp < Test::Unit::TestCase
 
 
   def test_install_deps
-    nginx_dep = Sunshine::Dependencies['nginx']
+    nginx_dep = Sunshine::Dependencies.get 'nginx'
 
     @dsa.install_deps "ruby", nginx_dep
 
@@ -245,7 +245,7 @@ class TestDeployServerApp < Test::Unit::TestCase
     assert_server_call "ln -sfT #{last_deploy} #{@app.current_path}"
 
     args = [[@app.name], {'servers' => [@dsa], 'force' => true}]
-    assert Sunshine::StartCommand.method_called? :exec, :args => args
+    assert Sunshine::StartCommand.method_called?(:exec, :args => args)
   end
 
 

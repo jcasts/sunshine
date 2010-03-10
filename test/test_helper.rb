@@ -76,7 +76,7 @@ end
 
 
 def assert_dep_install dep_name
-  dep = Sunshine::Dependencies[dep_name]
+  dep = Sunshine::Dependencies.get(dep_name)
 
   assert dep.method_called?(:install!, :args => [{:call => @deploy_server}]),
     "#{dep_name} install was not called."

@@ -18,6 +18,7 @@ module Sunshine
 
 
     attr_accessor :app, :roles, :scripts, :info
+    attr_writer :pkg_manager
 
     def initialize app, host, options={}
 
@@ -30,6 +31,7 @@ module Sunshine
       @scripts = Hash.new{|h, k| h[k] = []}
       @info    = {:ports => {}}
 
+      @pkg_manager = nil
 
       host.gsub!('%e', @app.deploy_env)
       host.gsub!('%n', @app.name)
@@ -143,8 +145,7 @@ module Sunshine
 
     def install_deps(*deps)
       deps.each do |d|
-        d = Sunshine::Dependencies[d] if String === d
-        d.install! :call => self
+        Sunshine::Dependencies.install d, :call => self
       end
     end
 
@@ -195,6 +196,14 @@ fi
     def make_env_bash_script
       env_str = @env.map{|e| e.join("=")}.join(" ")
       "#!/bin/bash\nenv #{env_str} \"$@\""
+    end
+
+
+    ##
+    # Returns the type of package management system to use.
+
+    def pkg_manager
+      @pkg_manager ||= (call("yum -v") && Settler::Yum) rescue Settler::Apt
     end
 
 
