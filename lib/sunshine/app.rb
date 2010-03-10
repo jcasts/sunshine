@@ -352,6 +352,32 @@ module Sunshine
 
 
     ##
+    # Runs bundler on deploy servers.
+
+    def run_bundler options=nil
+      with_server_apps options,
+        :msg  => "Running Bundler",
+        :send => :run_bundler
+
+    rescue => e
+      raise CriticalDeployError, e
+    end
+
+
+    ##
+    # Runs GemInstaller on deploy servers.
+
+    def run_geminstaller options=nil
+      with_server_apps options,
+        :msg  => "Running GemInstaller",
+        :send => :run_geminstaller
+
+    rescue => e
+      raise CriticalDeployError, e
+    end
+
+
+    ##
     # Run lambdas that were saved for after the user's script.
     # See #after_user_script.
 
