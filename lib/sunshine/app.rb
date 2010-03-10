@@ -320,6 +320,19 @@ module Sunshine
 
 
     ##
+    # Assign the prefered package manager to all deploy_server_apps:
+    #   app.prefer_pkg_manager Settler::Yum
+    #
+    # Package managers are typically detected automatically by each
+    # individual deploy_server_app.
+
+    def prefer_pkg_manager pkg_manager, options=nil
+      with_server_apps options,
+        :send => [:pkg_manager=, pkg_manager]
+    end
+
+
+    ##
     # Run a rake task on any or all deploy servers.
 
     def rake command, options=nil

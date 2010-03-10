@@ -120,33 +120,33 @@ class TestDeployServerApp < Test::Unit::TestCase
 
 
   def test_install_deps
-    nginx_dep = Sunshine::Dependencies.get 'nginx'
+    nginx_dep = Sunshine::Dependencies.get 'nginx', :prefer => @dsa.pkg_manager
 
     @dsa.install_deps "ruby", nginx_dep
 
-    assert_dep_install 'nginx'
     assert_dep_install 'ruby'
+    assert_dep_install 'nginx'
   end
 
 
-  def test_install_gems_bundler
-    @dsa.mock :file?,
-      :args => ["#{@app.checkout_path}/Gemfile"], :return => true
+  def test_install_gems
+    rake_dep = Sunshine::Dependencies.get 'rake'
 
-    @dsa.install_gems
+    @dsa.install_gems "bundler", rake_dep
 
-    assert @dsa.method_called?(:run_bundler)
+    assert_gem_install 'bundler'
+    assert_gem_install 'rake'
   end
 
 
-  def test_install_gems_geminstaller
-    @dsa.mock :file?,
-      :args => ["#{@app.checkout_path}/config/geminstaller.yml"],
-      :return => true
+  def test_install_gems_bad_dep
+    nginx_dep = Sunshine::Dependencies.get 'nginx'
 
-    @dsa.install_gems
+    @dsa.install_gems nginx_dep
+    raise "Didn't raise missing gem dependency when it should have."
 
-    assert @dsa.method_called?(:run_geminstaller)
+  rescue Settler::MissingDependency => e
+    assert_equal "No dependency 'nginx' [Settler::Gem]", e.message
   end
 
 
@@ -176,7 +176,7 @@ class TestDeployServerApp < Test::Unit::TestCase
   def test_rake
     @dsa.rake "db:migrate"
 
-    assert_dep_install 'rake'
+    assert_gem_install 'rake'
     assert_server_call "cd #{@app.checkout_path} && rake db:migrate"
   end
 
@@ -268,7 +268,7 @@ class TestDeployServerApp < Test::Unit::TestCase
   def test_run_bundler
     @dsa.run_bundler
 
-    assert_dep_install 'bundler'
+    assert_gem_install 'bundler'
     assert_server_call "cd #{@app.checkout_path} && gem bundle"
   end
 
@@ -276,7 +276,7 @@ class TestDeployServerApp < Test::Unit::TestCase
   def test_run_geminstaller
     @dsa.run_geminstaller
 
-    assert_dep_install 'geminstaller'
+    assert_gem_install 'geminstaller'
     assert_server_call "cd #{@app.checkout_path} && geminstaller -e"
   end
 
@@ -286,7 +286,7 @@ class TestDeployServerApp < Test::Unit::TestCase
 
     @dsa.sass(*sass_files)
 
-    assert_dep_install 'haml'
+    assert_gem_install 'haml'
 
     sass_files.each do |file|
       sass_file = "public/stylesheets/sass/#{file}.sass"

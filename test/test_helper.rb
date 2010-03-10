@@ -76,10 +76,26 @@ end
 
 
 def assert_dep_install dep_name
-  dep = Sunshine::Dependencies.get(dep_name)
+  prefered = @deploy_server.pkg_manager rescue nil
+  args = [{:call => @deploy_server, :prefer => prefered}]
+
+  dep = if Settler::Dependency === dep_name
+          dep_name
+        else
+          Sunshine::Dependencies.get(dep_name, :prefer => prefered)
+        end
+
+
+  assert dep.method_called?(:install!, :args => args),
+    "Dependency '#{dep_name}' install was not called."
+end
+
+
+def assert_gem_install gem_name
+  dep = Sunshine::Dependencies.get(gem_name, :type => Settler::Gem)
 
   assert dep.method_called?(:install!, :args => [{:call => @deploy_server}]),
-    "#{dep_name} install was not called."
+    "#{gem_name} install was not called."
 end
 
 
@@ -173,6 +189,6 @@ unless MockObject === Sunshine.console
   Sunshine.console.mock :write, :return => nil
 end
 
-unless MockObject === Settler::Dependency
+unless Settler::Dependency.include? MockObject
   Settler::Dependency.send(:include, MockObject)
 end

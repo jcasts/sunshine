@@ -141,23 +141,20 @@ module Sunshine
 
 
     ##
-    # Install dependencies previously defined in Sunshine::Dependencies
+    # Install dependencies previously defined in Sunshine::Dependencies.
 
     def install_deps(*deps)
-      deps.each do |d|
-        Sunshine::Dependencies.install d, :call => self
-      end
+      args = deps << {:call => self, :prefer => pkg_manager}
+      Sunshine::Dependencies.install(*args)
     end
 
 
     ##
-    # Install gem dependencies defined by the app's checked-in
-    # bundler or geminstaller config.
+    # Install gem dependencies previously defined in Sunshine::Dependencies.
 
-    def install_gems
-      run_bundler if file?("#{@app.checkout_path}/Gemfile")
-
-      run_geminstaller if file?("#{@app.checkout_path}/config/geminstaller.yml")
+    def install_gems(*gems)
+      args = gems << {:call => self, :type => Settler::Gem}
+      Sunshine::Dependencies.install(*args)
     end
 
 
@@ -211,7 +208,7 @@ fi
     # Run a rake task the deploy server.
 
     def rake command
-      install_deps 'rake'
+      install_gems 'rake'
       call "cd #{@app.checkout_path} && rake #{command}"
     end
 
@@ -282,7 +279,7 @@ fi
     # Runs bundler. Installs the bundler gem if missing.
 
     def run_bundler
-      install_deps 'bundler'
+      install_gems 'bundler'
       call "cd #{@app.checkout_path} && gem bundle"
     end
 
@@ -292,7 +289,7 @@ fi
     # Deprecated: use bundler
 
     def run_geminstaller
-      install_deps 'geminstaller'
+      install_gems 'geminstaller'
       call "cd #{@app.checkout_path} && geminstaller -e"
     end
 
@@ -309,7 +306,7 @@ fi
     # Run a sass task on any or all deploy servers.
 
     def sass *sass_names
-      install_deps 'haml'
+      install_gems 'haml'
 
       sass_names.flatten.each do |name|
         sass_file = "public/stylesheets/sass/#{name}.sass"

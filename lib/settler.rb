@@ -36,6 +36,8 @@ require 'open4'
 
 class Settler
 
+  class MissingDependency < Exception; end
+
   ##
   # Array of all dependency classes. Appended to automatically when
   # Settler::Dependency is inherited.
@@ -70,7 +72,7 @@ class Settler
 
 
   ##
-  # Hash of 'name' => object dependencies
+  # Hash of 'name' => array dependencies
 
   def self.dependencies
     @dependencies ||= Hash.new
@@ -92,7 +94,8 @@ class Settler
   #   #=> <Gem @name="daemon"...>
   #
   # For an 'nginx' dependency defined for both apt and yum, where the yum
-  # dependency object was added to the tree last:
+  # dependency object was added to the tree last. Returns nil if
+  # no matching dependency type is found:
   #   Dependencies.get 'nginx'
   #   #=> <Yum @name="nginx"...>
   #
@@ -104,17 +107,26 @@ class Settler
   #   Dependencies.yum 'my_dep'
   #   Dependencies.get 'my_dep', :prefer => Settler::Apt
   #   #=> <Yum @name="my_dep"...>
+  #
+  # Both the :type and the :prefer options support passing arrays to search
+  # from best to least acceptable candidate:
+  #   Dependencies.yum 'my_dep'
+  #   Dependencies.apt 'my_dep'
+  #   Dependencies.get 'my_dep', :type => [Settler::Tpkg, Settler::Yum]
+  #   #=> <Yum @name="my_dep"...>
 
   def self.get name, options={}
     return unless self.dependencies.has_key? name
 
-    deps     = self.dependencies[name]
-    dep_type = options[:type] || options[:prefer]
+    deps      = self.dependencies[name]
+    dep_types = [*(options[:type] || options[:prefer])].compact
 
-    return deps.first unless dep_type
+    return deps.first if dep_types.empty?
 
-    deps.each do |dep|
-      return dep if dep_type === dep
+    dep_types.each do |dep_type|
+      deps.each do |dep|
+        return dep if dep_type === dep
+      end
     end
 
     return deps.first unless options[:type]
@@ -127,6 +139,13 @@ class Settler
   #   Dependencies.install 'dep1', 'dep2', options_hash
   #
   # See Settler::get and Dependency#install! for supported options.
+  #
+  # Note: If a Dependency object is passed and the :type option is set,
+  # Settler will attempt to find and install a dependency of class :type
+  # with the same name as the passed Dependency object:
+  #   my_dep = Dependencies.yum "my_dep_yum_only"
+  #   Dependencies.install my_dep, :type => Settler::Apt
+  #   #=> "No dependency 'my_dep' [Settler::Apt]"
 
   def self.install(*deps)
     send_each(:install!, *deps)
@@ -149,14 +168,29 @@ class Settler
   # Get and call method on each dependency passed
 
   def self.send_each(method, *deps)
-    options = Hash === deps.last ? deps.delete_at(deps.length - 1).dup : {}
+    options = Hash === deps.last ? deps.delete_at(-1).dup : {}
 
     #if options[:call].respond_to? :pkg_manager
     #  options[:prefer] ||= options[:call].pkg_manager
     #end
 
-    deps.each do |dep|
-      dep = self.get(dep, options) if String === dep
+    deps.each do |dep_name|
+      dep = if Dependency === dep_name
+              if options[:type] && !(options[:type] === dep_name)
+                self.get(dep_name.name, options)
+              else
+                dep_name
+              end
+            else
+              self.get(dep_name, options)
+            end
+
+      raise MissingDependency,
+        "No dependency '#{dep_name}' [#{options[:type] || "any"}]" if !dep
+
+      # Remove :type so dependencies of other types than dep can be installed
+      options.delete(:type)
+
       dep.send method, options
     end
   end

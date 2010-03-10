@@ -261,7 +261,7 @@ class TestApp < Test::Unit::TestCase
 
     set_mock_response_for @app, 1,
       {check_nginx => [:err, ""],
-      check_ruby  => [:err, ""]},
+       check_ruby  => [:err, ""]},
       {:sudo => yum_sudo}
 
     @app.install_deps 'ruby', nginx_dep
@@ -281,14 +281,31 @@ class TestApp < Test::Unit::TestCase
 
 
   def test_install_gems
-    @app.install_gems
+    rake_dep = Sunshine::Dependencies.get 'rake'
+    bundler_dep  = Sunshine::Dependencies.get 'bundler'
+
+    gem_sudo = Sunshine::Dependencies::Gem.sudo
+
+    checks = {
+      rake_dep    => "gem list #{rake_dep.pkg} -i --version '>=0.8'",
+      bundler_dep => "gem list #{bundler_dep.pkg} -i --version '>=0.9'"
+    }
+
+    checks.values.each do |check|
+      set_mock_response_for @app, 1, {check => [:err, ""]}, {:sudo => gem_sudo}
+    end
+
+    @app.install_deps 'rake', bundler_dep
+
 
     each_deploy_server do |ds|
-      assert_ssh_call "test -f #{@app.checkout_path}/config/geminstaller.yml"
-      assert_ssh_call "cd #{@app.checkout_path} && geminstaller -e"
+      [rake_dep, bundler_dep].each do |dep|
 
-      assert_ssh_call "test -f #{@app.checkout_path}/Gemfile"
-      assert_ssh_call "cd #{@app.checkout_path} && gem bundle"
+        install = dep.instance_variable_get "@install"
+
+        assert_ssh_call checks[dep], ds, :sudo => gem_sudo
+        assert_ssh_call install, ds, :sudo => gem_sudo
+      end
     end
   end
 
