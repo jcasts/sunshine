@@ -25,23 +25,36 @@ class Sunshine::Dependencies < Settler
   apt 'ruby-devel', :pkg => 'ruby-dev'
   yum 'ruby-devel'
 
+  apt 'irb'
   yum 'irb', :pkg => 'ruby-irb'
 
+  apt 'rubygems', :version => '1.3.5' do
+    requires 'ruby', 'ruby-devel'
+  end
   yum 'rubygems', :version => '1.3.5' do
     requires 'ruby', 'ruby-devel'
   end
 
+  apt 'logrotate'
   yum 'logrotate'
 
+  apt 'curl-devel', :pkg => 'libcurl-dev'
   yum 'curl-devel'
 
+  apt 'libxml2-devel', :pkg => 'libxml2-dev'
   yum 'libxml2-devel'
 
+  apt 'libxslt-devel', :pkg => 'libxslt-dev'
   yum 'libxslt-devel'
 
+  apt 'sqlite', :pkg => 'sqlite3'
   yum 'sqlite'
 
+  apt 'sqlite-devel', :pkg => 'libsqlite3-dev'
   yum 'sqlite-devel'
+
+
+  # Define gems used by Sunshine
 
   gem 'bundler', :version => ">=0.9"
 
