@@ -42,7 +42,7 @@ module Sunshine
 
     def self.deploy(*args, &block)
       app = new(*args)
-      app.deploy!(&block)
+      app.deploy(&block)
       app
     end
 
@@ -92,7 +92,7 @@ module Sunshine
     # Deploy the application to deploy servers and
     # call user's post-deploy code.
 
-    def deploy!(&block)
+    def deploy(&block)
       @deploy_successful = false
 
       Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
@@ -233,6 +233,21 @@ module Sunshine
 
 
     ##
+    # Get a hash of deploy information for each server app.
+    # Post-deploy only.
+
+    def deploy_details options=nil
+      details = {}
+
+      with_server_apps options, :msg => "Getting deploy info..." do |server_app|
+        details[server_app.host] = server_app.deploy_details
+      end
+
+      details
+    end
+
+
+    ##
     # Check if app has been deployed successfully.
 
     def deployed?
@@ -364,6 +379,18 @@ module Sunshine
 
 
     ##
+    # Run the restart script of a deployed app on the specified
+    # deploy servers.
+    # Post-deploy only.
+
+    def restart options=nil
+      with_server_apps options,
+        :msg  => "Running restart script",
+        :send => :restart
+    end
+
+
+    ##
     # Runs bundler on deploy servers.
 
     def run_bundler options=nil
@@ -425,6 +452,45 @@ module Sunshine
       end
 
       @shell_env.dup
+    end
+
+
+    ##
+    # Run the start script of a deployed app on the specified
+    # deploy servers.
+    # Post-deploy only.
+
+    def start options=nil
+      with_server_apps options,
+        :msg  => "Running start script",
+        :send => [:start, options]
+    end
+
+
+    ##
+    # Get a hash of which deploy server apps are :running or :down.
+    # Post-deploy only.
+
+    def status options=nil
+      statuses = {}
+
+      with_server_apps options, :msg => "Querying app status..." do |server_app|
+        statuses[server_app.host] = server_app.running? ? :running : :down
+      end
+
+      statuses
+    end
+
+
+    ##
+    # Run the stop script of a deployed app on the specified
+    # deploy servers.
+    # Post-deploy only.
+
+    def stop options=nil
+      with_server_apps options,
+        :msg  => "Running stop script",
+        :send => :stop
     end
 
 

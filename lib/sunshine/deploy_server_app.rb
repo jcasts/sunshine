@@ -108,6 +108,15 @@ module Sunshine
 
 
     ##
+    # Get information about the app's deploy.
+    # Post-deploy only.
+
+    def deploy_details
+      YAML.load call("cat #{@app.current_path}/info")
+    end
+
+
+    ##
     # Returns the most current deploy information.
 
     def get_deploy_info
@@ -245,6 +254,7 @@ fi
 
     ##
     # Run the app's restart script
+    # Post-deploy only.
 
     def restart
       call "#{@app.deploy_path}/restart"
@@ -300,9 +310,10 @@ fi
 
     ##
     # Check if the app pids are present.
+    # Post-deploy only.
 
     def running?
-      call "#{@app.deploy_path}/status"
+      call "#{@app.deploy_path}/status" rescue false
     end
 
 
@@ -331,7 +342,8 @@ fi
 
 
     ##
-    # Run the app's start script
+    # Run the app's start script.
+    # Post-deploy only.
 
     def start options={}
       if running?
@@ -344,7 +356,8 @@ fi
 
 
     ##
-    # Run the app's stop script
+    # Run the app's stop script.
+    # Post-deploy only.
 
     def stop
       call "#{@app.deploy_path}/stop"

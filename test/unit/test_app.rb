@@ -63,7 +63,7 @@ class TestApp < Test::Unit::TestCase
   def test_app_deploy
     yield_called = false
 
-    @app.deploy! do |app|
+    @app.deploy do |app|
       assert app.deploy_servers.connected?
 
       yield_called = true
