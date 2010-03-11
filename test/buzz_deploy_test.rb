@@ -12,7 +12,7 @@ Sunshine::AttiApp.deploy do |app|
                    'libaio', 'ruby-devel',
                    'isolate', 'activerecord-oracle_enhanced-adapter'
 
-  app.install_gems
+  app.run_geminstaller
 
 
   # Don't decrypt the db yml file for these environments

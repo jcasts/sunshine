@@ -12,7 +12,7 @@ Sunshine::AttiApp.deploy do |app|
                   :stderr      => "#{app.log_path}/error.log",
                   :stdout      => "#{app.log_path}/access.log"
 
-  app.install_gems
+  app.run_geminstaller
 
   app.upload_tasks 'app', 'common', 'tpkg'
 
