@@ -78,6 +78,14 @@ module Sunshine
 
 
     ##
+    # Write a file - used for compatibility with DeployServer.
+
+    def make_file filepath, content, options={}
+      File.open(filepath, "w+"){|f| f.write(content)}
+    end
+
+
+    ##
     # Prompt the user for a password
 
     def prompt_for_password

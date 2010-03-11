@@ -296,7 +296,7 @@ module Sunshine
     # Write the app list hash to the remote server.
 
     def self.save_list list, server
-      server.call "echo '#{list.to_yaml}' > #{Sunshine::APP_LIST_PATH}"
+      server.make_file Sunshine::APP_LIST_PATH, list.to_yaml
     end
 
 
