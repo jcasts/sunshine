@@ -12,7 +12,7 @@ namespace :sunshine do
                    'web_directory' => '~nextgen',
                    'deploy_env'    => deploy_env
 
-    deploy_hash = {
+    app_hash = {
       :repo => {
         :type => :svn,
         :url  => "svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/tags/200912.2-WAT-235-release"
@@ -20,7 +20,7 @@ namespace :sunshine do
       :deploy_servers => %w{jcast.np.wc1.yellowpages.com}
     }
 
-    @app = Sunshine::AttiApp.new deploy_hash
+    @app = Sunshine::AttiApp.new app_hash
   end
 
 
