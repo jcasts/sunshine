@@ -66,8 +66,5 @@ __END__
   :deploy_path: ~nextgen/buzz
 
   :deploy_servers:
-    - - jcast.np.wc1.yellowpages.com
-      - :roles: web db app cdn mail dj
-
-    - - sunny.np.wc1.yellowpages.com
-      - :roles: web db app cdn mail dj
+    - jcast.np.wc1.yellowpages.com
+    - sunny.np.wc1.yellowpages.com
