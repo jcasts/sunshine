@@ -12,6 +12,9 @@ class TestApp < Test::Unit::TestCase
                :deploy_path => "/usr/local/nextgen/parity"}
 
     @app = Sunshine::App.new @config
+    @app.deploy_servers.each do |ds|
+      ds.extend MockObject
+    end
 
     @tmpdir = File.join Dir.tmpdir, "test_sunshine_#{$$}"
 
@@ -335,7 +338,9 @@ class TestApp < Test::Unit::TestCase
       assert_ssh_call "test -d #{@app.deploy_path}"
 
       yml_list = {@app.name => @app.deploy_path}.to_yaml
-      assert_ssh_call "echo '#{yml_list}' > #{Sunshine::APP_LIST_PATH}"
+      path     = ds.expand_path(Sunshine::APP_LIST_PATH)
+
+      assert ds.method_called?(:make_file, :args => [path, yml_list])
     end
   end
 
