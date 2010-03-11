@@ -345,7 +345,9 @@ fi
     # Run the app's start script.
     # Post-deploy only.
 
-    def start options={}
+    def start options=nil
+      options ||= {}
+
       if running?
         return unless options[:force]
         stop
