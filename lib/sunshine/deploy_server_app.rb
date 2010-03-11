@@ -67,6 +67,10 @@ module Sunshine
         build_scripts[:restart] << "#{@app.deploy_path}/start"
       end
 
+      if build_scripts[:status].empty?
+        build_scripts[:status] << "echo 'No daemons for #{@app.name}'; exit 1;"
+      end
+
       build_scripts.each do |name, cmds|
         if cmds.empty?
           Sunshine.logger.warn @host, "#{name} script is empty"
@@ -329,8 +333,12 @@ fi
     ##
     # Run the app's start script
 
-    def start force=false
-      stop if running? && force
+    def start options={}
+      if running?
+        return unless options[:force]
+        stop
+      end
+
       call "#{@app.deploy_path}/start"
     end
 
