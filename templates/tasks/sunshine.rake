@@ -12,8 +12,7 @@ namespace :sunshine do
   task :app do
     deploy_env = ENV['env'] || ENV['RACK_ENV'] || ENV['RAILS_ENV']
 
-    Sunshine.setup 'trace'      => true,
-                   'deploy_env' => deploy_env
+    Sunshine.setup 'deploy_env' => ( deploy_env || "development" )
 
 
     # View the Sunshine README, scripts in the sunshine/examples
@@ -28,6 +27,8 @@ namespace :sunshine do
 
   desc "Deploy the app"
   task :deploy => :app do
+    Sunshine.setup 'trace' => true
+
     @app.deploy do |app|
 
       # Do deploy-specific stuff here, e.g.
@@ -36,7 +37,7 @@ namespace :sunshine do
       #
       #   unicorn = Sunshine::Unicorn.new app, :port      => 3000,
       #                                        :processes => 8
-      #   uncorn.restart
+      #   unicorn.restart
 
     end
   end
@@ -85,17 +86,11 @@ namespace :sunshine do
 
   desc "Get the health state"
   task :health => :app do
-    puts @app.health.status.to_yaml
+    health_status @app
   end
 
 
   namespace :health do
-
-    desc "Get the health state"
-    task :check => :app do
-      health_status @app
-    end
-
 
     desc "Turn on health check"
     task :enable => :app do

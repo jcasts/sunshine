@@ -88,13 +88,13 @@ namespace :sunshine do
   end
 
 
+  desc "Get the health state"
+  task :health => :app do
+    health_status @app
+  end
+
+
   namespace :health do
-
-    desc "Get the health state"
-    task :check => :app do
-      health_status @app
-    end
-
 
     desc "Turn on health check"
     task :enable => :app do

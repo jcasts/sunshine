@@ -15,7 +15,14 @@ module Sunshine
     # and optionally an accompanying message.
 
     def self.exec argv, config
-      return false
+      template_rakefile = File.join File.dirname(__FILE__),
+        "../../templates/tasks/sunshine.rake"
+
+      target_rakefile = config['rakefile']
+
+      FileUtils.cp template_rakefile, target_rakefile
+
+      return true, "Copied Sunshine template rakefile to #{target_rakefile}"
     end
 
 
@@ -42,6 +49,8 @@ module Sunshine
     # Returns the main sunshine help when no arguments are passed.
 
     def self.parse_args argv
+      options = {}
+
       opts = opt_parser do |opt|
         opt.banner = <<-EOF
 
@@ -67,14 +76,29 @@ Sunshine is an object oriented deploy tool for rack applications.
     start     Start a deployed app
     stop      Stop a deployed app
 
-  For more help on sunshine commands, use '#{opt.program_name} COMMAND --help'
-
+   Options:
         EOF
+
+        opt.on('--rakefile [PATH]',
+               'Copy the Sunshine template rakefile.') do |path|
+          options['rakefile'] = path || File.join(Dir.pwd, "sunshine.rake")
+        end
+
+        opt.separator nil
+        opt.separator "For more help on sunshine commands, "+
+                      "use '#{opt.program_name} COMMAND --help'"
+        opt.separator nil
       end
 
+
       opts.parse! argv
-      puts opts
-      exit 1
+
+      if options.empty?
+        puts opts
+        exit 1
+      end
+
+      options
     end
 
 
