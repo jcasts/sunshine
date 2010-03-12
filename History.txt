@@ -19,6 +19,8 @@
 
 * Bugfixes:
 
+  * Renamed the 'deploy' command to 'run' to more accurately express it's use.
+
   * RsyncRepo#do_checkout fixed to match standard Repo#do_checkout methods.
 
   * Sunshine::DATA and Sunshine::PATH are now set when running standalone
