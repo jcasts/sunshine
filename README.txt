@@ -12,10 +12,10 @@ Installing sunshine:
 
   gem install sunshine
 
-You can either use sunshine by requiring the gem in your deploy script or
+You can either use sunshine by requiring the gem in your script or
 by calling the sunshine command:
 
-  sunshine deploy my_deploy.rb -e qa
+  sunshine run my_deploy.rb -e qa
 
 
 == Deploy Scripts
@@ -49,7 +49,7 @@ The App::deploy and App::new methods also support passing
 a path to a yaml file:
 
   app = Sunshine::App.new("path/to/config.yml")
-  app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
+  app.deploy{|app| Sunshine::Rainbows.new(app).restart }
 
 
 The yaml file can also be any IO stream whos output will parse to yaml.
@@ -60,7 +60,7 @@ information in one place:
     app = Sunshine::App.new
     app = Sunshine::App.new Sunshine::DATA
 
-    app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
+    app.deploy{|app| Sunshine::Rainbows.new(app).restart }
 
     __END__
 
@@ -195,17 +195,17 @@ actions to be taken application-wide, as well as querying for the
 health and state of the app:
 
 Examples:
-  sunshine deploy deploy_script.rb
+  sunshine run deploy_script.rb
   sunshine restart myapp -r user@server.com,user@host.com
   sunshine list myapp myotherapp --health -r user@server.com
   sunshine list myapp --status
 
 The Sunshine commands are as follows:
   add       Register an app with sunshine
-  deploy    Run a deploy script
   list      Display deployed apps
   restart   Restart a deployed app
   rm        Unregister an app with sunshine
+  run       Run a Sunshine script
   start     Start a deployed app
   stop      Stop a deployed app
 

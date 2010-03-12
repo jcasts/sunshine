@@ -14,7 +14,7 @@ module Sunshine
   #
   #   app = Sunshine::App.new(options)
   #
-  #   app.deploy! do |app|
+  #   app.deploy do |app|
   #
   #     app_server = Sunshine::Rainbows.new(app)
   #     app_server.restart

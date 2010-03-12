@@ -45,7 +45,7 @@ require 'fileutils'
 # a path to a yaml file:
 #
 #   app = Sunshine::App.new("path/to/config.yml")
-#   app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
+#   app.deploy{|app| Sunshine::Rainbows.new(app).restart }
 #
 #
 # Command line execution:
@@ -56,17 +56,17 @@ require 'fileutils'
 #     sunshine command [arguments...] [options...]
 #
 #   Examples:
-#     sunshine deploy deploy_script.rb
+#     sunshine run deploy_script.rb
 #     sunshine restart myapp -r user@server.com,user@host.com
 #     sunshine list myapp myotherapp --health -r user@server.com
 #     sunshine list myapp --status
 #
 #   Commands:
 #     add       Register an app with sunshine
-#     deploy    Run a deploy script
 #     list      Display deployed apps
 #     restart   Restart a deployed app
 #     rm        Unregister an app with sunshine
+#     run       Run a Sunshine script
 #     start     Start a deployed app
 #     stop      Stop a deployed app
 #
@@ -111,7 +111,7 @@ module Sunshine
   require 'commands/default'
   require 'commands/list'
   require 'commands/add'
-  require 'commands/deploy'
+  require 'commands/run'
   require 'commands/restart'
   require 'commands/rm'
   require 'commands/start'
@@ -178,7 +178,7 @@ module Sunshine
   ##
   # Check if trace log should be output at all.
   # This value can be assigned by default in ~/.sunshine
-  # or switched off with the deploy command's --no-trace option.
+  # or switched off with the run command's --no-trace option.
   # Defaults to true.
 
   def self.trace?
@@ -205,7 +205,7 @@ module Sunshine
 
   ##
   # Commands supported by Sunshine
-  COMMANDS = %w{add deploy list restart rm start stop}
+  COMMANDS = %w{add list restart rm run start stop}
 
   ##
   # Default Sunshine config file
@@ -232,7 +232,7 @@ module Sunshine
   PATH = Dir.getwd
 
   ##
-  # File DATA from sunshine deploy files.
+  # File DATA from sunshine run files.
   DATA = ::DATA if defined?(::DATA)
 
   ##
@@ -256,7 +256,7 @@ module Sunshine
 
   ##
   # Run sunshine with the passed argv and exits with appropriate exitcode.
-  #   run %w{deploy my_script.rb -l debug}
+  #   run %w{run my_script.rb -l debug}
   #   run %w{list -d}
 
   def self.run argv=ARGV
@@ -289,7 +289,7 @@ module Sunshine
   ##
   # Find the sunshine command to run based on the passed name.
   # Handles partial command names if they can be uniquely mapped to a command.
-  #   find_command "dep" #=> "deploy"
+  #   find_command "dep" #=> "run"
   #   find_command "zzz" #=> false
 
   def self.find_command name

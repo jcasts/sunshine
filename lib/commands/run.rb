@@ -1,12 +1,12 @@
 module Sunshine
 
   ##
-  # Run one or more sunshine deploy scripts.
+  # Run one or more sunshine scripts.
   #
-  # Usage: sunshine deploy [deploy_file] [options]
+  # Usage: sunshine run [run_file] [options]
   #
   # Arguments:
-  #     deploy_file     Load a deploy script or app path. Defaults to ./Sunshine
+  #     run_file     Load a script or app path. Defaults to ./Sunshine
   #
   # Options:
   #     -l, --level LEVEL         Set trace level. Defaults to info.
@@ -14,7 +14,7 @@ module Sunshine
   #     -a, --auto                Non-interactive - automate or fail.
   #         --no-trace            Don't trace any output.
 
-  class DeployCommand < DefaultCommand
+  class RunCommand < DefaultCommand
 
     ##
     # Takes an array and a hash, runs the command and returns:
@@ -25,19 +25,19 @@ module Sunshine
     #     code != 0: failed
     # and optionally an accompanying message.
 
-    def self.exec deploy_files, config
+    def self.exec run_files, config
 
-      deploy_files.each do |deploy_file|
+      run_files.each do |run_file|
 
-        deploy_file = deploy_file_from deploy_file
+        run_file = run_file_from run_file
 
-        with_load_path File.dirname(deploy_file) do
+        with_load_path File.dirname(run_file) do
 
-          puts "Running #{deploy_file}"
+          puts "Running #{run_file}"
 
-          get_file_data deploy_file
+          get_file_data run_file
 
-          require deploy_file
+          require run_file
         end
       end
 
@@ -46,27 +46,27 @@ module Sunshine
 
 
     ##
-    # Tries to infer what deploy file to used based on a given path:
-    #   deploy_file_from "path/to/some/dir"
+    # Tries to infer what run file to used based on a given path:
+    #   run_file_from "path/to/some/dir"
     #     #=> "path/to/some/dir/Sunshine"
-    #   deploy_file_from nil
+    #   run_file_from nil
     #     #=> "Sunshine"
-    #   deploy_file_from "path/to/deploy_script.rb"
-    #     #=> "path/to/deploy_script.rb"
+    #   run_file_from "path/to/run_script.rb"
+    #     #=> "path/to/run_script.rb"
 
-    def self.deploy_file_from deploy_file
-      deploy_file = File.join(deploy_file, "Sunshine") if
-        deploy_file && File.directory?(deploy_file)
+    def self.run_file_from run_file
+      run_file = File.join(run_file, "Sunshine") if
+        run_file && File.directory?(run_file)
 
-      deploy_file ||= "Sunshine"
+      run_file ||= "Sunshine"
 
-      File.expand_path deploy_file
+      File.expand_path run_file
     end
 
 
     ##
     # Adds a directory to the ruby load path and runs the passed block.
-    # Useful for deploy scripts to be able to reference their own dirs.
+    # Useful for scripts to be able to reference their own dirs.
 
     def self.with_load_path path
       path = File.expand_path path
@@ -88,15 +88,15 @@ module Sunshine
 
 
     ##
-    # Returns file data in a deploy file as a File IO object.
+    # Returns file data in a run file as a File IO object.
 
-    def self.get_file_data deploy_file
+    def self.get_file_data run_file
       # TODO: Find a better way to make file data accessible to App objects.
       Sunshine.send :remove_const, "DATA" if defined?(Sunshine::DATA)
       data_marker = "__END__\n"
       line = nil
 
-      Sunshine.const_set("DATA", File.open(deploy_file, 'r'))
+      Sunshine.const_set("DATA", File.open(run_file, 'r'))
 
       until line == data_marker || Sunshine::DATA.eof?
         line = Sunshine::DATA.gets
@@ -113,10 +113,10 @@ module Sunshine
       opts = opt_parser(options) do |opt|
         opt.banner = <<-EOF
 
-Usage: #{opt.program_name} deploy [deploy_file] [options]
+Usage: #{opt.program_name} run [run_file] [options]
 
 Arguments:
-    deploy_file     Load a deploy script or app path. Defaults to ./Sunshine
+    run_file     Load a script or app path. Defaults to ./Sunshine
         EOF
 
         opt.separator nil
