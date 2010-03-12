@@ -37,17 +37,17 @@ class TestSunshine < Test::Unit::TestCase
   end
 
 
-  def test_run_deploy_command
+  def test_exec_run_command
     mock_sunshine_exit
-    mock_sunshine_command Sunshine::DeployCommand
+    mock_sunshine_command Sunshine::RunCommand
 
-    Sunshine.run %w{deploy somefile.rb -l debug -e prod}
+    Sunshine.run %w{run somefile.rb -l debug -e prod --no-trace}
 
-    assert_command Sunshine::DeployCommand, [['somefile.rb'], Sunshine.setup]
+    assert_command Sunshine::RunCommand, [['somefile.rb'], Sunshine.setup]
   end
 
 
-  def test_run_control_commands
+  def test_exec_control_commands
     mock_sunshine_exit
 
     %w{add list restart rm start stop}.each do |name|
@@ -77,7 +77,7 @@ class TestSunshine < Test::Unit::TestCase
   end
 
 
-  def test_run_local_cmd
+  def test_exec_local_cmd
     mock_sunshine_exit
     mock_sunshine_command Sunshine::RmCommand
 

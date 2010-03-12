@@ -2,6 +2,9 @@
 
 * Improvements:
 
+  * Added a Sunshine rakefile template for task-based deploys.
+    Available through: sunshine --rakefile [COPY_TO]
+
   * App#name gets auto-assigned by repo info if not provided.
 
   * Sunshine::web_directory used to determine App#deploy_path when missing.
