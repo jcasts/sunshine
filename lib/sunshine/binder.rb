@@ -17,21 +17,31 @@ module Sunshine
     ##
     # Set the binding instance variable and accessor method.
 
-    def set name, value=nil, &block
+    def set key, value=nil, &block
       value ||= block if block_given?
 
-      instance_variable_set("@#{name}", value)
+      instance_variable_set("@#{key}", value)
 
-      instance_eval <<-STR, __FILE__, __LINE__ + 1
-        undef #{name} if defined?(#{name})
-        def #{name}(*args)
-          if Proc === @#{name}
-            @#{name}.call(*args)
+      eval_str = <<-STR
+        undef #{key} if defined?(#{key})
+        def #{key}(*args)
+          if Proc === @#{key}
+            @#{key}.call(*args)
           else
-            @#{name}
+            @#{key}
           end
         end
       STR
+
+      instance_eval eval_str, __FILE__, __LINE__ + 1
+    end
+
+
+    ##
+    # Takes a hash and assign each hash key/value as an attribute.
+
+    def import_hash hash
+      hash.each{|k, v| self.set(k, v)}
     end
 
 

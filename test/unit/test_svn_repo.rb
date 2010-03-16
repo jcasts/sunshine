@@ -4,7 +4,7 @@ class TestSvnRepo < Test::Unit::TestCase
 
   def setup
     @svn = Sunshine::SvnRepo.new("svn://someurl/proj_name/somebranch")
-    @ds = mock_deploy_server
+    @ds = mock_remote_shell
     mock_svn_response @svn.url
   end
 

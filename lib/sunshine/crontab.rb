@@ -45,11 +45,11 @@ module Sunshine
     ##
     # Remove all cron jobs that reference crontab.name
 
-    def delete! deploy_server
-      crontab = read_crontab deploy_server
+    def delete! shell
+      crontab = read_crontab shell
       crontab = delete_jobs crontab
 
-      write_crontab crontab, deploy_server
+      write_crontab crontab, shell
 
       crontab
     end
@@ -57,12 +57,12 @@ module Sunshine
 
 
     ##
-    # Write the crontab on the given deploy_server
+    # Write the crontab on the given shell
 
-    def write! deploy_server
-      crontab = build read_crontab(deploy_server)
+    def write! shell
+      crontab = build read_crontab(shell)
 
-      write_crontab crontab, deploy_server
+      write_crontab crontab, shell
 
       crontab
     end
@@ -70,13 +70,13 @@ module Sunshine
 
     private
 
-    def read_crontab deploy_server
-      deploy_server.call("crontab -l") rescue ""
+    def read_crontab shell
+      shell.call("crontab -l") rescue ""
     end
 
 
-    def write_crontab content, deploy_server
-      deploy_server.call("echo '#{content.gsub(/'/){|s| "'\\''"}}' | crontab")
+    def write_crontab content, shell
+      shell.call("echo '#{content.gsub(/'/){|s| "'\\''"}}' | crontab")
     end
 
 

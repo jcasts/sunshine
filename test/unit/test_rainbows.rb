@@ -5,7 +5,7 @@ class TestRainbows < TestUnicorn
 
   def setup
     super
-    @app.deploy_servers.each{|ds| ds.extend MockOpen4}
+    @app.each{|sa| sa.shell.extend MockOpen4}
     @server = Sunshine::Rainbows.new @app
   end
 

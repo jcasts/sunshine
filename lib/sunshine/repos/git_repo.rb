@@ -28,14 +28,14 @@ module Sunshine
     ##
     # Get the repo info from the path to a checked out git repo
 
-    def self.get_info path=".", console=nil
-      console ||= Sunshine.console
+    def self.get_info path=".", shell=nil
+      shell ||= Sunshine.shell
 
-      info = YAML.load git_log(path, console)
+      info = YAML.load git_log(path, shell)
 
       info[:date]   = Time.parse info[:date]
       info[:branch] = parse_branch info
-      info[:url]    = git_origin path, console
+      info[:url]    = git_origin path, shell
 
       info
     rescue => e
@@ -46,24 +46,24 @@ module Sunshine
     ##
     # Returns the git logs for a path, formatted as yaml.
 
-    def self.git_log path, console
+    def self.git_log path, shell
       git_options = "-1 --no-color --format=\"#{LOG_FORMAT}\""
-      console.call "cd #{path} && git log #{git_options}"
+      shell.call "cd #{path} && git log #{git_options}"
     end
 
 
     ##
     # Returns the fetch origin of the current git repo. Returns the path to a
     # public git repo by default:
-    #   GitRepo.git_origin "/some/path", Sunshine.console
+    #   GitRepo.git_origin "/some/path", Sunshine.shell
     #     #=> "git://myrepo/path/to/repo.git"
-    #   GitRepo.git_origin "/some/path", Sunshine.console, false
+    #   GitRepo.git_origin "/some/path", Sunshine.shell, false
     #     #=> "user@myrepo:path/to/repo.git"
 
-    def self.git_origin path, console, public_url=true
+    def self.git_origin path, shell, public_url=true
       get_origin_cmd = "cd #{path} && git remote -v | grep \\(fetch\\)"
 
-      origin = console.call get_origin_cmd
+      origin = shell.call get_origin_cmd
       origin = origin.split(/\t|\s/)[1]
 
       origin = make_public_url origin if public_url
@@ -93,10 +93,10 @@ module Sunshine
     end
 
 
-    def do_checkout path, console
+    def do_checkout path, shell
       cmd = "cd #{path} && git clone #{@url} #{scm_flags} . && "+
         "git checkout #{@tree}"
-      console.call cmd
+      shell.call cmd
     end
 
 

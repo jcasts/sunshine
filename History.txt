@@ -1,6 +1,15 @@
 === 0.0.6 / 2010-03-19
 
+* Major:
+
+  * Removed DeployServerDispatcher. Dispatching now happens at the App level.
+
 * Improvements:
+
+  * Extended functionality of ServerApp#upload_tasks.
+
+  * ServerApp now support being instatiated with an App instance (for 
+    coordinated deploys) or just with an app name (for post-deploy usage).
 
   * Added a Sunshine rakefile template for task-based deploys.
     Available through: sunshine --rakefile [COPY_TO]
@@ -13,14 +22,21 @@
 
   * Added start/stop/restart/status methods to DeployServerApp.
 
-  * DeployServerApp instances with unspecified roles get all roles by default.
+  * ServerApp instances with unspecified roles get all roles by default.
 
-  * DeployServerApp supports host names with placeholder syntax %e and %n.
+  * App config files now use erb parsing.
+    Any key/value passed the App constructor as a hash should be passed
+    to the erb binding along with the deploy_env.
 
   * Added support to bundler for defining multiple dependencies with the same
     name, and different package managers.
 
 * Bugfixes:
+
+  * Renamed DeployServerApp to ServerApp.
+
+  * Renamed App#deploy_path and App#deploys_dir to
+    App#root_path and App#deploys_path.
 
   * Renamed the 'deploy' command to 'run' to more accurately express it's use.
 

@@ -1,9 +1,9 @@
 module Sunshine
 
   ##
-  # The Console class handles local input, output and execution to the shell.
+  # The Shell class handles local input, output and execution to the shell.
 
-  class Console
+  class Shell
 
     include Open4
 
@@ -44,8 +44,8 @@ module Sunshine
     ##
     # Checks for equality
 
-    def == console
-      @host == console.host && @user == console.user
+    def == shell
+      @host == shell.host && @user == shell.user rescue false
     end
 
 
@@ -164,7 +164,7 @@ module Sunshine
 
 
     ##
-    # Execute a block while setting the console's mutex.
+    # Execute a block while setting the shell's mutex.
     # Sets the mutex to its original value on exit.
     # Executing commands with a mutex is used for user prompts.
 
@@ -190,7 +190,7 @@ module Sunshine
     # The cmd argument may be a string or an array. If a block is passed,
     # it will be called when data is received and passed the stream type
     # and stream string value:
-    #   console.execute "test -s 'blah' && echo 'true'" do |stream, str|
+    #   shell.execute "test -s 'blah' && echo 'true'" do |stream, str|
     #     stream    #=> :stdout
     #     string    #=> 'true'
     #   end

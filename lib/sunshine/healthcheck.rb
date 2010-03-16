@@ -7,10 +7,10 @@ module Sunshine
 
   class Healthcheck
 
-    attr_reader :deploy_servers, :enabled_file, :disabled_file
+    attr_reader :shells, :enabled_file, :disabled_file
 
-    def initialize path, deploy_servers
-      @deploy_servers = [*deploy_servers]
+    def initialize path, shells
+      @shells = [*shells]
       @enabled_file = "#{path}/health.txt"
       @disabled_file = "#{path}/health.disabled"
     end
@@ -21,8 +21,8 @@ module Sunshine
 
     def disable
       Sunshine.logger.info :healthcheck, "Disabling healthcheck" do
-        @deploy_servers.each do |deploy_server|
-          deploy_server.call "touch #{@disabled_file} && rm -f #{@enabled_file}"
+        @shells.each do |shell|
+          shell.call "touch #{@disabled_file} && rm -f #{@enabled_file}"
         end
       end
     end
@@ -33,8 +33,8 @@ module Sunshine
 
     def enable
       Sunshine.logger.info :healthcheck, "Enabling healthcheck" do
-        @deploy_servers.each do |deploy_server|
-          deploy_server.call "rm -f #{@disabled_file} && touch #{@enabled_file}"
+        @shells.each do |shell|
+          shell.call "rm -f #{@disabled_file} && touch #{@enabled_file}"
         end
       end
     end
@@ -45,8 +45,8 @@ module Sunshine
 
     def remove
       Sunshine.logger.info :healthcheck, "Removing healthcheck" do
-        @deploy_servers.each do |deploy_server|
-          deploy_server.call "rm -f #{@disabled_file} #{@enabled_file}"
+        @shells.each do |shell|
+          shell.call "rm -f #{@disabled_file} #{@enabled_file}"
         end
       end
     end
@@ -60,16 +60,16 @@ module Sunshine
     #   :disabled:  healthcheck was explicitely turned off
     #   :down:      um, something may be wrong
 
-    def status d_servers=@deploy_servers
+    def status shells=@shells
       stat = {}
-      [*d_servers].each do |ds|
-        stat[ds.host] = {}
-        if ( ds.call "test -f #{@disabled_file}" rescue false )
-          stat[ds.host] = :disabled
-        elsif ( ds.call "test -f #{@enabled_file}" rescue false )
-          stat[ds.host] = :ok
+      [*shells].each do |shell|
+        stat[shell.host] = {}
+        if ( shell.call "test -f #{@disabled_file}" rescue false )
+          stat[shell.host] = :disabled
+        elsif ( shell.call "test -f #{@enabled_file}" rescue false )
+          stat[shell.host] = :ok
         else
-          stat[ds.host] = :down
+          stat[shell.host] = :down
         end
       end
       stat

@@ -23,9 +23,9 @@ module Sunshine
   ##
   # An ssh call returned a non-zero exit code
   class SSHCmdError < CmdError
-    attr_reader :deploy_server
-    def initialize message=nil, deploy_server=nil
-      @deploy_server = deploy_server
+    attr_reader :shell
+    def initialize message=nil, shell=nil
+      @shell = shell
       super(message)
     end
   end

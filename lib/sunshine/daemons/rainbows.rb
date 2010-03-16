@@ -25,10 +25,10 @@ module Sunshine
     # Setup Rainbows specific bindings before building its config.
 
     def setup
-      super do |deploy_server, binder|
+      super do |server_app, binder|
         binder.forward :concurrency
 
-        yield(deploy_server, binder) if block_given?
+        yield(server_app, binder) if block_given?
       end
     end
   end

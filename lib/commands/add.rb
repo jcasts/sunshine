@@ -30,11 +30,11 @@ module Sunshine
     def self.exec names, config
       apps_hash  = parse_app_paths(*names)
 
-      output = exec_each_server config do |deploy_server|
-        server_command = new(deploy_server)
+      output = exec_each_server config do |shell|
+        server_command = new(shell)
         results        = server_command.add apps_hash
 
-        self.save_list server_command.app_list, deploy_server
+        self.save_list server_command.app_list, shell
 
         results
       end
@@ -66,7 +66,7 @@ module Sunshine
     def add apps_hash
       response_for_each(*apps_hash.keys) do |name|
         path = apps_hash[name]
-        test_dir = @deploy_server.call("test -d #{path}") rescue false
+        test_dir = @shell.call("test -d #{path}") rescue false
 
         raise "'#{path}' is not a directory." unless test_dir
 

@@ -15,8 +15,7 @@ module Sunshine
     # and optionally an accompanying message.
 
     def self.exec argv, config
-      template_rakefile = File.join File.dirname(__FILE__),
-        "../../templates/tasks/sunshine.rake"
+      template_rakefile = "#{Sunshine::ROOT}/templates/tasks/sunshine.rake"
 
       target_rakefile = config['rakefile']
 
@@ -141,11 +140,10 @@ Sunshine is an object oriented deploy tool for rack applications.
 
       if options['servers']
         options['servers'].map! do |host|
-          DeployServer.new host, :user => options['user']
+          RemoteShell.new host, :user => options['user']
         end
-        options['servers'] = DeployServerDispatcher.new(*options['servers'])
       else
-        options['servers'] = [Sunshine.console]
+        options['servers'] = [Sunshine.shell]
       end
 
       options['format'] ||= :txt_format

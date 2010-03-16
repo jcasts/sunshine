@@ -29,8 +29,8 @@ module Sunshine
     def self.exec names, config
       force = config['force']
 
-      output = exec_each_server config do |deploy_server|
-        new(deploy_server).start(names, force)
+      output = exec_each_server config do |shell|
+        new(shell).start(names, force)
       end
 
       return output
@@ -43,7 +43,7 @@ module Sunshine
     def start app_names, force=false
       status_after_command :start, app_names do |name, path|
 
-        @deploy_server.call "#{path}/stop" if running?(path) && force
+        @shell.call "#{path}/stop" if running?(path) && force
       end
     end
 

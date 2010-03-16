@@ -4,12 +4,12 @@ require 'sunshine/presets/atti'
 class TestAttiApp < Test::Unit::TestCase
 
   def setup
-    mock_deploy_server_popen4
+    mock_remote_shell_popen4
     svn_url = "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
 
     @config = {:name => "parity",
                :repo => {:type => "svn", :url => svn_url},
-               :deploy_servers => ["jcastagna@jcast.np.wc1.yellowpages.com"],
+               :remote_shells => ["jcastagna@jcast.np.wc1.yellowpages.com"],
                :deploy_path => "/usr/local/nextgen/parity"}
 
     @app = Sunshine::AttiApp.new @config
@@ -40,7 +40,7 @@ class TestAttiApp < Test::Unit::TestCase
 
     assert_equal [cronjob], @app.crontab.jobs["logrotate"]
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       assert_ssh_call "echo '#{new_crontab}' | crontab"
       assert_ssh_call "mkdir -p #{config_path} #{@app.log_path}/rotate"
       assert_rsync(/logrotate/, "#{ds.host}:#{config_path}/logrotate.conf")

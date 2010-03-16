@@ -59,7 +59,7 @@ job for otherapp
 
 
   def test_delete!
-    ds = mock_deploy_server
+    ds = mock_remote_shell
     ds.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
 
     assert_cronjob "blah", "otherapp blah job", @othercron
@@ -77,7 +77,7 @@ job for otherapp
 
 
   def test_write!
-    ds = mock_deploy_server
+    ds = mock_remote_shell
     ds.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
 
     @cron.add "job2", "new job2"

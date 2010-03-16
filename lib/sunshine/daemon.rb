@@ -33,7 +33,7 @@ module Sunshine
 
     attr_reader :app, :name, :target
 
-    attr_accessor :bin, :pid, :processes, :timeout, :sudo, :deploy_servers
+    attr_accessor :bin, :pid, :processes, :timeout, :sudo, :server_apps
 
     attr_accessor :config_template, :config_path, :config_file
 
@@ -57,7 +57,7 @@ module Sunshine
     # :processes:: prcss_num - number of processes daemon should run
     #                          defaults to 0
     #
-    # :deploy_servers:: ds_arr - deploy servers to use
+    # :server_apps:: ds_arr - deploy servers to use
     #
     # :config_template:: path - glob path to tempates to render and upload
     #                           defaults to sunshine_path/templates/svr_name/*
@@ -71,7 +71,7 @@ module Sunshine
     # :log_path:: path - path to where the log files should be output
     #                    defaults to app.log_path
     #
-    # :point_to:: app|deploy_server - an abstract target to point to
+    # :point_to:: app|daemon - an abstract target to point to
     #                                 defaults to the passed app
 
     def initialize app, options={}
@@ -86,7 +86,8 @@ module Sunshine
       @dep_name    = options[:dep_name] || @name
       @processes   = options[:processes] || 1
 
-      @deploy_servers = options[:deploy_servers] || @app.deploy_servers
+      @server_apps =
+        options[:server_apps] || @app.server_apps
 
       @config_template = options[:config_template] || "templates/#{@name}/*"
       @config_path     = options[:config_path] ||
@@ -111,31 +112,31 @@ module Sunshine
     # Setup the daemon, parse and upload config templates.
     # If a dependency with the daemon name exists in Sunshine::Dependencies,
     # setup will attempt to install the dependency before uploading configs.
-    # If a block is given it will be passed each deploy_server and binder object
+    # If a block is given it will be passed each server_app and binder object
     # which will be used for the building erb config templates.
     # See the ConfigBinding class for more information.
 
     def setup
       Sunshine.logger.info @name, "Setting up #{@name} daemon" do
 
-        @deploy_servers.each do |deploy_server|
+        @server_apps.each do |server_app|
 
           begin
-            deploy_server.install_deps @dep_name
+            server_app.install_deps @dep_name
           rescue => e
             raise DependencyError.new(e,
               "Failed installing dependency #{@dep_name}")
           end if Sunshine::Dependencies.exist?(@dep_name)
 
           # Build erb binding
-          binder = config_binding deploy_server
+          binder = config_binding server_app.shell
 
-          deploy_server.call "mkdir -p #{remote_dirs.join(" ")}",
+          server_app.shell.call "mkdir -p #{remote_dirs.join(" ")}",
             :sudo => binder.sudo
 
-          yield(deploy_server, binder) if block_given?
+          yield(server_app, binder) if block_given?
 
-          self.upload_config_files(deploy_server, binder.get_binding)
+          self.upload_config_files(server_app.shell, binder.get_binding)
         end
       end
 
@@ -151,11 +152,12 @@ module Sunshine
       self.setup
       Sunshine.logger.info @name, "Starting #{@name} daemon" do
 
-        @deploy_servers.each do |deploy_server|
+        @server_apps.each do |server_app|
           begin
-            deploy_server.call start_cmd, :sudo => pick_sudo(deploy_server)
+            server_app.shell.call start_cmd,
+              :sudo => pick_sudo(server_app.shell)
 
-            yield(deploy_server) if block_given?
+            yield(server_app) if block_given?
           rescue => e
             raise CriticalDeployError.new(e, "Could not start #{@name}")
           end
@@ -170,11 +172,12 @@ module Sunshine
     def stop
       Sunshine.logger.info @name, "Stopping #{@name} daemon" do
 
-        @deploy_servers.each do |deploy_server|
+        @server_apps.each do |server_app|
           begin
-            deploy_server.call stop_cmd, :sudo => pick_sudo(deploy_server)
+            server_app.shell.call stop_cmd,
+              :sudo => pick_sudo(server_app.shell)
 
-            yield(deploy_server) if block_given?
+            yield(server_app) if block_given?
           rescue => e
             raise CriticalDeployError.new(e, "Could not stop #{@name}")
           end
@@ -191,11 +194,12 @@ module Sunshine
       self.setup
 
       Sunshine.logger.info @name, "Restarting #{@name} daemon" do
-        @deploy_servers.each do |deploy_server|
+        @server_apps.each do |server_app|
           begin
-            deploy_server.call restart_cmd, :sudo => pick_sudo(deploy_server)
+            server_app.shell.call restart_cmd,
+              :sudo => pick_sudo(server_app.shell)
 
-            yield(deploy_server) if block_given?
+            yield(server_app) if block_given?
           rescue => e
             raise CriticalDeployError.new(e, "Could not restart #{@name}")
           end
@@ -271,16 +275,16 @@ module Sunshine
     # Upload config files and run them through erb with the provided
     # binding if necessary.
 
-    def upload_config_files(deploy_server, setup_binding=binding)
+    def upload_config_files(shell, setup_binding=binding)
       self.config_template_files.each do |config_file|
 
         if File.extname(config_file) == ".erb"
           filename = File.basename(config_file[0..-5])
           parsed_config = @app.build_erb(config_file, setup_binding)
-          deploy_server.make_file "#{@config_path}/#{filename}", parsed_config
+          shell.make_file "#{@config_path}/#{filename}", parsed_config
         else
           filename = File.basename(config_file)
-          deploy_server.upload config_file, "#{@config_path}/#{filename}"
+          shell.upload config_file, "#{@config_path}/#{filename}"
         end
       end
     end
@@ -296,29 +300,29 @@ module Sunshine
 
     private
 
-    def config_binding deploy_server
+    def config_binding shell
       binder = Binder.new self
       binder.forward(*self.class.binder_methods)
 
-      binder.set :deploy_server, deploy_server
+      binder.set :shell, shell
 
-      binder_sudo = pick_sudo(deploy_server)
+      binder_sudo = pick_sudo(shell)
       binder.set :sudo, binder_sudo
 
       binder.set :expand_path do |path|
-        deploy_server.expand_path path
+        shell.expand_path path
       end
 
       binder
     end
 
 
-    def pick_sudo deploy_server
-      case deploy_server.sudo
+    def pick_sudo shell
+      case shell.sudo
       when true
-        self.sudo || deploy_server.sudo
+        self.sudo || shell.sudo
       when String
-        String === self.sudo ? self.sudo : deploy_server.sudo
+        String === self.sudo ? self.sudo : shell.sudo
       else
         self.sudo
       end
@@ -335,10 +339,12 @@ module Sunshine
 
     def register_after_user_script
       @app.after_user_script do |app|
-        app.add_to_script :start,   start_cmd,   :servers => @deploy_servers
-        app.add_to_script :stop,    stop_cmd,    :servers => @deploy_servers
-        app.add_to_script :restart, restart_cmd, :servers => @deploy_servers
-        app.add_to_script :status,  status_cmd,  :servers => @deploy_servers
+        @server_apps.each do |sa|
+          sa.scripts[:start]   << start_cmd
+          sa.scripts[:stop]    << stop_cmd
+          sa.scripts[:restart] << restart_cmd
+          sa.scripts[:status]  << status_cmd
+        end
       end
     end
   end

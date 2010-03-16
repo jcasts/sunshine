@@ -30,11 +30,11 @@ module Sunshine
     def self.exec names, config
       delete_dir = config['delete_dir']
 
-      output = exec_each_server config do |deploy_server|
-        server_command = new(deploy_server)
+      output = exec_each_server config do |shell|
+        server_command = new(shell)
         results        = server_command.remove(names, delete_dir)
 
-        self.save_list server_command.app_list, deploy_server
+        self.save_list server_command.app_list, shell
 
         results
       end
@@ -49,10 +49,10 @@ module Sunshine
     def remove app_names, delete_dir=false
       each_app(*app_names) do |name, path|
         if delete_dir
-          @deploy_server.call File.join(path, "stop")
-          @deploy_server.call "rm -rf #{path}"
+          @shell.call File.join(path, "stop")
+          @shell.call "rm -rf #{path}"
 
-          Crontab.new(name).delete! @deploy_server
+          Crontab.new(name).delete! @shell
         end
 
         @app_list.delete name

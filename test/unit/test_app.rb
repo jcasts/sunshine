@@ -3,17 +3,18 @@ require 'test/test_helper'
 class TestApp < Test::Unit::TestCase
 
   def setup
-    mock_deploy_server_popen4
+    mock_remote_shell_popen4
     @svn_url = "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
 
     @config = {:name => "parity",
                :repo => {:type => "svn", :url => @svn_url},
-               :deploy_servers => ["jcastagna@jcast.np.wc1.yellowpages.com"],
-               :deploy_path => "/usr/local/nextgen/parity"}
+               :remote_shells => ["jcastagna@jcast.np.wc1.yellowpages.com"],
+               :root_path => "/usr/local/nextgen/parity"}
 
     @app = Sunshine::App.new @config
-    @app.deploy_servers.each do |ds|
-      ds.extend MockObject
+    @app.each do |server_app|
+      server_app.extend MockObject
+      server_app.shell.extend MockObject
     end
 
     @tmpdir = File.join Dir.tmpdir, "test_sunshine_#{$$}"
@@ -28,7 +29,7 @@ class TestApp < Test::Unit::TestCase
 
   def test_initialize_without_name
     app = Sunshine::App.new :repo => {:type => "svn", :url => @svn_url},
-            :deploy_servers => ["jcastagna@jcast.np.wc1.yellowpages.com"]
+            :remote_shells => ["jcastagna@jcast.np.wc1.yellowpages.com"]
 
     assert_equal "parity", app.name
   end
@@ -64,12 +65,12 @@ class TestApp < Test::Unit::TestCase
     yield_called = false
 
     @app.deploy do |app|
-      assert app.deploy_servers.connected?
+      assert app.connected?
 
       yield_called = true
     end
 
-    assert !@app.deploy_servers.connected?
+    assert !@app.connected?
 
     setup_cmd =
      "test -d #{@app.checkout_path} && rm -rf #{@app.checkout_path}"+
@@ -81,7 +82,7 @@ class TestApp < Test::Unit::TestCase
       "#{@app.repo.scm_flags} #{@app.repo.url} #{@app.checkout_path}"
 
     run_results = [
-      "mkdir -p #{@app.directories.join(" ")}",
+      "mkdir -p #{@app.server_apps.first.directories.join(" ")}",
       setup_cmd,
       mkdir_cmd,
       checkout_cmd,
@@ -89,8 +90,8 @@ class TestApp < Test::Unit::TestCase
     ]
 
 
-    @app.deploy_servers.each do |server|
-      use_deploy_server server
+    @app.each do |server_app|
+      use_remote_shell server_app.shell
 
       run_results.each_index do |i|
         assert_ssh_call run_results[i]
@@ -172,18 +173,18 @@ class TestApp < Test::Unit::TestCase
 
   def test_revert
     set_mock_response_for @app, 0,
-      "ls -rc1 #{@app.deploys_dir}" => [:out, "last_deploy_dir"]
+      "ls -rc1 #{@app.deploys_path}" => [:out, "last_deploy_dir"]
 
     @app.revert!
 
-    @app.deploy_servers.each do |ds|
-      use_deploy_server ds
+    @app.each do |sa|
+      use_remote_shell sa.shell
 
       assert_ssh_call "rm -rf #{@app.checkout_path}"
 
-      assert_ssh_call "ls -rc1 #{@app.deploys_dir}"
+      assert_ssh_call "ls -rc1 #{@app.deploys_path}"
 
-      last_deploy =  "#{@app.deploys_dir}/last_deploy_dir"
+      last_deploy =  "#{@app.deploys_path}/last_deploy_dir"
       assert_ssh_call "ln -sfT #{last_deploy} #{@app.current_path}"
     end
   end
@@ -196,7 +197,7 @@ class TestApp < Test::Unit::TestCase
 
     @app.build_control_scripts
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
 
       %w{start stop restart custom env}.each do |script|
         assert_rsync(/#{script}/, "#{ds.host}:#{@app.checkout_path}/#{script}")
@@ -208,7 +209,7 @@ class TestApp < Test::Unit::TestCase
   def test_build_deploy_info_file
     @app.build_deploy_info_file
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       assert_rsync(/info/, "#{ds.host}:#{@app.checkout_path}/info")
     end
   end
@@ -235,7 +236,7 @@ class TestApp < Test::Unit::TestCase
   def test_checkout_codebase
     @app.checkout_codebase
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       path = @app.checkout_path
       setup_cmd = "test -d #{path} && rm -rf #{path} || echo false"
 
@@ -247,6 +248,19 @@ class TestApp < Test::Unit::TestCase
       assert_ssh_call setup_cmd
       assert_ssh_call checkout_cmd
     end
+  end
+
+
+  def test_deployed?
+    deployed = @app.deployed?
+
+    state = true
+    @app.server_apps.each do |sa|
+      assert sa.method_called? :deployed?
+      state = false unless sa.deployed?
+    end
+
+    assert_equal state, deployed
   end
 
 
@@ -270,7 +284,7 @@ class TestApp < Test::Unit::TestCase
     @app.install_deps 'ruby', nginx_dep
 
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       [nginx_dep, ruby_dep].each do |dep|
         check =
           "test \"$(yum list installed #{dep.pkg} | grep -c #{dep.pkg})\" -ge 1"
@@ -301,7 +315,7 @@ class TestApp < Test::Unit::TestCase
     @app.install_deps 'rake', bundler_dep
 
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       [rake_dep, bundler_dep].each do |dep|
 
         install = dep.instance_variable_get "@install"
@@ -316,8 +330,8 @@ class TestApp < Test::Unit::TestCase
   def test_make_app_directories
     @app.make_app_directories
 
-    each_deploy_server do |ds|
-      assert_ssh_call "mkdir -p #{@app.directories.join(" ")}"
+    each_remote_shell do |ds|
+      assert_ssh_call "mkdir -p #{@app.server_apps.first.directories.join(" ")}"
     end
   end
 
@@ -325,7 +339,7 @@ class TestApp < Test::Unit::TestCase
   def test_rake
     @app.rake("test:task")
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       assert_ssh_call "cd #{@app.checkout_path} && rake test:task"
     end
   end
@@ -334,10 +348,10 @@ class TestApp < Test::Unit::TestCase
   def test_register_as_deployed
     @app.register_as_deployed
 
-    each_deploy_server do |ds|
-      assert_ssh_call "test -d #{@app.deploy_path}"
+    each_remote_shell do |ds|
+      assert_ssh_call "test -d #{@app.root_path}"
 
-      yml_list = {@app.name => @app.deploy_path}.to_yaml
+      yml_list = {@app.name => @app.root_path}.to_yaml
       path     = ds.expand_path(Sunshine::APP_LIST_PATH)
 
       assert ds.method_called?(:make_file, :args => [path, yml_list])
@@ -347,9 +361,9 @@ class TestApp < Test::Unit::TestCase
 
   def test_remove_old_deploys
     returned_dirs = %w{old_deploy1 old_deploy2 old_deploy3 main_deploy}
-    old_deploys = returned_dirs[0..-2].map{|d| "#{@app.deploys_dir}/#{d}"}
+    old_deploys = returned_dirs[0..-2].map{|d| "#{@app.deploys_path}/#{d}"}
 
-    list_cmd = "ls -1 #{@app.deploys_dir}"
+    list_cmd = "ls -1 #{@app.deploys_path}"
     rm_cmd   = "rm -rf #{old_deploys.join(" ")}"
 
     set_mock_response_for @app, 0,
@@ -359,7 +373,7 @@ class TestApp < Test::Unit::TestCase
 
     @app.remove_old_deploys
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       assert_ssh_call list_cmd
       assert_ssh_call rm_cmd
     end
@@ -400,7 +414,7 @@ class TestApp < Test::Unit::TestCase
   def test_symlink_current_dir
     @app.symlink_current_dir
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       assert_ssh_call "ln -sfT #{@app.checkout_path} #{@app.current_path}"
     end
   end
@@ -413,11 +427,11 @@ class TestApp < Test::Unit::TestCase
       :host => 'jcast.np.wc1.yellowpages.com',
       :remote_path => path
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       assert_ssh_call "mkdir -p /path/to/tasks"
 
       %w{common tpkg}.each do |task|
-        from = "templates/tasks/#{task}.rake"
+        from = "#{Sunshine::ROOT}/templates/tasks/#{task}.rake"
         to   = "#{ds.host}:#{path}/#{task}.rake"
 
         assert_rsync from, to
@@ -432,7 +446,7 @@ class TestApp < Test::Unit::TestCase
     tasks = Dir.glob("templates/tasks/*").map{|t| File.basename t}
     path  = "#{@app.checkout_path}/lib/tasks"
 
-    each_deploy_server do |ds|
+    each_remote_shell do |ds|
       assert_ssh_call "mkdir -p #{path}"
 
       tasks.each do |task|
@@ -448,8 +462,8 @@ class TestApp < Test::Unit::TestCase
   def test_sudo_assignment
     @app.sudo = "someuser"
 
-    @app.deploy_servers.each do |ds|
-      assert_equal "someuser", ds.sudo
+    @app.each do |server_app|
+      assert_equal "someuser", server_app.shell.sudo
     end
   end
 
@@ -460,13 +474,13 @@ class TestApp < Test::Unit::TestCase
   def assert_attributes_equal(attr_hash, app)
     assert_equal attr_hash[:name], app.name
     assert_equal attr_hash[:repo][:url], app.repo.url
-    assert_equal attr_hash[:deploy_path], app.deploy_path
+    assert_equal attr_hash[:root_path], app.root_path
 
-    attr_hash[:deploy_servers].each_with_index do |server_def, i|
+    attr_hash[:remote_shells].each_with_index do |server_def, i|
       server_def = server_def.first if Array === server_def
       user, host = server_def.split("@")
-      assert_equal host, app.deploy_servers[i].host
-      assert_equal user, app.deploy_servers[i].user
+      assert_equal host, app.server_apps[i].shell.host
+      assert_equal user, app.server_apps[i].shell.user
     end
   end
 

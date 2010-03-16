@@ -20,17 +20,17 @@ def mock_app
 end
 
 
-def mock_deploy_server host=nil
+def mock_remote_shell host=nil
   host ||= "jcastagna@jcast.np.wc1.yellowpages.com"
-  deploy_server = Sunshine::DeployServer.new host
+  remote_shell = Sunshine::RemoteShell.new host
 
-  deploy_server.extend MockOpen4
-  deploy_server.extend MockObject
+  remote_shell.extend MockOpen4
+  remote_shell.extend MockObject
 
-  use_deploy_server deploy_server
+  use_remote_shell remote_shell
 
-  deploy_server.connect
-  deploy_server
+  remote_shell.connect
+  remote_shell
 end
 
 
@@ -57,27 +57,29 @@ def mock_svn_response url=nil
 end
 
 
-def mock_deploy_server_popen4
+def mock_remote_shell_popen4
   return if no_mocks
-  Sunshine::DeployServer.class_eval{ include MockOpen4 }
+  Sunshine::RemoteShell.class_eval{ include MockOpen4 }
 end
 
 
 def set_mock_response_for obj, code, stream_vals={}, options={}
   case obj
   when Sunshine::App then
-    obj.deploy_servers.each do |ds|
-      ds.set_mock_response code, stream_vals, options
+    obj.each do |sa|
+      sa.shell.set_mock_response code, stream_vals, options
     end
-  when Sunshine::DeployServer then
+  when Sunshine::ServerApp then
+    obj.shell.set_mock_response code, stream_vals, options
+  when Sunshine::RemoteShell then
     obj.set_mock_response code, stream_vals, options
   end
 end
 
 
-def assert_dep_install dep_name
-  prefered = @deploy_server.pkg_manager rescue nil
-  args = [{:call => @deploy_server, :prefer => prefered}]
+def assert_dep_install dep_name, type=Settler::Yum
+  prefered = type rescue nil
+  args = [{:call => @remote_shell, :prefer => prefered}]
 
   dep = if Settler::Dependency === dep_name
           dep_name
@@ -94,20 +96,20 @@ end
 def assert_gem_install gem_name
   dep = Sunshine::Dependencies.get(gem_name, :type => Settler::Gem)
 
-  assert dep.method_called?(:install!, :args => [{:call => @deploy_server}]),
+  assert dep.method_called?(:install!, :args => [{:call => @remote_shell}]),
     "#{gem_name} install was not called."
 end
 
 
 def assert_not_called *args
-  assert !@deploy_server.method_called?(:call, :args => [*args]),
-    "Command called by #{@deploy_server.host} but should't have:\n #{args[0]}"
+  assert !@remote_shell.method_called?(:call, :args => [*args]),
+    "Command called by #{@remote_shell.host} but should't have:\n #{args[0]}"
 end
 
 
 def assert_server_call *args
-  assert @deploy_server.method_called?(:call, :args => [*args]),
-    "Command was not called by #{@deploy_server.host}:\n #{args[0]}"
+  assert @remote_shell.method_called?(:call, :args => [*args]),
+    "Command was not called by #{@remote_shell.host}:\n #{args[0]}"
 end
 
 
@@ -120,7 +122,7 @@ def assert_bash_script name, cmds, check_value
 if [ "$1" == "--no-env" ]; then
   #{cmds.flatten.join(" && ")}
 else
-  #{@app.deploy_path}/env #{@app.deploy_path}/#{name} --no-env
+  #{@app.root_path}/env #{@app.root_path}/#{name} --no-env
 fi
   STR
 
@@ -128,17 +130,17 @@ fi
 end
 
 
-def assert_ssh_call expected, ds=@deploy_server, options={}
+def assert_ssh_call expected, ds=@remote_shell, options={}
   expected = ds.send(:ssh_cmd, expected, options).join(" ")
 
-  error_msg = "No such command in deploy_server log [#{ds.host}]\n#{expected}"
+  error_msg = "No such command in remote_shell log [#{ds.host}]\n#{expected}"
   error_msg << "\n\n#{ds.cmd_log.select{|c| c =~ /^ssh/}.join("\n\n")}"
 
   assert ds.cmd_log.include?(expected), error_msg
 end
 
 
-def assert_rsync from, to, ds=@deploy_server, sudo=false
+def assert_rsync from, to, ds=@remote_shell, sudo=false
   received = ds.cmd_log.last
 
   rsync_path = if sudo
@@ -148,7 +150,7 @@ def assert_rsync from, to, ds=@deploy_server, sudo=false
 
   rsync_cmd = "rsync -azP #{rsync_path}-e \"ssh #{ds.ssh_flags.join(' ')}\""
 
-  error_msg = "No such command in deploy_server log [#{ds.host}]\n#{rsync_cmd}"
+  error_msg = "No such command in remote_shell log [#{ds.host}]\n#{rsync_cmd}"
   error_msg << "#{from.inspect} #{to.inspect}"
   error_msg << "\n\n#{ds.cmd_log.select{|c| c =~ /^rsync/}.join("\n\n")}"
 
@@ -169,24 +171,24 @@ def assert_rsync from, to, ds=@deploy_server, sudo=false
 end
 
 
-def use_deploy_server deploy_server
-  @deploy_server = deploy_server
+def use_remote_shell remote_shell
+  @remote_shell = remote_shell
 end
 
 
-def each_deploy_server app=@app
-  app.deploy_servers.each do |ds|
-    use_deploy_server ds
-    yield(ds) if block_given?
+def each_remote_shell app=@app
+  app.server_apps.each do |sa|
+    use_remote_shell sa.shell
+    yield(sa.shell) if block_given?
   end
 end
 
 Sunshine.setup({}, true)
 
-unless MockObject === Sunshine.console
-  Sunshine.console.extend MockObject
-  Sunshine.console.mock :<<, :return => nil
-  Sunshine.console.mock :write, :return => nil
+unless MockObject === Sunshine.shell
+  Sunshine.shell.extend MockObject
+  Sunshine.shell.mock :<<, :return => nil
+  Sunshine.shell.mock :write, :return => nil
 end
 
 unless Settler::Dependency.include? MockObject

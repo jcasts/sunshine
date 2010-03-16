@@ -10,14 +10,14 @@ class TestSunshine < Test::Unit::TestCase
     config = Sunshine::DEFAULT_CONFIG
     Sunshine.setup config
 
-    assert Sunshine::Console === Sunshine.console
+    assert Sunshine::Shell === Sunshine.shell
 
     assert_equal config['deploy_env'].to_s, Sunshine.deploy_env
 
     assert_equal !config['auto'], Sunshine.interactive?
 
-    assert Sunshine::Output === Sunshine.output
-    assert_equal Logger::INFO, Sunshine.output.logger.level
+    assert Sunshine::Output === Sunshine.logger
+    assert_equal Logger::INFO, Sunshine.logger.level
 
     assert_equal config['max_deploy_versions'], Sunshine.max_deploy_versions
 
@@ -57,21 +57,20 @@ class TestSunshine < Test::Unit::TestCase
 
       Sunshine.run %w{thing1 thing2 -r remoteserver.com}.unshift(name)
 
-      ds = Sunshine::DeployServer.new "remoteserver.com"
-      dsd = Sunshine::DeployServerDispatcher.new ds
+      servers = [Sunshine::RemoteShell.new("remoteserver.com")]
 
       args = [%w{thing1 thing2}, Sunshine.setup]
       assert_command cmd, args
 
-      assert_equal dsd, Sunshine.setup['servers']
+      assert_equal servers, Sunshine.setup['servers']
 
 
       Sunshine.run %w{thing1 thing2 -v}.unshift(name)
-      dsd = [Sunshine.console]
+      servers = [Sunshine.shell]
 
       assert_command cmd, args
 
-      assert_equal dsd, Sunshine.setup['servers']
+      assert_equal servers, Sunshine.setup['servers']
       assert Sunshine.setup['verbose']
     end
   end
@@ -83,7 +82,7 @@ class TestSunshine < Test::Unit::TestCase
 
     Sunshine.run %w{rm app1 app2}
 
-    dsd = [Sunshine.console]
+    dsd = [Sunshine.shell]
 
     args = [['app1', 'app2'], Sunshine.setup]
     assert_command Sunshine::RmCommand, args

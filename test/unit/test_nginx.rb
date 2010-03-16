@@ -4,8 +4,9 @@ class TestNginx < Test::Unit::TestCase
 
   def setup
     @app = Sunshine::App.new TEST_APP_CONFIG_FILE
-    @app.deploy_servers.first.extend MockOpen4
-    use_deploy_server @app.deploy_servers.first
+    @app.server_apps.first.extend MockOpen4
+    @app.server_apps.first.shell.extend MockOpen4
+    use_remote_shell @app.server_apps.first.shell
 
     @passenger = Sunshine::Nginx.new @app
     @nginx = Sunshine::Nginx.new @app, :port => 5000, :point_to => @passenger
@@ -25,7 +26,7 @@ passenger (2.2.4)
 
 
   def test_cmd
-    ds = @nginx.deploy_servers.first
+    ds = @nginx.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @nginx.start
@@ -37,7 +38,7 @@ passenger (2.2.4)
 
 
   def test_custom_sudo_cmd
-    ds = @nginx.deploy_servers.first
+    ds = @nginx.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @nginx.sudo = "someuser"
@@ -51,7 +52,7 @@ passenger (2.2.4)
 
 
   def test_sudo_cmd
-    ds = @passenger.deploy_servers.first
+    ds = @passenger.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @passenger.start
@@ -64,7 +65,7 @@ passenger (2.2.4)
 
 
   def test_setup_passenger
-    ds = @passenger.deploy_servers.first
+    ds = @passenger.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @passenger.setup do |ds, binder|
@@ -77,7 +78,7 @@ passenger (2.2.4)
 
 
   def test_setup
-    ds = @nginx.deploy_servers.first
+    ds = @nginx.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @nginx.setup do |ds, binder|

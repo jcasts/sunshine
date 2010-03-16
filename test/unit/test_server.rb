@@ -14,13 +14,15 @@ class TestServer < Test::Unit::TestCase
 
 
   def setup
-    mock_deploy_server_popen4
+    mock_remote_shell_popen4
     @app    = Sunshine::App.new(TEST_APP_CONFIG_FILE).extend MockObject
-    @deploy_server = @app.deploy_servers.first.extend MockObject
+    @server_app = @app.server_apps.first.extend MockObject
+    @app.server_apps.first.shell.extend MockObject
+
     @server = Server.new @app
 
     @rainbows = Sunshine::Rainbows.new(@app).extend MockObject
-    use_deploy_server @deploy_server
+    use_remote_shell @server_app.shell
   end
 
 
@@ -34,7 +36,7 @@ class TestServer < Test::Unit::TestCase
       :port     => 1234,
       :processes => 10,
       :server_name => "serv1.com",
-      :deploy_servers => ["deploy_server_test"],
+      :server_apps => ["remote_shell_test"],
       :config_template => "template.erb",
       :config_path => "path/to/config",
       :config_file => "conf_filename.conf",
@@ -55,16 +57,16 @@ class TestServer < Test::Unit::TestCase
   def test_setup
     server = @rainbows
 
-    server.setup do |ds, binder|
-      assert_equal @deploy_server, ds
+    server.setup do |sa, binder|
+      assert_equal @server_app, sa
 
-      assert_equal ds,      binder.deploy_server
-      assert_equal ds.host, binder.server_name
-      assert_equal @rainbows.send(:pick_sudo, ds), binder.sudo
+      assert_equal sa.shell,      binder.shell
+      assert_equal sa.shell.host, binder.server_name
+      assert_equal @rainbows.send(:pick_sudo, sa.shell), binder.sudo
     end
 
     args = ["rainbows"]
-    server.deploy_servers.each do |ds|
+    server.server_apps.each do |ds|
       assert ds.method_called?(:install_deps, :args => args)
     end
 
@@ -81,7 +83,7 @@ class TestServer < Test::Unit::TestCase
     server = @rainbows
 
     server.start do |ds|
-      assert_equal @deploy_server, ds
+      assert_equal @server_app, ds
     end
 
     assert server.method_called?(:setup)
@@ -94,7 +96,7 @@ class TestServer < Test::Unit::TestCase
     server = @rainbows
 
     server.stop do |ds|
-      assert_equal @deploy_server, ds
+      assert_equal @server_app, ds
     end
 
     assert_ssh_call server.stop_cmd
@@ -157,13 +159,13 @@ class TestServer < Test::Unit::TestCase
 
     @app.mock :build_erb, :return => "test_config"
 
-    server.upload_config_files @deploy_server
+    server.upload_config_files @server_app.shell
 
     args = ["#{server.config_path}/rainbows.conf", "test_config"]
-    assert @deploy_server.method_called?(:make_file, :args => args)
+    assert @server_app.shell.method_called?(:make_file, :args => args)
 
     args = ["test/non_erb.conf", "#{server.config_path}/non_erb.conf"]
-    assert @deploy_server.method_called?(:upload, :args => args)
+    assert @server_app.shell.method_called?(:upload, :args => args)
   end
 
 
@@ -192,7 +194,7 @@ class TestServer < Test::Unit::TestCase
 
     @app.run_post_user_lambdas
 
-    server.deploy_servers.each do |ds|
+    server.server_apps.each do |ds|
 
       assert ds.scripts[:start].include?(server.start_cmd)
       assert ds.scripts[:stop].include?(server.stop_cmd)
@@ -205,7 +207,7 @@ class TestServer < Test::Unit::TestCase
 
 
   def test_pick_sudo
-    ds = @rainbows.deploy_servers.first
+    ds = @rainbows.server_apps.first.shell
     assert_equal nil, @rainbows.send(:pick_sudo, ds)
 
     @rainbows.sudo = true
@@ -244,7 +246,7 @@ class TestServer < Test::Unit::TestCase
       :config_file => "server.conf",
       :config_path => "#{@app.current_path}/daemons/server",
       :config_template => "templates/server/*",
-      :deploy_servers => @app.deploy_servers.find(:role => :web),
+      :server_apps => @app.find(:role => :web),
       :stderr => "#{@app.log_path}/server_stderr.log",
       :stdout => "#{@app.log_path}/server_stdout.log"
     }.merge(user_config)
@@ -266,7 +268,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal config[:stderr], server.log_file(:stderr)
     assert_equal config[:stdout], server.log_file(:stdout)
 
-    assert_equal config[:deploy_servers], server.deploy_servers
+    assert_equal config[:server_apps], server.server_apps
 
     config_file_path = "#{config[:config_path]}/#{config[:config_file]}"
     assert_equal config_file_path, server.config_file_path

@@ -26,8 +26,8 @@ module Sunshine
     # and optionally an accompanying message.
 
     def self.exec names, config
-      output = exec_each_server config do |deploy_server|
-        new(deploy_server).stop(names)
+      output = exec_each_server config do |shell|
+        new(shell).stop(names)
       end
 
       return output

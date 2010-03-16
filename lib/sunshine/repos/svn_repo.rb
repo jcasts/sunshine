@@ -16,11 +16,11 @@ module Sunshine
     ##
     # Get the repo info from the path to a checked out svn repo
 
-    def self.get_info path=".", console=nil
-      console ||= Sunshine.console
+    def self.get_info path=".", shell=nil
+      shell ||= Sunshine.shell
 
-      svn_url  = get_svn_url path, console
-      response = svn_log svn_url, console
+      svn_url  = get_svn_url path, shell
+      response = svn_log svn_url, shell
 
       info = {}
 
@@ -40,8 +40,8 @@ module Sunshine
     ##
     # Returns the svn logs as xml.
 
-    def self.svn_log path, console
-      console.call "svn log #{path} --limit 1 --xml"
+    def self.svn_log path, shell
+      shell.call "svn log #{path} --limit 1 --xml"
     end
 
 
@@ -56,14 +56,14 @@ module Sunshine
     ##
     # Get the svn url from a svn or git-svn checkout.
 
-    def self.get_svn_url path, console
+    def self.get_svn_url path, shell
       cmd = git_svn?(path) ? "git svn" : "svn"
-      console.call("cd #{path} && #{cmd} info | grep ^URL:").split(" ")[1]
+      shell.call("cd #{path} && #{cmd} info | grep ^URL:").split(" ")[1]
     end
 
 
-    def do_checkout path, console
-      console.call "svn checkout #{scm_flags} #{@url} #{path}"
+    def do_checkout path, shell
+      shell.call "svn checkout #{scm_flags} #{@url} #{path}"
     end
 
 

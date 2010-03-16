@@ -68,7 +68,7 @@ module MockOpen4
         next
       end
 
-      key = ssh_cmd(key, options).join(" ") if Sunshine::DeployServer === self
+      key = ssh_cmd(key, options).join(" ") if Sunshine::RemoteShell === self
 
       new_stream_vals[key] = (val.dup << code)
     end

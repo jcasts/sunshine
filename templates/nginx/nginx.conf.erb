@@ -1,4 +1,4 @@
-<% darwin = deploy_server.os_name =~ /^darwin$/i %>
+<% darwin = shell.os_name =~ /^darwin$/i %>
 
 <% if sudo == true || sudo == 'root' %>
 user nobody nobody;

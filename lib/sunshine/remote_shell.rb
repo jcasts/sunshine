@@ -9,7 +9,7 @@ module Sunshine
   # Setting session-persistant environment variables is supported by
   # accessing the @env attribute.
 
-  class DeployServer < Console
+  class RemoteShell < Shell
 
     class ConnectionError < FatalDeployError; end
 
@@ -24,10 +24,10 @@ module Sunshine
 
 
     ##
-    # Deploy servers essentially need a user and a host. Typical instantiation
-    # is done through either of these methods:
-    #   DeployServer.new "user@host"
-    #   DeployServer.new "host", :user => "user"
+    # Remote shells essentially need a host and optional user.
+    # Typical instantiation is done through either of these methods:
+    #   RemoteShell.new "user@host"
+    #   RemoteShell.new "host", :user => "user"
     #
     # The constructor also supports the following options:
     # :env:: hash - hash of environment variables to set for the ssh session
@@ -136,7 +136,7 @@ module Sunshine
 
     ##
     # Expand a path:
-    #   deploy_server.expand_path "~user/thing"
+    #   shell.expand_path "~user/thing"
     #   #=> "/home/user/thing"
 
     def expand_path path

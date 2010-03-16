@@ -59,10 +59,10 @@ module Sunshine
 
         server_app.install_deps 'logrotate', 'mogwai_logpush'
 
-        server_app.call "mkdir -p #{config_path} #{@log_path}/rotate"
-        server_app.make_file logrotate_path, logrotate_conf
+        server_app.shell.call "mkdir -p #{config_path} #{@log_path}/rotate"
+        server_app.shell.make_file logrotate_path, logrotate_conf
 
-        @crontab.write! server_app
+        @crontab.write! server_app.shell
       end
 
     rescue => e

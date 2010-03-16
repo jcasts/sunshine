@@ -15,12 +15,12 @@ module Sunshine
       Logger::DEBUG   => :cyan,
     }
 
-    attr_reader :logger, :indent
+    attr_reader :logger, :indent, :level
 
     def initialize(options={})
       @logger = Logger.new options[:output] || $stdout
       @logger.formatter = lambda{|sev, time, progname, msg| msg}
-      @logger.level = options[:level] || Logger::DEBUG
+      @level = @logger.level = options[:level] || Logger::DEBUG
       @indent = 0
     end
 

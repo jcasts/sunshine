@@ -24,13 +24,13 @@ module Sunshine
 
 
     def setup
-      super do |deploy_server, binder|
-        passenger_root = setup_passenger(deploy_server) if use_passenger?
+      super do |server_app, binder|
+        passenger_root = setup_passenger(server_app.shell) if use_passenger?
 
         binder.set :passenger_root, passenger_root
         binder.forward :use_passenger?
 
-        yield(deploy_server, binder) if block_given?
+        yield(server_app, binder) if block_given?
       end
     end
 
@@ -46,9 +46,9 @@ module Sunshine
 
     private
 
-    def setup_passenger deploy_server
-      Dependencies.install 'passenger', :call => deploy_server
-      str = deploy_server.call "gem list passenger -d"
+    def setup_passenger shell
+      Dependencies.install 'passenger', :call => shell
+      str = shell.call "gem list passenger -d"
       version = str.match(/passenger\s\((.*)\)$/)[1]
       gempath = str.match(/Installed\sat:\s(.*)$/)[1]
       File.join(gempath, "gems/passenger-#{version}")

@@ -25,14 +25,13 @@ module Sunshine
     # :port:: port_num - the port to run the server on
     #                    defaults to 80
     #
-    # :deploy_servers:: ds_arr - deploy servers to use
-    #                            defaults to app's :web role servers
+    # :server_apps:: ds_arr - deploy servers to use
     #
     # :server_name:: myserver.com - host name used by server
     #                               defaults to nil
 
     def initialize app, options={}
-      options[:deploy_servers] ||= app.deploy_servers.find(:role => :web)
+      options[:server_apps] ||= app.find(:role => :web)
 
       super app, options
 
@@ -43,10 +42,10 @@ module Sunshine
 
     private
 
-    def config_binding deploy_server
+    def config_binding shell
       binder = super
 
-      binder.set :server_name, (@server_name || deploy_server.host)
+      binder.set :server_name, (@server_name || shell.host)
 
       binder
     end
@@ -58,8 +57,8 @@ module Sunshine
       @app.after_user_script do |app|
         next unless @port
 
-        @deploy_servers.each do |server_app|
-          server_app.info[:ports][@pid] = @port
+        @server_apps.each do |sa|
+          sa.info[:ports][@pid] = @port
         end
       end
     end

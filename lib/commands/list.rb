@@ -37,8 +37,8 @@ module Sunshine
       args = config[action.to_s] || []
       args = [args, names].flatten
 
-      output = exec_each_server config do |deploy_server|
-        new(deploy_server).send(action, *args)
+      output = exec_each_server config do |shell|
+        new(shell).send(action, *args)
       end
 
       return output
@@ -49,22 +49,22 @@ module Sunshine
     # Executes common list functionality for each deploy server.
 
     def self.exec_each_server config
-      deploy_servers = config['servers']
-      format         = config['format']
+      shells = config['servers']
+      format = config['format']
 
       responses = {}
       success   = true
 
-      deploy_servers.each do |deploy_server|
+      shells.each do |shell|
 
         begin
-          state, response = yield(deploy_server)
+          state, response = yield(shell)
         rescue => e
           state = false
           response = "#{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
         end
 
-        host            = deploy_server.host
+        host            = shell.host
         success         = state if success
         responses[host] = build_response state, response
       end
@@ -125,13 +125,13 @@ module Sunshine
 
 
 
-    attr_accessor :app_list, :deploy_server
+    attr_accessor :app_list, :shell
 
-    def initialize deploy_server
-      @deploy_server = deploy_server
-      @deploy_server.connect rescue nil
+    def initialize shell
+      @shell = shell
+      @shell.connect rescue nil
 
-      @app_list = self.class.load_list @deploy_server
+      @app_list = self.class.load_list @shell
     end
 
 
@@ -141,7 +141,7 @@ module Sunshine
 
     def details(*app_names)
       each_app(*app_names) do |name, path|
-        output = @deploy_server.call "cat #{path}/info"
+        output = @shell.call "cat #{path}/info"
         "\n#{output}"
       end
     end
@@ -166,7 +166,7 @@ module Sunshine
       action = app_names.delete_at(0) if Symbol === app_names.first
 
       each_app(*app_names) do |name, path|
-        health = Healthcheck.new "#{path}/shared", @deploy_server
+        health = Healthcheck.new "#{path}/shared", @shell
         health.send action if action
 
         health.status.values.first
@@ -195,7 +195,7 @@ module Sunshine
         yield(name, path) if block_given?
 
         begin
-          @deploy_server.call "#{path}/#{cmd}"
+          @shell.call "#{path}/#{cmd}"
           text_status path
 
         rescue CmdError => e
@@ -217,7 +217,7 @@ module Sunshine
     # Check if an app is running
 
     def running? path
-      @deploy_server.call "#{path}/status" rescue false
+      @shell.call "#{path}/status" rescue false
     end
 
     # Do something with each server app it to a set of app names

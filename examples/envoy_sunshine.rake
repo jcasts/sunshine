@@ -17,7 +17,7 @@ namespace :sunshine do
         :type => :svn,
         :url  => "svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/tags/200912.2-WAT-235-release"
       },
-      :deploy_servers => %w{jcast.np.wc1.yellowpages.com}
+      :remote_shells => %w{jcast.np.wc1.yellowpages.com}
     }
 
     @app = Sunshine::AttiApp.new app_hash

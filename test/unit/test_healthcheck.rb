@@ -3,8 +3,8 @@ require 'test/test_helper'
 class TestHealthcheck < Test::Unit::TestCase
 
   def setup
-    @deploy_server = mock_deploy_server
-    @health = Sunshine::Healthcheck.new "somepath", @deploy_server
+    @remote_shell = mock_remote_shell
+    @health = Sunshine::Healthcheck.new "somepath", @remote_shell
 
     @test_disabled = "test -f #{@health.disabled_file}"
     @test_enabled  = "test -f #{@health.enabled_file}"
@@ -12,7 +12,7 @@ class TestHealthcheck < Test::Unit::TestCase
 
 
   def test_initialize
-    assert_equal [@deploy_server], @health.deploy_servers
+    assert_equal [@remote_shell], @health.shells
     assert_equal "somepath/health.txt", @health.enabled_file
     assert_equal "somepath/health.disabled", @health.disabled_file
   end
@@ -43,11 +43,11 @@ class TestHealthcheck < Test::Unit::TestCase
 
 
   def test_status_down
-    @deploy_server.set_mock_response 1,
+    @remote_shell.set_mock_response 1,
       @test_disabled => [:err, ""],
       @test_enabled  => [:err, ""]
 
-    assert_equal({@deploy_server.host => :down}, @health.status)
+    assert_equal({@remote_shell.host => :down}, @health.status)
 
     assert_ssh_call @test_disabled
     assert_ssh_call @test_enabled
@@ -55,16 +55,16 @@ class TestHealthcheck < Test::Unit::TestCase
 
 
   def test_status_ok
-    @deploy_server.set_mock_response 1, @test_disabled => [:err, ""]
-    @deploy_server.set_mock_response 0, @test_enabled  => [:out, ""]
+    @remote_shell.set_mock_response 1, @test_disabled => [:err, ""]
+    @remote_shell.set_mock_response 0, @test_enabled  => [:out, ""]
 
-    assert_equal({@deploy_server.host => :ok}, @health.status)
+    assert_equal({@remote_shell.host => :ok}, @health.status)
   end
 
 
   def test_status_disabled
-    @deploy_server.set_mock_response 0, @test_disabled => [:out, ""]
+    @remote_shell.set_mock_response 0, @test_disabled => [:out, ""]
 
-    assert_equal({@deploy_server.host => :disabled}, @health.status)
+    assert_equal({@remote_shell.host => :disabled}, @health.status)
   end
 end

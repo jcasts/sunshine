@@ -35,14 +35,14 @@ module Sunshine
     #   Repo.detect "invalid/repo/path"
     #     #=> nil
 
-    def self.detect path=".", console=nil
+    def self.detect path=".", shell=nil
 
-      if SvnRepo.valid? path, console
-        info = SvnRepo.get_info path, console
+      if SvnRepo.valid? path, shell
+        info = SvnRepo.get_info path, shell
         SvnRepo.new info[:url], info
 
-      elsif GitRepo.valid? path, console
-        info = GitRepo.get_info path, console
+      elsif GitRepo.valid? path, shell
+        info = GitRepo.get_info path, shell
         GitRepo.new info[:url], info
       end
     end
@@ -51,7 +51,7 @@ module Sunshine
     ##
     # Gets repo information for the specified dir - Implemented by subclass
 
-    def self.get_info path=".", console=nil
+    def self.get_info path=".", shell=nil
       raise RepoError,
         "The 'get_info' method must be implemented by child classes"
     end
@@ -68,24 +68,24 @@ module Sunshine
 
 
     ##
-    # Checkout code to a deploy_server and return an info log hash:
+    # Checkout code to a shell and return an info log hash:
     #   repo.chekout_to server, "some/path"
     #   #=> {:revision => 123, :committer => 'someone', :date => time_obj ...}
 
-    def checkout_to path, console=nil
-      console ||= Sunshine.console
+    def checkout_to path, shell=nil
+      shell ||= Sunshine.shell
 
       Sunshine.logger.info @scm,
-        "Checking out to #{console.host} #{path}" do
+        "Checking out to #{shell.host} #{path}" do
 
-        Sunshine::Dependencies.install @scm, :call => console if
+        Sunshine::Dependencies.install @scm, :call => shell if
           Sunshine::Dependencies.exist? @scm
 
-        console.call "test -d #{path} && rm -rf #{path} || echo false"
-        console.call "mkdir -p #{path}"
+        shell.call "test -d #{path} && rm -rf #{path} || echo false"
+        shell.call "mkdir -p #{path}"
 
-        do_checkout   path, console
-        get_repo_info path, console
+        do_checkout   path, shell
+        get_repo_info path, shell
       end
     end
 
@@ -93,7 +93,7 @@ module Sunshine
     ##
     # Checkout the repo - implemented by subclass
 
-    def do_checkout path, console
+    def do_checkout path, shell
       raise RepoError,
         "The 'do_checkout' method must be implemented by child classes"
     end
@@ -119,10 +119,10 @@ module Sunshine
     ##
     # Returns the repo information as a hash.
 
-    def get_repo_info path=".", console=nil
+    def get_repo_info path=".", shell=nil
       defaults = {:type => @scm, :url => @url, :path => path}
 
-      defaults.merge self.class.get_info(path, console)
+      defaults.merge self.class.get_info(path, shell)
     end
   end
 end

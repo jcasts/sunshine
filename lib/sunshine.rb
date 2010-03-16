@@ -21,7 +21,7 @@ require 'fileutils'
 #     :name => 'myapp',
 #     :repo => {:type => :svn, :url => 'svn://blah...'},
 #     :deploy_path => '/usr/local/myapp',
-#     :deploy_servers => ['user@someserver.com']
+#     :remote_shells => ['user@someserver.com']
 #   }
 #
 #   Sunshine::App.deploy(options) do |app|
@@ -74,55 +74,16 @@ require 'fileutils'
 
 module Sunshine
 
+  ##
+  # Sunshine version.
   VERSION = '0.0.5'
-
-  require 'sunshine/exceptions'
-
-  require 'sunshine/console'
-  require 'sunshine/output'
-
-  require 'sunshine/binder'
-
-  require 'sunshine/dependencies'
-
-  require 'sunshine/repo'
-  require 'sunshine/repos/svn_repo'
-  require 'sunshine/repos/git_repo'
-  require 'sunshine/repos/rsync_repo'
-
-  require 'sunshine/daemon'
-  require 'sunshine/daemons/server'
-  require 'sunshine/daemons/nginx'
-  require 'sunshine/daemons/unicorn'
-  require 'sunshine/daemons/rainbows'
-  require 'sunshine/daemons/ar_sendmail'
-  require 'sunshine/daemons/delayed_job'
-
-  require 'sunshine/crontab'
-
-  require 'sunshine/healthcheck'
-
-  require 'sunshine/deploy_server_dispatcher'
-  require 'sunshine/deploy_server'
-
-  require 'sunshine/deploy_server_app'
-  require 'sunshine/app'
-
-  require 'commands/default'
-  require 'commands/list'
-  require 'commands/add'
-  require 'commands/run'
-  require 'commands/restart'
-  require 'commands/rm'
-  require 'commands/start'
-  require 'commands/stop'
 
 
   ##
-  # Handles input/output to the shell. See Sunshine::Console.
+  # Handles input/output to the shell. See Sunshine::Shell.
 
-  def self.console
-    @console ||= Sunshine::Console.new
+  def self.shell
+    @shell ||= Sunshine::Shell.new
   end
 
   ##
@@ -156,13 +117,9 @@ module Sunshine
   ##
   # Handles all output for sunshine. See Sunshine::Output.
 
-  def self.output
-    log_level = Logger.const_get(@config['level'].upcase)
-    @logger ||= Sunshine::Output.new :level => log_level
-  end
-
   def self.logger
-    self.output
+    @logger ||= Sunshine::Output.new \
+      :level => Logger.const_get(@config['level'].upcase)
   end
 
 
@@ -233,7 +190,11 @@ module Sunshine
 
   ##
   # File DATA from sunshine run files.
-  DATA = ::DATA if defined?(::DATA)
+  DATA = defined?(::DATA) ? ::DATA : nil
+
+  ##
+  # Root directory of the Sunshine gem.
+  ROOT = File.expand_path File.join(File.dirname(__FILE__), "..")
 
   ##
   # Cleanup after sunshine has run, remove temp dirs, etc...
@@ -327,5 +288,46 @@ module Sunshine
 
     Kernel.exit status
   end
+
+
+  require 'sunshine/exceptions'
+
+  require 'sunshine/shell'
+  require 'sunshine/output'
+
+  require 'sunshine/binder'
+
+  require 'sunshine/dependencies'
+
+  require 'sunshine/repo'
+  require 'sunshine/repos/svn_repo'
+  require 'sunshine/repos/git_repo'
+  require 'sunshine/repos/rsync_repo'
+
+  require 'sunshine/daemon'
+  require 'sunshine/daemons/server'
+  require 'sunshine/daemons/nginx'
+  require 'sunshine/daemons/unicorn'
+  require 'sunshine/daemons/rainbows'
+  require 'sunshine/daemons/ar_sendmail'
+  require 'sunshine/daemons/delayed_job'
+
+  require 'sunshine/crontab'
+
+  require 'sunshine/healthcheck'
+
+  require 'sunshine/remote_shell'
+
+  require 'sunshine/server_app'
+  require 'sunshine/app'
+
+  require 'commands/default'
+  require 'commands/list'
+  require 'commands/add'
+  require 'commands/run'
+  require 'commands/restart'
+  require 'commands/rm'
+  require 'commands/start'
+  require 'commands/stop'
 end
 

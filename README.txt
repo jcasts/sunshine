@@ -25,10 +25,10 @@ Writing a Sunshine script is easy:
   options = {
     :name => 'myapp',
     :repo => {:type => :svn, :url => 'svn://blah...'},
-    :deploy_path => '/usr/local/myapp'
+    :root_path => '/usr/local/myapp'
   }
 
-  options[:deploy_servers] = case Sunshine.deploy_env
+  options[:remote_shells] = case Sunshine.deploy_env
   when 'qa'
     ['qa1.svr.com', 'qa2.svr.com']
   else
@@ -77,9 +77,9 @@ Yaml files are read on a deploy-environment basis so its format reflects this:
       :type : svn
       :url :  svn://subversion/app_name/branches/continuous_integration
 
-    :deploy_path : /usr/local/app_name
+    :root_path : /usr/local/app_name
 
-    :deploy_servers :
+    :remote_shells :
       - - localhost
         - :roles : web db app
 
@@ -88,14 +88,14 @@ Yaml files are read on a deploy-environment basis so its format reflects this:
     :repo :
       :type : svn
       :url :  svn://subversion/app_name/tags/release_0001
-    :deploy_servers :
+    :remote_shells :
       - qa1.servers.com
       - qa2.servers.com
 
   # Prod inherits top level values from :qa
   :prod :
     :inherits : :qa
-    :deploy_servers :
+    :remote_shells :
       - prod1.servers.com
       - prod2.servers.com
 
@@ -167,16 +167,16 @@ directly on the dependency object with Dependency#install!:
   Sunshine::Dependencies['rubygems'].install!
 
 
-By default dependencies are run by Sunshine::console which is a representation
+By default dependencies are run by Sunshine::shell which is a representation
 of the local shell. However, Settler dependencies may use any object that
 responds to a #call method and takes a single argument, such as
-Sunshine::DeployServer objects:
+Sunshine::RemoteShell objects:
 
-  Sunshine::Dependencies.install 'nginx', :call => deploy_server
+  Sunshine::Dependencies.install 'nginx', :call => remote_shell
 
   # Equivalent to:
 
-  Sunshine::Dependencies['nginx'].install! :call => deploy_server
+  Sunshine::Dependencies['nginx'].install! :call => remote_shell
 
 
 Note: To install Sunshine dependencies for a given Sunshine::App object, use

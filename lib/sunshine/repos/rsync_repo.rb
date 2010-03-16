@@ -5,7 +5,7 @@ module Sunshine
 
   class RsyncRepo < Repo
 
-    def self.get_info path=".", console=nil
+    def self.get_info path=".", shell=nil
       {}
     end
 
@@ -16,8 +16,8 @@ module Sunshine
     end
 
 
-    def do_checkout path, deploy_server
-      deploy_server.upload @url, path, :flags => @flags
+    def do_checkout path, shell
+      shell.upload @url, path, :flags => @flags
     end
 
 

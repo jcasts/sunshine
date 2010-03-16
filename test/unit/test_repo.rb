@@ -19,7 +19,7 @@ class TestRepo < Test::Unit::TestCase
 
 
   def test_get_repo_info
-    ds = mock_deploy_server
+    ds = mock_remote_shell
     begin
       Sunshine::Repo.new(@svn_url).get_repo_info ds, "path/to/repo"
       raise "Didn't raise RepoError when it should have"
@@ -32,7 +32,7 @@ class TestRepo < Test::Unit::TestCase
 
   def test_checkout_to
     begin
-      Sunshine::Repo.new(@svn_url).checkout_to "somepath", mock_deploy_server
+      Sunshine::Repo.new(@svn_url).checkout_to "somepath", mock_remote_shell
       raise "Didn't raise RepoError on checkout_cmd"
     rescue Sunshine::RepoError => e
       msg = "The 'do_checkout' method must be implemented by child classes"

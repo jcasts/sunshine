@@ -29,7 +29,7 @@ Sunshine::AttiApp.deploy do |app|
 
 
   sass_yml_file = "#{app.checkout_path}/config/asset_packages.yml"
-  sass_yml      = app.deploy_servers.first.call "cat #{sass_yml_file}"
+  sass_yml      = app.server_apps.first.shell.call "cat #{sass_yml_file}"
   sass_files    = YAML.load(sass_yml)['stylesheets']
   sass_files    = sass_files[0]['all'].concat sass_files[1]['brochure']
 
@@ -63,8 +63,8 @@ __END__
     :url:   git://buzzdotcom.np.wc1.yellowpages.com/buzz.git
     :flags: "--depth 5"
 
-  :deploy_path: ~nextgen/buzz
+  :root_path: ~nextgen/buzz
 
-  :deploy_servers:
+  :remote_shells:
     - jcast.np.wc1.yellowpages.com
     - sunny.np.wc1.yellowpages.com
