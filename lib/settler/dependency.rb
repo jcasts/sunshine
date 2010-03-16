@@ -68,8 +68,8 @@ class Settler
 
     attr_reader :name, :pkg, :parents, :children
 
-    def initialize dependency_lib, name, options={}, &block
-      @dependency_lib = dependency_lib
+    def initialize name, options={}, &block
+      @dependency_lib = options[:tree]
 
       @name    = name.to_s
       @pkg     = options[:pkg] || @name
@@ -174,6 +174,8 @@ class Settler
     #   dep.install_parents! :call => runner
 
     def install_parents! options={}
+      return unless @dependency_lib
+
       @parents.each do |dep|
         @dependency_lib.get(dep, options).install!(options)
       end
@@ -205,6 +207,8 @@ class Settler
 
 
     def missing_parents? options={}
+      return unless @dependency_lib
+
       missing = []
       @parents.each do |dep|
         parent_dep = @dependency_lib.get dep, options
@@ -232,6 +236,8 @@ class Settler
     #  dep.requires 'rubygems', 'rdoc'
 
     def requires *deps
+      return unless @dependency_lib
+
       @parents.concat(deps).uniq!
       deps.each do |dep|
         @dependency_lib.dependencies[dep].each{|d| d.add_child(@name) }
@@ -276,6 +282,8 @@ class Settler
     # :remove_children:: :recursive - removes children recursively
 
     def uninstall_children! options={}
+      return unless @dependency_lib
+
       options = options.dup
 
       @children.each do |dep|
@@ -344,7 +352,7 @@ class Settler
 
       Settler.class_eval <<-STR, __FILE__, __LINE__ + 1
       def self.#{method_name}(name, options={}, &block)
-        self.add #{class_name}.new(self, name, options, &block)
+        self.add #{class_name}.new(name, options.merge(:tree => self), &block)
       end
       STR
 

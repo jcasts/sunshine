@@ -11,8 +11,8 @@ class Settler
 
   class Apt < Dependency
 
-    def initialize(dependency_lib, name, options={}, &block)
-      super(dependency_lib, name, options) do
+    def initialize(name, options={}, &block)
+      super(name, options) do
         pkg_name = build_pkg_name @pkg.dup, options
 
         install    "apt-get install -y #{pkg_name}"
@@ -36,6 +36,8 @@ class Settler
 
 
     def run_command(command, options={})
+      return unless @dependency_lib
+
       if @dependency_lib.exist?('apt')
         @dependency_lib.install 'apt', options
       end

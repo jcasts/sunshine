@@ -16,8 +16,8 @@ class Settler
     self.sudo = true
 
 
-    def initialize(dependency_lib, name, options={}, &block)
-      super(dependency_lib, name, options) do
+    def initialize(name, options={}, &block)
+      super(name, options) do
         version = options[:version] ? " --version '#{options[:version]}'" : ""
 
         source = if options[:source]
@@ -43,6 +43,8 @@ class Settler
     private
 
     def run_command(command, options={})
+      return unless @dependency_lib
+
       @dependency_lib.install 'rubygems', options if
         @dependency_lib.exist?('rubygems')
 

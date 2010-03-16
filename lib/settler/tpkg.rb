@@ -4,8 +4,8 @@ class Settler
 
     self.sudo = true
 
-    def initialize(dependency_lib, name, options={}, &block)
-      super(dependency_lib, name, options) do
+    def initialize(name, options={}, &block)
+      super(name, options) do
         pkg_name = @pkg.dup
         pkg_name << "-#{options[:version]}" if options[:version]
         pkg_name << "-#{options[:rel]}" if options[:rel]
@@ -25,6 +25,8 @@ class Settler
     private
 
     def run_command(command, options={})
+      return unless @dependency_lib
+
       @dependency_lib.install 'ruby', options if
         @dependency_lib.exist?('ruby')
 
