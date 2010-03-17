@@ -4,13 +4,13 @@ require 'sunshine/presets/atti'
 class TestAttiApp < Test::Unit::TestCase
 
   def setup
-    mock_remote_shell_popen4
     svn_url = "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
 
     @config = {:name => "parity",
                :repo => {:type => "svn", :url => svn_url},
-               :remote_shells => ["jcastagna@jcast.np.wc1.yellowpages.com"],
+               :remote_shells => mock_remote_shell,
                :deploy_path => "/usr/local/nextgen/parity"}
+
 
     @app = Sunshine::AttiApp.new @config
 
@@ -21,7 +21,7 @@ class TestAttiApp < Test::Unit::TestCase
 
 
   def test_setup_logrotate
-    @app.crontab.extend MockObject
+    crontab = @app.server_apps.first.crontab.extend MockObject
 
     config_path = "#{@app.checkout_path}/config"
 
@@ -33,12 +33,12 @@ class TestAttiApp < Test::Unit::TestCase
 
     @app.setup_logrotate
 
-    assert @app.crontab.method_called?(:add, :args => "logrotate")
-    assert @app.crontab.method_called?(:write!, :exactly => 1)
+    assert crontab.method_called?(:add, :args => "logrotate")
+    assert crontab.method_called?(:write!, :exactly => 1)
 
-    new_crontab = @app.crontab.build
+    new_crontab = crontab.build
 
-    assert_equal [cronjob], @app.crontab.jobs["logrotate"]
+    assert_equal [cronjob], crontab.jobs["logrotate"]
 
     each_remote_shell do |ds|
       assert_ssh_call "echo '#{new_crontab}' | crontab"

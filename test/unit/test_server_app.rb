@@ -8,11 +8,7 @@ class TestServerApp < Test::Unit::TestCase
     @app = mock_app
     @app.repo.extend MockObject
 
-    @sa = Sunshine::ServerApp.new @app,
-      "jcastagna@jcast.np.wc1.yellowpages.com"
-
-    @sa.shell.extend MockOpen4
-    @sa.shell.extend MockObject
+    @sa = Sunshine::ServerApp.new @app, mock_remote_shell
     @sa.extend MockObject
 
     use_remote_shell @sa.shell
@@ -290,8 +286,6 @@ class TestServerApp < Test::Unit::TestCase
 
 
   def test_no_previous_revert!
-    @sa.app.crontab.extend MockObject
-
     @sa.shell.mock :call,
       :args    => ["ls -rc1 #{@app.deploys_path}"],
       :return => "\n"

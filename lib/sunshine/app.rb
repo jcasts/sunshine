@@ -47,7 +47,7 @@ module Sunshine
     end
 
 
-    attr_reader :name, :repo, :server_apps, :crontab, :sudo
+    attr_reader :name, :repo, :server_apps, :sudo
     attr_reader :root_path, :checkout_path, :current_path, :deploys_path
     attr_reader :shared_path, :log_path, :deploy_name, :deploy_env
 
@@ -68,8 +68,6 @@ module Sunshine
       @repo        = repo_from_config options[:repo]
 
       @name        = options[:name] || @repo.name
-
-      @crontab     = Crontab.new @name
 
       @deploy_name = options[:deploy_name] || Time.now.to_i.to_s
 

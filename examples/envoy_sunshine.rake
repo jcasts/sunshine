@@ -41,9 +41,11 @@ namespace :sunshine do
 
       app.upload_tasks 'app', 'common', 'tpkg'
 
-      rainbows.restart
-      nginx.restart
+      rainbows.setup
+      nginx.setup
     end
+
+    @app.restart
   end
 
 

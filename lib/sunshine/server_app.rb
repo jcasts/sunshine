@@ -51,7 +51,7 @@ module Sunshine
     app_attr :root_path, :checkout_path, :current_path
     app_attr :deploys_path, :log_path, :shared_path
 
-    attr_accessor :app, :roles, :scripts, :info, :shell, :health
+    attr_accessor :app, :roles, :scripts, :info, :shell, :crontab, :health
     attr_writer :pkg_manager
 
     def initialize app, host, options={}
@@ -79,7 +79,8 @@ module Sunshine
                  raise "Could not get remote shell '#{host}'"
                end
 
-      @health = Healthcheck.new shared_path, @shell
+      @crontab = Crontab.new name, @shell
+      @health  = Healthcheck.new shared_path, @shell
     end
 
 

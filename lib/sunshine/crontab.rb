@@ -6,11 +6,12 @@ module Sunshine
 
   class Crontab
 
-    attr_reader :jobs, :name
+    attr_reader :jobs, :name, :shell
 
-    def initialize name
-      @name = name
-      @jobs = Hash.new{|hash, key| hash[key] = []}
+    def initialize name, shell
+      @name  = name
+      @shell = shell
+      @jobs  = parse read_crontab
     end
 
 
@@ -20,6 +21,24 @@ module Sunshine
 
     def add namespace, cron_cmd
       @jobs[namespace] << cron_cmd unless @jobs[namespace].include?(cron_cmd)
+    end
+
+
+    ##
+    # Remove all jobs belonging to the specified namespace.
+
+    def remove namespace
+      @jobs.delete(namespace)
+    end
+
+
+    ##
+    # Remove all jobs belonging to the specified namespace and replace it
+    # with the specified cron command.
+
+    def replace namespace, cron_cmd
+      remove namespace
+      add namespace, cron_cmd
     end
 
 
@@ -45,38 +64,63 @@ module Sunshine
     ##
     # Remove all cron jobs that reference crontab.name
 
-    def delete! shell
-      crontab = read_crontab shell
+    def delete!
+      crontab = read_crontab
       crontab = delete_jobs crontab
 
-      write_crontab crontab, shell
+      write_crontab crontab
 
       crontab
     end
-
 
 
     ##
     # Write the crontab on the given shell
 
-    def write! shell
-      crontab = build read_crontab(shell)
+    def write!
+      crontab = read_crontab
+      crontab = delete_jobs crontab
+      crontab = build crontab
 
-      write_crontab crontab, shell
+      write_crontab crontab
 
       crontab
     end
 
 
-    private
+    ##
+    # Load a crontab string and parse out jobs related to crontab.name.
+    # Returns a hash of namespace/jobs_array pairs.
 
-    def read_crontab shell
-      shell.call("crontab -l") rescue ""
+    def parse string
+      jobs = Hash.new{|hash, key| hash[key] = Array.new}
+
+      namespace = nil
+
+      string.each_line do |line|
+        if line =~ /^# sunshine #{@name}:(.*):begin/
+          namespace = $1
+          next
+        elsif line =~ /^# sunshine #{@name}:#{namespace}:end/
+          namespace = nil
+        end
+
+        jobs[namespace] << line.strip if namespace
+      end
+
+      jobs
     end
 
 
-    def write_crontab content, shell
-      shell.call("echo '#{content.gsub(/'/){|s| "'\\''"}}' | crontab")
+    private
+
+    def read_crontab
+      @shell.call("crontab -l") rescue ""
+    end
+
+
+    def write_crontab content
+      @shell.call("echo '#{content.gsub(/'/){|s| "'\\''"}}' | crontab")
     end
 
 
