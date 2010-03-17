@@ -28,7 +28,7 @@ module Sunshine
     # Check if healthcheck is disabled.
 
     def disabled?
-      @shell.call("test -f #{@disabled_file}") && true rescue false
+      @shell.file? @disabled_file
     end
 
 
@@ -36,10 +36,7 @@ module Sunshine
     # Check if healthcheck is down.
 
     def down?
-      @shell.call("test -f #{@disabled_file} || test -f #{@enabled_file}")
-      false
-    rescue
-      true
+      !@shell.file?(@disabled_file) && !@shell.file?(@enabled_file)
     end
 
 
@@ -55,7 +52,7 @@ module Sunshine
     # Check if healthcheck is enabled.
 
     def enabled?
-      @shell.call("test -f #{@enabled_file}") && true rescue false
+      @shell.file? @enabled_file
     end
 
 
