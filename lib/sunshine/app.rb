@@ -387,7 +387,7 @@ module Sunshine
 
       valid_method = valid_methods.include? method
 
-      message   = "#{method.to_s.capitalize[0..-1]}ing" if valid_method
+      message   = "#{method.to_s.capitalize[0..-2]}ing" if valid_method
       message ||= "Getting status of"
       message   = "#{message} healthcheck"
 

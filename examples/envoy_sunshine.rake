@@ -45,7 +45,7 @@ namespace :sunshine do
       nginx.setup
     end
 
-    @app.restart
+    @app.start :force => true
   end
 
 

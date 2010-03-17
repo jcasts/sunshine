@@ -37,9 +37,11 @@ namespace :sunshine do
       #
       #   unicorn = Sunshine::Unicorn.new app, :port      => 3000,
       #                                        :processes => 8
-      #   unicorn.restart
+      #   unicorn.setup
 
     end
+
+    @app.start :force => true
   end
 
 
