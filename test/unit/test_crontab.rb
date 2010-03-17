@@ -27,10 +27,8 @@ job for otherapp
 
     @shell = mock_remote_shell
 
-    @shell.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
     @cron = Sunshine::Crontab.new "crontest", @shell
 
-    @shell.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
     @othercron = Sunshine::Crontab.new "otherapp", @shell
 
     @shell.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
@@ -89,6 +87,8 @@ job for otherapp
     @cron.add "job2", "new job2"
     @cron.add "job3", "new job3"
 
+    @shell.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
+
     @crontab_str = @cron.write!
 
     assert_cronjob "job1", "this job should stay"
@@ -106,6 +106,8 @@ job for otherapp
 
   def test_removed_jobs_write!
     @cron.remove "job1"
+
+    @shell.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
 
     @crontab_str = @cron.write!
 

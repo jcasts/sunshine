@@ -6,12 +6,12 @@ module Sunshine
 
   class Crontab
 
-    attr_reader :jobs, :name, :shell
+    attr_reader :name, :shell
 
     def initialize name, shell
       @name  = name
       @shell = shell
-      @jobs  = parse read_crontab
+      @jobs  = nil
     end
 
 
@@ -20,7 +20,16 @@ module Sunshine
     #   crontab.add "logrotote", "00 * * * * /usr/sbin/logrotate"
 
     def add namespace, cron_cmd
-      @jobs[namespace] << cron_cmd unless @jobs[namespace].include?(cron_cmd)
+      jobs[namespace] << cron_cmd unless jobs[namespace].include?(cron_cmd)
+    end
+
+
+    ##
+    # Get the jobs matching this crontab. Loads them from the crontab
+    # if @jobs hasn't been set yet.
+
+    def jobs
+      @jobs ||= parse read_crontab
     end
 
 
@@ -28,7 +37,7 @@ module Sunshine
     # Remove all jobs belonging to the specified namespace.
 
     def remove namespace
-      @jobs.delete(namespace)
+      jobs.delete(namespace)
     end
 
 
@@ -48,7 +57,7 @@ module Sunshine
     def build crontab=""
       crontab.strip!
 
-      @jobs.each do |namespace, cron_arr|
+      jobs.each do |namespace, cron_arr|
         crontab = delete_jobs crontab, namespace
 
         start_id, end_id = get_job_ids namespace
