@@ -387,9 +387,15 @@ module Sunshine
       valid_methods = [:enable, :disable, :remove]
       options = method if options.nil? && Hash === method
 
+      valid_method = valid_methods.include? method
+
+      message   = "#{method.to_s.capitalize[0..-1]}ing" if valid_method
+      message ||= "Getting status of"
+      message   = "#{message} healthcheck"
+
       statuses = {}
-      with_server_apps options do |server_app|
-        server_app.health.send method if valid_methods.include? method
+      with_server_apps options, :msg => message do |server_app|
+        server_app.health.send method if valid_method
 
         statuses[server_app.shell.host] = server_app.health.status
       end
