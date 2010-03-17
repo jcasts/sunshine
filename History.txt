@@ -6,6 +6,9 @@
 
 * Improvements:
 
+  * Added dependency installation methods apt_install, gem_install,
+    tpkg_install and yum_install to App and ServerApp.
+
   * Extended functionality of ServerApp#upload_tasks.
 
   * ServerApp now support being instatiated with an App instance (for 

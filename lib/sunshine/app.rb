@@ -353,6 +353,22 @@ module Sunshine
     end
 
 
+    %w{gem yum apt tpkg}.each do |dep_type|
+      self.class_eval <<-STR, __FILE__, __LINE__ + 1
+        ##
+        # Install one or more #{dep_type} packages.
+        # See Settler::#{dep_type.capitalize}#new for supported options.
+
+        def #{dep_type}_install(*names)
+          options = names.last if Hash === names.last
+          with_server_apps options,
+            :msg  => "Installing #{dep_type} packages",
+            :send => [:#{dep_type}_install, *names]
+        end
+      STR
+    end
+
+
     ##
     # Install dependencies defined as a Sunshine dependency object:
     #   rake   = Sunshine::Dependencies.gem 'rake', :version => '~>0.8'
@@ -375,20 +391,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Installing dependencies: #{deps.map{|d| d.to_s}.join(" ")}",
         :send => [:install_deps, *deps]
-    end
-
-
-    ##
-    # Install gem dependencies defined by the app's checked-in
-    # bundler or geminstaller config.
-
-    def install_gems options=nil
-      with_server_apps options,
-        :msg  => "Installing gems",
-        :send => :install_gems
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 

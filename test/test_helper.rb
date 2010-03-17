@@ -93,14 +93,6 @@ def assert_dep_install dep_name, type=Settler::Yum
 end
 
 
-def assert_gem_install gem_name
-  dep = Sunshine::Dependencies.get(gem_name, :type => Settler::Gem)
-
-  assert dep.method_called?(:install!, :args => [{:call => @remote_shell}]),
-    "#{gem_name} install was not called."
-end
-
-
 def assert_not_called *args
   assert !@remote_shell.method_called?(:call, :args => [*args]),
     "Command called by #{@remote_shell.host} but should't have:\n #{args[0]}"

@@ -183,21 +183,11 @@ class TestServerApp < Test::Unit::TestCase
   end
 
 
-  def test_install_gems
-    rake_dep = Sunshine::Dependencies.get 'rake'
-
-    @sa.install_gems "bundler", rake_dep
-
-    assert_gem_install 'bundler'
-    assert_gem_install 'rake'
-  end
-
-
-  def test_install_gems_bad_dep
+  def test_install_deps_bad_type
     nginx_dep = Sunshine::Dependencies.get 'nginx'
 
-    @sa.install_gems nginx_dep
-    raise "Didn't raise missing gem dependency when it should have."
+    @sa.install_deps nginx_dep, :type => Settler::Gem
+    raise "Didn't raise missing dependency when it should have."
 
   rescue Settler::MissingDependency => e
     assert_equal "No dependency 'nginx' [Settler::Gem]", e.message
@@ -230,7 +220,7 @@ class TestServerApp < Test::Unit::TestCase
   def test_rake
     @sa.rake "db:migrate"
 
-    assert_gem_install 'rake'
+    assert_dep_install 'rake'
     assert_server_call "cd #{@app.checkout_path} && rake db:migrate"
   end
 
@@ -316,7 +306,7 @@ class TestServerApp < Test::Unit::TestCase
   def test_run_bundler
     @sa.run_bundler
 
-    assert_gem_install 'bundler'
+    assert_dep_install 'bundler'
     assert_server_call "cd #{@app.checkout_path} && gem bundle"
   end
 
@@ -324,7 +314,7 @@ class TestServerApp < Test::Unit::TestCase
   def test_run_geminstaller
     @sa.run_geminstaller
 
-    assert_gem_install 'geminstaller'
+    assert_dep_install 'geminstaller'
     assert_server_call "cd #{@app.checkout_path} && geminstaller -e"
   end
 
@@ -334,7 +324,7 @@ class TestServerApp < Test::Unit::TestCase
 
     @sa.sass(*sass_files)
 
-    assert_gem_install 'haml'
+    assert_dep_install 'haml'
 
     sass_files.each do |file|
       sass_file = "public/stylesheets/sass/#{file}.sass"

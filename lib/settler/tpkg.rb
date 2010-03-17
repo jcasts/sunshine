@@ -25,16 +25,16 @@ class Settler
     private
 
     def run_command(command, options={})
-      return unless @dependency_lib
+      if @dependency_lib
+        @dependency_lib.install 'ruby', options if
+          @dependency_lib.exist?('ruby')
 
-      @dependency_lib.install 'ruby', options if
-        @dependency_lib.exist?('ruby')
+        @dependency_lib.install 'rubygems', options if
+          @dependency_lib.exist?('rubygems')
 
-      @dependency_lib.install 'rubygems', options if
-        @dependency_lib.exist?('rubygems')
-
-      @dependency_lib.install 'tpkg', options if
-        @dependency_lib.exist?('tpkg')
+        @dependency_lib.install 'tpkg', options if
+          @dependency_lib.exist?('tpkg')
+      end
 
       super
     end

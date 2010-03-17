@@ -234,20 +234,32 @@ module Sunshine
     end
 
 
-    ##
-    # Install dependencies previously defined in Sunshine::Dependencies.
+    %w{gem yum apt tpkg}.each do |dep_type|
+      self.class_eval <<-STR, __FILE__, __LINE__ + 1
+        ##
+        # Install one or more #{dep_type} packages.
+        # See Settler::#{dep_type.capitalize}#new for supported options.
 
-    def install_deps(*deps)
-      args = deps << {:call => @shell, :prefer => pkg_manager}
-      Sunshine::Dependencies.install(*args)
+        def #{dep_type}_install(*names)
+          options = Hash === names.last ? names.delete_at(-1) : Hash.new
+
+          names.each do |name|
+            dep = Settler::#{dep_type.capitalize}.new(name, options)
+            dep.install! :call => @shell
+          end
+        end
+      STR
     end
 
 
     ##
-    # Install gem dependencies previously defined in Sunshine::Dependencies.
+    # Install dependencies previously defined in Sunshine::Dependencies.
 
-    def install_gems(*gems)
-      args = gems << {:call => @shell, :type => Settler::Gem}
+    def install_deps(*deps)
+      options = {:call => @shell, :prefer => pkg_manager}
+      options.merge! deps.delete_at(-1) if Hash === deps.last
+
+      args = deps << options
       Sunshine::Dependencies.install(*args)
     end
 
@@ -303,7 +315,7 @@ fi
     # Run a rake task the deploy server.
 
     def rake command
-      install_gems 'rake'
+      install_deps 'rake', :type => Settler::Gem
       @shell.call "cd #{self.checkout_path} && rake #{command}"
     end
 
@@ -371,7 +383,7 @@ fi
     # Runs bundler. Installs the bundler gem if missing.
 
     def run_bundler
-      install_gems 'bundler'
+      install_deps 'bundler', :type => Settler::Gem
       @shell.call "cd #{self.checkout_path} && gem bundle"
     end
 
@@ -381,7 +393,7 @@ fi
     # Deprecated: use bundler
 
     def run_geminstaller
-      install_gems 'geminstaller'
+      install_deps 'geminstaller', :type => Settler::Gem
       @shell.call "cd #{self.checkout_path} && geminstaller -e"
     end
 
@@ -399,7 +411,7 @@ fi
     # Run a sass task on any or all deploy servers.
 
     def sass *sass_names
-      install_gems 'haml'
+      install_deps 'haml', :type => Settler::Gem
 
       sass_names.flatten.each do |name|
         sass_file = "public/stylesheets/sass/#{name}.sass"

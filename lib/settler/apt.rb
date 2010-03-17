@@ -36,11 +36,12 @@ class Settler
 
 
     def run_command(command, options={})
-      return unless @dependency_lib
-
-      if @dependency_lib.exist?('apt')
-        @dependency_lib.install 'apt', options
+      if @dependency_lib
+        if @dependency_lib.exist?('apt')
+          @dependency_lib.install 'apt', options
+        end
       end
+
       super
     end
   end

@@ -8,6 +8,8 @@ Sunshine::AttiApp.deploy do |app|
                 "ORACLE_HOME"     => "/usr/lib/oracle/11.2/client64",
                 "LD_LIBRARY_PATH" => "/usr/lib/oracle/11.2/client64/lib"
 
+  app.gem_install 'isolate', :version => '1.3.0'
+
   app.install_deps 'libxml2-devel', 'libxslt-devel', 'sqlite', 'sqlite-devel',
                    'libaio', 'ruby-devel',
                    'isolate', 'activerecord-oracle_enhanced-adapter'

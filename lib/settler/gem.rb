@@ -43,10 +43,10 @@ class Settler
     private
 
     def run_command(command, options={})
-      return unless @dependency_lib
-
-      @dependency_lib.install 'rubygems', options if
-        @dependency_lib.exist?('rubygems')
+      if @dependency_lib
+        @dependency_lib.install 'rubygems', options if
+          @dependency_lib.exist?('rubygems')
+      end
 
       super
     end

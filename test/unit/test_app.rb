@@ -297,7 +297,7 @@ class TestApp < Test::Unit::TestCase
   end
 
 
-  def test_install_gems
+  def test_install_gem_deps
     rake_dep = Sunshine::Dependencies.get 'rake'
     bundler_dep  = Sunshine::Dependencies.get 'bundler'
 

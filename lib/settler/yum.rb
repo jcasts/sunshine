@@ -50,11 +50,12 @@ class Settler
 
 
     def run_command(command, options={})
-      return unless @dependency_lib
-
-      if @dependency_lib.exist?('yum')
-        @dependency_lib.install 'yum', options
+      if @dependency_lib
+        if @dependency_lib.exist?('yum')
+          @dependency_lib.install 'yum', options
+        end
       end
+
       super
     end
   end
