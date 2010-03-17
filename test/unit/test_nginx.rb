@@ -26,7 +26,7 @@ passenger (2.2.4)
 
 
   def test_cmd
-    ds = @nginx.server_apps.first.shell
+    ds = @nginx.app.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @nginx.start
@@ -38,7 +38,7 @@ passenger (2.2.4)
 
 
   def test_custom_sudo_cmd
-    ds = @nginx.server_apps.first.shell
+    ds = @nginx.app.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @nginx.sudo = "someuser"
@@ -52,7 +52,7 @@ passenger (2.2.4)
 
 
   def test_sudo_cmd
-    ds = @passenger.server_apps.first.shell
+    ds = @passenger.app.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @passenger.start
@@ -65,7 +65,7 @@ passenger (2.2.4)
 
 
   def test_setup_passenger
-    ds = @passenger.server_apps.first.shell
+    ds = @passenger.app.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @passenger.setup do |ds, binder|
@@ -78,7 +78,7 @@ passenger (2.2.4)
 
 
   def test_setup
-    ds = @nginx.server_apps.first.shell
+    ds = @nginx.app.server_apps.first.shell
     ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
 
     @nginx.setup do |ds, binder|

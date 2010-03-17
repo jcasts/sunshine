@@ -57,8 +57,6 @@ module Sunshine
     # :processes:: prcss_num - number of processes daemon should run
     #                          defaults to 0
     #
-    # :server_apps:: ds_arr - deploy servers to use
-    #
     # :config_template:: path - glob path to tempates to render and upload
     #                           defaults to sunshine_path/templates/svr_name/*
     #
@@ -73,8 +71,14 @@ module Sunshine
     #
     # :point_to:: app|daemon - an abstract target to point to
     #                                 defaults to the passed app
+    #
+    # The Daemon constructor also supports any App#find options to narrow
+    # the server apps to use. Note: subclasses such as Server already have
+    # a default :role that can be overridden.
 
     def initialize app, options={}
+      @options = options
+
       @app    = app
       @target = options[:point_to] || @app
       @name   = self.class.underscore self.class.to_s.split("::").last
@@ -85,9 +89,6 @@ module Sunshine
       @timeout     = options[:timeout] || 0
       @dep_name    = options[:dep_name] || @name
       @processes   = options[:processes] || 1
-
-      @server_apps =
-        options[:server_apps] || @app.server_apps
 
       @config_template = options[:config_template] || "templates/#{@name}/*"
       @config_path     = options[:config_path] ||
@@ -100,11 +101,19 @@ module Sunshine
         :stdout => "#{log_path}/#{@name}_stdout.log"
       }
 
-
       @start_cmd = @stop_cmd = @restart_cmd = @status_cmd = nil
 
+      @setup_successful = nil
 
       register_after_user_script
+    end
+
+
+    ##
+    # Do something with each server app used by the daemon.
+
+    def each_server_app(&block)
+      @app.each(@options, &block)
     end
 
 
@@ -119,7 +128,7 @@ module Sunshine
     def setup
       Sunshine.logger.info @name, "Setting up #{@name} daemon" do
 
-        @server_apps.each do |server_app|
+        each_server_app do |server_app|
 
           begin
             server_app.install_deps @dep_name
@@ -136,9 +145,11 @@ module Sunshine
 
           yield(server_app, binder) if block_given?
 
-          self.upload_config_files(server_app.shell, binder.get_binding)
+          upload_config_files(server_app.shell, binder.get_binding)
         end
       end
+
+      @setup_successful = true
 
     rescue => e
       raise CriticalDeployError.new(e, "Could not setup #{@name}")
@@ -146,13 +157,30 @@ module Sunshine
 
 
     ##
+    # Check if setup was run successfully.
+
+    def has_setup? force=false
+      return @setup_successful unless @setup_successful.nil? || force
+
+      each_server_app do |server_app|
+
+        unless server_app.shell.file? config_file_path
+          return @setup_successful = false
+        end
+      end
+
+      @setup_successful = true
+    end
+
+
+    ##
     # Start the daemon app after running setup.
 
     def start
-      self.setup
+      self.setup unless has_setup?
       Sunshine.logger.info @name, "Starting #{@name} daemon" do
 
-        @server_apps.each do |server_app|
+        each_server_app do |server_app|
           begin
             server_app.shell.call start_cmd,
               :sudo => pick_sudo(server_app.shell)
@@ -172,7 +200,7 @@ module Sunshine
     def stop
       Sunshine.logger.info @name, "Stopping #{@name} daemon" do
 
-        @server_apps.each do |server_app|
+        each_server_app do |server_app|
           begin
             server_app.shell.call stop_cmd,
               :sudo => pick_sudo(server_app.shell)
@@ -191,10 +219,10 @@ module Sunshine
     # If restart_cmd is not provided, calls stop and start.
 
     def restart
-      self.setup
+      self.setup unless has_setup?
 
       Sunshine.logger.info @name, "Restarting #{@name} daemon" do
-        @server_apps.each do |server_app|
+        each_server_app do |server_app|
           begin
             server_app.shell.call restart_cmd,
               :sudo => pick_sudo(server_app.shell)
@@ -276,7 +304,7 @@ module Sunshine
     # binding if necessary.
 
     def upload_config_files(shell, setup_binding=binding)
-      self.config_template_files.each do |config_file|
+      config_template_files.each do |config_file|
 
         if File.extname(config_file) == ".erb"
           filename = File.basename(config_file[0..-5])
@@ -339,7 +367,7 @@ module Sunshine
 
     def register_after_user_script
       @app.after_user_script do |app|
-        @server_apps.each do |sa|
+        each_server_app do |sa|
           sa.scripts[:start]   << start_cmd
           sa.scripts[:stop]    << stop_cmd
           sa.scripts[:restart] << restart_cmd

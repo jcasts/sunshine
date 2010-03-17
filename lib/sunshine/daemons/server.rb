@@ -25,13 +25,13 @@ module Sunshine
     # :port:: port_num - the port to run the server on
     #                    defaults to 80
     #
-    # :server_apps:: ds_arr - deploy servers to use
-    #
     # :server_name:: myserver.com - host name used by server
     #                               defaults to nil
+    #
+    # By default, servers also assign the option :role => :web.
 
     def initialize app, options={}
-      options[:server_apps] ||= app.find(:role => :web)
+      options[:role] ||= :web
 
       super app, options
 
@@ -57,7 +57,7 @@ module Sunshine
       @app.after_user_script do |app|
         next unless @port
 
-        @server_apps.each do |sa|
+        each_server_app do |sa|
           sa.info[:ports][@pid] = @port
         end
       end

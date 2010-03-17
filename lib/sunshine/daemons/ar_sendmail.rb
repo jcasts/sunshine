@@ -7,7 +7,7 @@ module Sunshine
   class ARSendmail < Daemon
 
     def initialize app, options={}
-      options[:server_apps] ||= app.find(:role => :mail)
+      options[:role] ||= :mail
 
       super app, options
 

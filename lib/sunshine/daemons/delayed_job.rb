@@ -8,7 +8,7 @@ module Sunshine
   class DelayedJob < Daemon
 
     def initialize app, options={}
-      options[:server_apps] ||= app.find(:role => :dj)
+      options[:role] ||= :dj
 
       super app, options
 

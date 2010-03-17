@@ -36,6 +36,8 @@
 
 * Bugfixes:
 
+  * Added setup checking to Daemon to only run setup when needed.
+
   * Moved healthcheck from App to ServerApp and improved the api.
 
   * Renamed DeployServerApp to ServerApp.

@@ -66,8 +66,8 @@ class TestServer < Test::Unit::TestCase
     end
 
     args = ["rainbows"]
-    server.server_apps.each do |ds|
-      assert ds.method_called?(:install_deps, :args => args)
+    server.each_server_app do |sa|
+      assert sa.method_called?(:install_deps, :args => args)
     end
 
     assert server.method_called?(:upload_config_files)
@@ -76,17 +76,51 @@ class TestServer < Test::Unit::TestCase
 
     assert_rsync(/rainbows\.conf/, "jcast.np.wc1.yellowpages.com:"+
       "/usr/local/nextgen/envoy/current/daemons/rainbows/rainbows.conf")
+
+    assert server.has_setup?
+  end
+
+
+  def test_has_setup?
+    server = @rainbows
+    assert_equal nil, server.instance_variable_get("@setup_successful")
+
+    @server_app.shell.mock :file?, :args => [server.config_file_path],
+                                   :return => false
+
+    assert_equal false, server.has_setup?
+
+    @server_app.shell.mock :file?, :args => [server.config_file_path],
+                                   :return => true
+
+    assert_equal false, server.has_setup?
+    assert_equal true,  server.has_setup?(true)
   end
 
 
   def test_start
     server = @rainbows
+    @server_app.shell.mock :file?, :args => [server.config_file_path],
+                                   :return => false
 
     server.start do |ds|
       assert_equal @server_app, ds
     end
 
     assert server.method_called?(:setup)
+
+    assert_ssh_call server.start_cmd
+  end
+
+
+  def test_start_missing_setup
+    server = @rainbows
+    @server_app.shell.mock :file?, :args => [server.config_file_path],
+                                   :return => true
+
+    server.start
+
+    assert !server.method_called?(:setup)
 
     assert_ssh_call server.start_cmd
   end
@@ -112,9 +146,25 @@ class TestServer < Test::Unit::TestCase
   end
 
 
+  def test_restart_missing_setup
+    server = @rainbows
+    @server_app.shell.mock :file?, :args => [server.config_file_path],
+                                   :return => true
+
+    server.restart
+
+    assert !server.method_called?(:setup)
+
+    assert_ssh_call server.restart_cmd
+  end
+
+
   def test_restart_with_cmd
     server = @rainbows
     server.instance_variable_set("@restart_cmd", "RESTART!!1!")
+
+    @server_app.shell.mock :file?, :args => [server.config_file_path],
+                                   :return => false
 
     server.restart
 
@@ -194,20 +244,20 @@ class TestServer < Test::Unit::TestCase
 
     @app.run_post_user_lambdas
 
-    server.server_apps.each do |ds|
+    server.each_server_app do |sa|
 
-      assert ds.scripts[:start].include?(server.start_cmd)
-      assert ds.scripts[:stop].include?(server.stop_cmd)
-      assert ds.scripts[:status].include?(server.status_cmd)
-      assert ds.scripts[:restart].include?(server.restart_cmd)
+      assert sa.scripts[:start].include?(server.start_cmd)
+      assert sa.scripts[:stop].include?(server.stop_cmd)
+      assert sa.scripts[:status].include?(server.status_cmd)
+      assert sa.scripts[:restart].include?(server.restart_cmd)
 
-      assert_equal server.port, ds.info[:ports][server.pid]
+      assert_equal server.port, sa.info[:ports][server.pid]
     end
   end
 
 
   def test_pick_sudo
-    ds = @rainbows.server_apps.first.shell
+    ds = @rainbows.app.server_apps.first.shell
     assert_equal nil, @rainbows.send(:pick_sudo, ds)
 
     @rainbows.sudo = true
@@ -246,7 +296,6 @@ class TestServer < Test::Unit::TestCase
       :config_file => "server.conf",
       :config_path => "#{@app.current_path}/daemons/server",
       :config_template => "templates/server/*",
-      :server_apps => @app.find(:role => :web),
       :stderr => "#{@app.log_path}/server_stderr.log",
       :stdout => "#{@app.log_path}/server_stdout.log"
     }.merge(user_config)
@@ -267,8 +316,6 @@ class TestServer < Test::Unit::TestCase
 
     assert_equal config[:stderr], server.log_file(:stderr)
     assert_equal config[:stdout], server.log_file(:stdout)
-
-    assert_equal config[:server_apps], server.server_apps
 
     config_file_path = "#{config[:config_path]}/#{config[:config_file]}"
     assert_equal config_file_path, server.config_file_path
