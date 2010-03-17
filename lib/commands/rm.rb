@@ -52,7 +52,7 @@ module Sunshine
           @shell.call File.join(path, "stop")
           @shell.call "rm -rf #{path}"
 
-          Crontab.new(name).delete! @shell
+          Crontab.new(name, @shell).delete!
         end
 
         @app_list.delete name

@@ -121,12 +121,12 @@ module Sunshine
     end
 
 
-    private
-
     def read_crontab
       @shell.call("crontab -l") rescue ""
     end
 
+
+    private
 
     def write_crontab content
       @shell.call("echo '#{content.gsub(/'/){|s| "'\\''"}}' | crontab")

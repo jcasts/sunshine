@@ -377,6 +377,8 @@ fi
         Sunshine.logger.error @shell.host, "Failed #{@name} startup" if !started
 
       else
+        @crontab.delete!
+
         Sunshine.logger.info @shell.host, "No previous deploy to revert to."
       end
     end

@@ -28,15 +28,12 @@ class TestAttiApp < Test::Unit::TestCase
     cronjob = "00 * * * * /usr/sbin/logrotate"+
       " --state /dev/null --force #{@app.current_path}/config/logrotate.conf"
 
-    set_mock_response_for @app, 0,
-      'crontab -l' => [:out, " "]
-
     @app.setup_logrotate
 
     assert crontab.method_called?(:add, :args => "logrotate")
     assert crontab.method_called?(:write!, :exactly => 1)
 
-    new_crontab = crontab.build
+    new_crontab = crontab.build crontab.read_crontab
 
     assert_equal [cronjob], crontab.jobs["logrotate"]
 
