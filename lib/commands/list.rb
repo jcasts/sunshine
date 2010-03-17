@@ -159,7 +159,7 @@ module Sunshine
 
 
     ##
-    # Get or set the healthcheck statue.
+    # Get or set the healthcheck state.
     # Returns a response hash (see ListCommand#each_app).
 
     def health(*app_names)

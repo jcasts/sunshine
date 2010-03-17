@@ -47,7 +47,7 @@ module Sunshine
     end
 
 
-    attr_reader :name, :repo, :server_apps, :crontab, :health, :sudo
+    attr_reader :name, :repo, :server_apps, :crontab, :sudo
     attr_reader :root_path, :checkout_path, :current_path, :deploys_path
     attr_reader :shared_path, :log_path, :deploy_name, :deploy_env
 
@@ -80,8 +80,6 @@ module Sunshine
       @server_apps = server_apps_from_config options[:remote_shells]
 
       self.sudo = options[:sudo] || Sunshine.sudo
-
-      @health = Healthcheck.new @shared_path, @server_apps.map{|sa| sa.shell}
 
       @shell_env = {
         "RACK_ENV"  => @deploy_env.to_s,
@@ -145,7 +143,7 @@ module Sunshine
 
         run_post_user_lambdas
 
-        @health.enable
+        health :enable
 
         build_control_scripts
         build_deploy_info_file
@@ -366,6 +364,37 @@ module Sunshine
             :send => [:#{dep_type}_install, *names]
         end
       STR
+    end
+
+
+    ##
+    # Gets or sets the healthcheck state. Returns a hash of host/state
+    # pairs. State values are :enabled, :disabled, and :down. The method
+    # argument can be omitted or take a value of :enable, :disable, or :remove:
+    #   app.health
+    #   #=> Returns the health status for all server_apps
+    #
+    #   app.health :role => :web
+    #   #=> Returns the status of all server_apps of role :web
+    #
+    #   app.health :enable
+    #   #=> Enables all health checking and returns the status
+    #
+    #   app.health :disable, :role => :web
+    #   #=> Disables health checking for :web server_apps and returns the status
+
+    def health method=nil, options=nil
+      valid_methods = [:enable, :disable, :remove]
+      options = method if options.nil? && Hash === method
+
+      statuses = {}
+      with_server_apps options do |server_app|
+        server_app.health.send method if valid_methods.include? method
+
+        statuses[server_app.shell.host] = server_app.health.status
+      end
+
+      statuses
     end
 
 

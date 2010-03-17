@@ -36,6 +36,8 @@
 
 * Bugfixes:
 
+  * Moved healthcheck from App to ServerApp and improved the api.
+
   * Renamed DeployServerApp to ServerApp.
 
   * Renamed App#deploy_path and App#deploys_dir to

@@ -54,27 +54,27 @@ namespace :sunshine do
   desc "Run the remote start script"
   task :start => :app do
     @app.start
-    output_status @app
+    puts @app.status.to_yaml
   end
 
 
   desc "Run the remote stop script"
   task :stop => :app do
     @app.stop
-    output_status @app
+    puts @app.status.to_yaml
   end
 
 
   desc "Run the remote restart script"
   task :restart => :app do
     @app.restart
-    output_status @app
+    puts @app.status.to_yaml
   end
 
 
   desc "Check if the deployed app is running"
   task :status => :app do
-    output_status @app
+    @app.status.to_yaml
   end
 
 
@@ -86,7 +86,7 @@ namespace :sunshine do
 
   desc "Get the health state"
   task :health => :app do
-    health_status @app
+    puts @app.health.to_yaml
   end
 
 
@@ -94,31 +94,19 @@ namespace :sunshine do
 
     desc "Turn on health check"
     task :enable => :app do
-      @app.health.enable
-      health_status @app
+      puts @app.health(:enable).to_yaml
     end
 
 
     desc "Turn off health check"
     task :disable => :app do
-      @app.health.disable
-      health_status @app
+      puts @app.health(:disable).to_yaml
     end
 
 
     desc "Remove health check"
     task :remove => :app do
-      @app.health.remove
-      health_status @app
+      puts @app.health(:remove).to_yaml
     end
-  end
-
-
-  def health_status app
-    puts app.health.status.to_yaml
-  end
-
-  def output_status app
-    puts app.status.to_yaml
   end
 end

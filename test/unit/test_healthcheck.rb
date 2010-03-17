@@ -12,8 +12,8 @@ class TestHealthcheck < Test::Unit::TestCase
 
 
   def test_initialize
-    assert_equal [@remote_shell], @health.shells
-    assert_equal "somepath/health.txt", @health.enabled_file
+    assert_equal @remote_shell, @health.shell
+    assert_equal "somepath/health.enabled", @health.enabled_file
     assert_equal "somepath/health.disabled", @health.disabled_file
   end
 
@@ -47,7 +47,7 @@ class TestHealthcheck < Test::Unit::TestCase
       @test_disabled => [:err, ""],
       @test_enabled  => [:err, ""]
 
-    assert_equal({@remote_shell.host => :down}, @health.status)
+    assert_equal(:down, @health.status)
 
     assert_ssh_call @test_disabled
     assert_ssh_call @test_enabled
@@ -58,13 +58,13 @@ class TestHealthcheck < Test::Unit::TestCase
     @remote_shell.set_mock_response 1, @test_disabled => [:err, ""]
     @remote_shell.set_mock_response 0, @test_enabled  => [:out, ""]
 
-    assert_equal({@remote_shell.host => :ok}, @health.status)
+    assert_equal(:enabled, @health.status)
   end
 
 
   def test_status_disabled
     @remote_shell.set_mock_response 0, @test_disabled => [:out, ""]
 
-    assert_equal({@remote_shell.host => :disabled}, @health.status)
+    assert_equal(:disabled, @health.status)
   end
 end
