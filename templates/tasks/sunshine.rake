@@ -74,7 +74,7 @@ namespace :sunshine do
 
   desc "Check if the deployed app is running"
   task :status => :app do
-    @app.status.to_yaml
+    puts @app.status.to_yaml
   end
 
 

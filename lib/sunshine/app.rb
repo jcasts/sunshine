@@ -276,7 +276,7 @@ module Sunshine
       details = {}
 
       with_server_apps options, :msg => "Getting deploy info..." do |server_app|
-        details[server_app.host] = server_app.deploy_details
+        details[server_app.shell.host] = server_app.deploy_details
       end
 
       details
@@ -583,7 +583,7 @@ module Sunshine
       statuses = {}
 
       with_server_apps options, :msg => "Querying app status..." do |server_app|
-        statuses[server_app.host] = server_app.running? ? :running : :down
+        statuses[server_app.shell.host] = server_app.running? ? :running : :down
       end
 
       statuses
