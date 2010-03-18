@@ -34,33 +34,23 @@ job for otherapp
     @shell.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
   end
 
-  def test_add
-    @cron.add "namespace1", "this is a job"
-    @cron.add "namespace1", "another job"
-    @cron.add "namespace1", "this is a job"
-    @cron.add "namespace2", "this is a job"
-
-    assert_equal ["this is a job", "another job"], @cron.jobs["namespace1"]
-    assert_equal ["this is a job"], @cron.jobs["namespace2"]
-  end
-
 
   def test_parse
     jobs = @cron.parse @crontab_str
-    assert_equal ["this job should stay"], jobs['job1']
-    assert_equal ["job2 part 1", "job2 part 2"], jobs['job2']
-    assert jobs['blah'].empty?
+    assert_equal "this job should stay\n", jobs['job1']
+    assert_equal "job2 part 1\njob2 part 2\n", jobs['job2']
+    assert jobs['blah'].nil?
   end
 
 
   def test_build
-    @cron.add "job2", "new job2"
-    @cron.add "job3", "new job3"
+    @cron.jobs["job2"] << "new job2"
+    @cron.jobs["job3"] = "new job3"
 
     @cron.build @crontab_str
 
     assert_cronjob "job1", "this job should stay"
-    assert_cronjob "job2", ["job2 part 1", "job2 part 2", "new job2"]
+    assert_cronjob "job2", "job2 part 1\njob2 part 2\nnew job2"
     assert_cronjob "job3", "new job3"
 
     assert_cronjob "blah", "otherapp blah job", @othercron
@@ -84,15 +74,15 @@ job for otherapp
 
 
   def test_write!
-    @cron.add "job2", "new job2"
-    @cron.add "job3", "new job3"
+    @cron.jobs["job2"] << "new job2"
+    @cron.jobs["job3"] = "new job3"
 
     @shell.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
 
     @crontab_str = @cron.write!
 
     assert_cronjob "job1", "this job should stay"
-    assert_cronjob "job2", ["job2 part 1", "job2 part 2", "new job2"]
+    assert_cronjob "job2", "job2 part 1\njob2 part 2\nnew job2"
     assert_cronjob "job3", "new job3"
 
     assert_cronjob "blah", "otherapp blah job", @othercron
@@ -104,15 +94,15 @@ job for otherapp
   end
 
 
-  def test_removed_jobs_write!
-    @cron.remove "job1"
+  def test_deleted_jobs_write!
+    @cron.jobs.delete "job1"
 
     @shell.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
 
     @crontab_str = @cron.write!
 
     assert !@crontab_str.include?("this job should stay")
-    assert_cronjob "job2", ["job2 part 1", "job2 part 2"]
+    assert_cronjob "job2", "job2 part 1\njob2 part 2"
 
     assert_cronjob "blah", "otherapp blah job", @othercron
     assert_cronjob "job1", "job for otherapp", @othercron
@@ -131,7 +121,7 @@ job for otherapp
   def cronjob namespace, job, crontab
 <<-STR
 # sunshine #{crontab.name}:#{namespace}:begin
-#{[*job].join("\n")}
+#{job}
 # sunshine #{crontab.name}:#{namespace}:end
 STR
   end

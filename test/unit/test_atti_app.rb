@@ -30,12 +30,10 @@ class TestAttiApp < Test::Unit::TestCase
 
     @app.setup_logrotate
 
-    assert crontab.method_called?(:add, :args => "logrotate")
+    assert_equal cronjob, crontab.jobs["logrotate"]
     assert crontab.method_called?(:write!, :exactly => 1)
 
     new_crontab = crontab.build crontab.read_crontab
-
-    assert_equal [cronjob], crontab.jobs["logrotate"]
 
     each_remote_shell do |ds|
       assert_ssh_call "echo '#{new_crontab}' | crontab"

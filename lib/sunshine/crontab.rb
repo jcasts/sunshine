@@ -16,15 +16,6 @@ module Sunshine
 
 
     ##
-    # Add a cron command to a given namespace:
-    #   crontab.add "logrotote", "00 * * * * /usr/sbin/logrotate"
-
-    def add namespace, cron_cmd
-      jobs[namespace] << cron_cmd unless jobs[namespace].include?(cron_cmd)
-    end
-
-
-    ##
     # Get the jobs matching this crontab. Loads them from the crontab
     # if @jobs hasn't been set yet.
 
@@ -34,34 +25,16 @@ module Sunshine
 
 
     ##
-    # Remove all jobs belonging to the specified namespace.
-
-    def remove namespace
-      jobs.delete(namespace)
-    end
-
-
-    ##
-    # Remove all jobs belonging to the specified namespace and replace it
-    # with the specified cron command.
-
-    def replace namespace, cron_cmd
-      remove namespace
-      add namespace, cron_cmd
-    end
-
-
-    ##
     # Build the crontab by replacing preexisting cron jobs and adding new ones.
 
     def build crontab=""
       crontab.strip!
 
-      jobs.each do |namespace, cron_arr|
+      jobs.each do |namespace, cron_job|
         crontab = delete_jobs crontab, namespace
 
         start_id, end_id = get_job_ids namespace
-        cron_str = "\n#{start_id}\n#{cron_arr.join("\n")}\n#{end_id}\n\n"
+        cron_str = "\n#{start_id}\n#{cron_job.chomp}\n#{end_id}\n\n"
 
         crontab << cron_str
       end
@@ -99,10 +72,10 @@ module Sunshine
 
     ##
     # Load a crontab string and parse out jobs related to crontab.name.
-    # Returns a hash of namespace/jobs_array pairs.
+    # Returns a hash of namespace/jobs pairs.
 
     def parse string
-      jobs = Hash.new{|hash, key| hash[key] = Array.new}
+      jobs = Hash.new
 
       namespace = nil
 
@@ -114,12 +87,18 @@ module Sunshine
           namespace = nil
         end
 
-        jobs[namespace] << line.strip if namespace
+        if namespace
+          jobs[namespace] ||= String.new
+          jobs[namespace] << line
+        end
       end
 
       jobs
     end
 
+
+    ##
+    # Returns the shell's crontab as a string
 
     def read_crontab
       @shell.call("crontab -l") rescue ""

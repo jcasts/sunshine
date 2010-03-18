@@ -65,7 +65,7 @@ module Sunshine
         shell.make_file logrotate_path, logrotate_conf
 
 
-        crontab.replace "logrotate",
+        crontab.jobs["logrotate"] =
           "00 * * * * /usr/sbin/logrotate"+
           " --state /dev/null --force #{@current_path}/config/logrotate.conf"
 
