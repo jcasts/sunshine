@@ -86,7 +86,7 @@ module Sunshine
         begin
           block.call
         ensure
-          @indent = @indent - 1
+          @indent = @indent - 1 unless @indent <= 0
           @logger << "\n"
         end
       end
