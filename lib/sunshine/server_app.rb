@@ -241,13 +241,13 @@ module Sunshine
       self.class_eval <<-STR, __FILE__, __LINE__ + 1
         ##
         # Install one or more #{dep_type} packages.
-        # See Settler::#{dep_type.capitalize}#new for supported options.
+        # See #{dep_type.capitalize}#new for supported options.
 
         def #{dep_type}_install(*names)
           options = Hash === names.last ? names.delete_at(-1) : Hash.new
 
           names.each do |name|
-            dep = Settler::#{dep_type.capitalize}.new(name, options)
+            dep = #{dep_type.capitalize}.new(name, options)
             dep.install! :call => @shell
           end
         end
@@ -256,14 +256,14 @@ module Sunshine
 
 
     ##
-    # Install dependencies previously defined in Sunshine::Dependencies.
+    # Install dependencies previously defined in Sunshine.dependencies.
 
     def install_deps(*deps)
       options = {:call => @shell, :prefer => pkg_manager}
       options.merge! deps.delete_at(-1) if Hash === deps.last
 
       args = deps << options
-      Sunshine::Dependencies.install(*args)
+      Sunshine.dependencies.install(*args)
     end
 
 
@@ -310,7 +310,7 @@ fi
 
     def pkg_manager
       @pkg_manager ||=
-        (@shell.call("yum -v") && Settler::Yum) rescue Settler::Apt
+        (@shell.call("yum -v") && Yum) rescue Apt
     end
 
 
@@ -318,7 +318,7 @@ fi
     # Run a rake task the deploy server.
 
     def rake command
-      install_deps 'rake', :type => Settler::Gem
+      install_deps 'rake', :type => Gem
       @shell.call "cd #{self.checkout_path} && rake #{command}"
     end
 
@@ -388,7 +388,7 @@ fi
     # Runs bundler. Installs the bundler gem if missing.
 
     def run_bundler
-      install_deps 'bundler', :type => Settler::Gem
+      install_deps 'bundler', :type => Gem
       @shell.call "cd #{self.checkout_path} && gem bundle"
     end
 
@@ -398,7 +398,7 @@ fi
     # Deprecated: use bundler
 
     def run_geminstaller
-      install_deps 'geminstaller', :type => Settler::Gem
+      install_deps 'geminstaller', :type => Gem
       @shell.call "cd #{self.checkout_path} && geminstaller -e"
     end
 
@@ -416,7 +416,7 @@ fi
     # Run a sass task on any or all deploy servers.
 
     def sass *sass_names
-      install_deps 'haml', :type => Settler::Gem
+      install_deps 'haml', :type => Gem
 
       sass_names.flatten.each do |name|
         sass_file = "public/stylesheets/sass/#{name}.sass"
@@ -465,7 +465,7 @@ fi
     # Creates a symlink to the app's checkout path.
 
     def symlink_current_dir
-      @shell.symlink(self.checkout_path, self.current_path)
+      @shell.symlink self.checkout_path, self.current_path
     end
 
 

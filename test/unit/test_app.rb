@@ -265,10 +265,10 @@ class TestApp < Test::Unit::TestCase
 
 
   def test_install_deps
-    nginx_dep = Sunshine::Dependencies.get 'nginx'
-    ruby_dep  = Sunshine::Dependencies.get 'ruby'
+    nginx_dep = Sunshine.dependencies.get 'nginx'
+    ruby_dep  = Sunshine.dependencies.get 'ruby'
 
-    yum_sudo = Sunshine::Dependencies::Yum.sudo
+    yum_sudo = Sunshine::Yum.sudo
 
     check_nginx = "test \"$(yum list installed #{nginx_dep.pkg} | "+
       "grep -c #{nginx_dep.pkg})\" -ge 1"
@@ -298,10 +298,10 @@ class TestApp < Test::Unit::TestCase
 
 
   def test_install_gem_deps
-    rake_dep = Sunshine::Dependencies.get 'rake'
-    bundler_dep  = Sunshine::Dependencies.get 'bundler'
+    rake_dep = Sunshine.dependencies.get 'rake'
+    bundler_dep  = Sunshine.dependencies.get 'bundler'
 
-    gem_sudo = Sunshine::Dependencies::Gem.sudo
+    gem_sudo = Sunshine::Gem.sudo
 
     checks = {
       rake_dep    => "gem list #{rake_dep.pkg} -i --version '>=0.8'",

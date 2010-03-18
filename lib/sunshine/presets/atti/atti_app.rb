@@ -5,7 +5,7 @@ module Sunshine
     def initialize(*args)
       super
 
-      prefer_pkg_manager [Settler::Tpkg, Settler::Yum]
+      prefer_pkg_manager [Tpkg, Yum]
 
       add_shell_paths "/home/t/bin", "/home/ypc/sbin"
     end

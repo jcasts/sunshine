@@ -1,4 +1,4 @@
-class Settler
+module Sunshine
 
   class Tpkg < Dependency
 

@@ -1,15 +1,10 @@
-class Settler
-
-  class CmdError < Exception; end
-  class InstallError < Exception; end
-  class UninstallError < Exception; end
-
+module Sunshine
 
   ##
   # Dependency objects let you define how to install, check, and remove
   # a described package, including parent dependency lookup and installation.
   #
-  #   Dependency.new(Settler, "ruby") do
+  #   Dependency.new "ruby", :tree => dependency_lib do
   #     install    "sudo yum install ruby"
   #     uninstall  "sudo yum remove ruby"
   #     check_test "yum list installed ruby | grep -c ruby", "-ge 1"
@@ -18,7 +13,7 @@ class Settler
   # Dependencies are more commonly defined through a Settler class'
   # constructor methods:
   #
-  #   class MyDeps < Settler
+  #   dependency_lib.instance_eval do
   #     dependency 'custom' do
   #       requires  'yum', 'ruby'
   #       install   'sudo yum install custom'
@@ -31,7 +26,7 @@ class Settler
   # Settler (see the Yum implementation for more info):
   #
   #   class Yum < Dependency
-  #     def initialize(dep_lib, name, options={}, &block)
+  #     def initialize(name, options={}, &block)
   #       super(dep_lib, name, options) do
   #         # Define install, check, and uninstall scripts specific to yum
   #       end
@@ -42,11 +37,16 @@ class Settler
   # Once a subclass is defined a constructor method is added automatically
   # to the Settler class:
   #
-  #   class MyDeps < Settler
+  #   dependency_lib.instance_eval do
   #     yum "ruby", :version => '1.9'
   #   end
 
   class Dependency
+
+    class CmdError < Exception; end
+    class InstallError < Exception; end
+    class UninstallError < Exception; end
+
 
     ##
     # Check if sudo should be used
@@ -82,7 +82,7 @@ class Settler
       @parents  = []
       @children = []
 
-      @cmd = method(:run_local).to_proc
+      @cmd = Sunshine.shell
 
       requires(*options[:requires]) if options[:requires]
 
@@ -316,25 +316,6 @@ class Settler
     end
 
 
-    def run_local str, options={}
-      result = nil
-
-      str = "sudo #{str}" if options[:sudo] == true
-      str = "sudo -u #{options[:sudo]} #{str}" if String === options[:sudo]
-
-      Open4.popen4(str) do |pid, stdin, stdout, stderr|
-        stderr = stderr.read
-
-        raise(CmdError, "#{stderr}  when attempting to run '#{str}'") unless
-          stderr.empty?
-
-        result = stdout.read.strip
-      end
-
-      result
-    end
-
-
     def self.short_class_name str
       str.to_s.split(":").last
     end
@@ -350,13 +331,15 @@ class Settler
       class_name  = short_class_name subclass.to_s
       method_name = underscore class_name
 
-      Settler.class_eval <<-STR, __FILE__, __LINE__ + 1
-      def self.#{method_name}(name, options={}, &block)
-        self.add #{class_name}.new(name, options.merge(:tree => self), &block)
+      DependencyLib.class_eval <<-STR, __FILE__, __LINE__ + 1
+      def #{method_name}(name, options={}, &block)
+        dep = #{class_name}.new(name, options.merge(:tree => self), &block)
+        self.add dep
+        dep
       end
       STR
 
-      Settler.dependency_types << subclass
+      DependencyLib.dependency_types << subclass
     end
 
     inherited self

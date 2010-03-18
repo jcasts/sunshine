@@ -77,14 +77,14 @@ def set_mock_response_for obj, code, stream_vals={}, options={}
 end
 
 
-def assert_dep_install dep_name, type=Settler::Yum
+def assert_dep_install dep_name, type=Sunshine::Yum
   prefered = type rescue nil
   args = [{:call => @remote_shell, :prefer => prefered}]
 
-  dep = if Settler::Dependency === dep_name
+  dep = if Sunshine::Dependency === dep_name
           dep_name
         else
-          Sunshine::Dependencies.get(dep_name, :prefer => prefered)
+          Sunshine.dependencies.get(dep_name, :prefer => prefered)
         end
 
 
@@ -183,6 +183,6 @@ unless MockObject === Sunshine.shell
   Sunshine.shell.mock :write, :return => nil
 end
 
-unless Settler::Dependency.include? MockObject
-  Settler::Dependency.send(:include, MockObject)
+unless Sunshine::Dependency.include? MockObject
+  Sunshine::Dependency.send(:include, MockObject)
 end

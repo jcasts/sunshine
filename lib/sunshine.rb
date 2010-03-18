@@ -4,7 +4,6 @@ require 'rainbow'
 require 'highline'
 require 'tmpdir'
 
-require 'settler'
 require 'yaml'
 require 'erb'
 require 'logger'
@@ -25,8 +24,8 @@ require 'fileutils'
 #   }
 #
 #   Sunshine::App.deploy(options) do |app|
-#     sqlite = Sunshine::Dependencies.yum 'sqlite3'
-#     sqlgem = Sunshine::Dependencies.gem 'sqlite3'
+#     sqlite = Sunshine.dependencies.yum 'sqlite3'
+#     sqlgem = Sunshine.dependencies.gem 'sqlite3'
 #
 #     app.install_deps sqlite, sqlgem
 #
@@ -92,6 +91,14 @@ module Sunshine
 
   def self.deploy_env
     @config['deploy_env'].to_s
+  end
+
+
+  ##
+  # Returns the main Sunshine dependencies library.
+
+  def self.dependencies
+    @dependency_lib ||= DependencyLib.new
   end
 
 
@@ -343,6 +350,13 @@ module Sunshine
   require 'sunshine/output'
 
   require 'sunshine/binder'
+
+  require 'sunshine/dependency_lib'
+  require 'sunshine/package_managers/dependency'
+  require 'sunshine/package_managers/apt'
+  require 'sunshine/package_managers/yum'
+  require 'sunshine/package_managers/gem'
+  require 'sunshine/package_managers/tpkg'
 
   require 'sunshine/dependencies'
 

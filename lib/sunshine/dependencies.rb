@@ -1,9 +1,8 @@
-require "settler"
-
 ##
 # Defines Sunshine deploy server dependencies.
 
-class Sunshine::Dependencies < Settler
+#class Sunshine::Dependencies < Settler
+Sunshine.dependencies.instance_eval do
 
   yum 'tpkg'
 

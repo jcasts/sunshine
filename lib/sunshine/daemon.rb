@@ -119,7 +119,7 @@ module Sunshine
 
     ##
     # Setup the daemon, parse and upload config templates.
-    # If a dependency with the daemon name exists in Sunshine::Dependencies,
+    # If a dependency with the daemon name exists in Sunshine.dependencies,
     # setup will attempt to install the dependency before uploading configs.
     # If a block is given it will be passed each server_app and binder object
     # which will be used for the building erb config templates.
@@ -135,7 +135,7 @@ module Sunshine
           rescue => e
             raise DependencyError.new(e,
               "Failed installing dependency #{@dep_name}")
-          end if Sunshine::Dependencies.exist?(@dep_name)
+          end if Sunshine.dependencies.exist?(@dep_name)
 
           # Build erb binding
           binder = config_binding server_app.shell

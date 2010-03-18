@@ -170,7 +170,7 @@ class TestServerApp < Test::Unit::TestCase
 
 
   def test_install_deps
-    nginx_dep = Sunshine::Dependencies.get 'nginx', :prefer => @sa.pkg_manager
+    nginx_dep = Sunshine.dependencies.get 'nginx', :prefer => @sa.pkg_manager
 
     @sa.install_deps "ruby", nginx_dep
 
@@ -180,13 +180,13 @@ class TestServerApp < Test::Unit::TestCase
 
 
   def test_install_deps_bad_type
-    nginx_dep = Sunshine::Dependencies.get 'nginx'
+    nginx_dep = Sunshine.dependencies.get 'nginx'
 
-    @sa.install_deps nginx_dep, :type => Settler::Gem
+    @sa.install_deps nginx_dep, :type => Sunshine::Gem
     raise "Didn't raise missing dependency when it should have."
 
-  rescue Settler::MissingDependency => e
-    assert_equal "No dependency 'nginx' [Settler::Gem]", e.message
+  rescue Sunshine::DependencyLib::MissingDependency => e
+    assert_equal "No dependency 'nginx' [Sunshine::Gem]", e.message
   end
 
 

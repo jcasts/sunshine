@@ -425,14 +425,14 @@ module Sunshine
 
     ##
     # Install dependencies defined as a Sunshine dependency object:
-    #   rake   = Sunshine::Dependencies.gem 'rake', :version => '~>0.8'
-    #   apache = Sunshine::Dependencies.yum 'apache'
+    #   rake   = Sunshine.dependencies.gem 'rake', :version => '~>0.8'
+    #   apache = Sunshine.dependencies.yum 'apache'
     #   app.install_deps rake, apache
     #
     # Deploy servers can also be specified as a dispatcher, array, or single
     # deploy server, by passing standard 'find' options:
-    #   postgres = Sunshine::Dependencies.yum 'postgresql'
-    #   pgserver = Sunshine::Dependencies.yum 'postgresql-server'
+    #   postgres = Sunshine.dependencies.yum 'postgresql'
+    #   pgserver = Sunshine.dependencies.yum 'postgresql-server'
     #   app.install_deps postgres, pgserver, :role => 'db'
     #
     # If a dependency was already defined in the Sunshine dependency tree,

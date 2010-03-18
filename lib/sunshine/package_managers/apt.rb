@@ -1,4 +1,4 @@
-class Settler
+module Sunshine
 
   ##
   # The Apt dependency class supports basic apt-get features:

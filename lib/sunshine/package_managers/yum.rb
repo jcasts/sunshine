@@ -1,4 +1,4 @@
-class Settler
+module Sunshine
 
   ##
   # The Yum dependency class supports most of yum's installation features:

@@ -78,8 +78,8 @@ module Sunshine
       Sunshine.logger.info @scm,
         "Checking out to #{shell.host} #{path}" do
 
-        Sunshine::Dependencies.install @scm, :call => shell if
-          Sunshine::Dependencies.exist? @scm
+        Sunshine.dependencies.install @scm, :call => shell if
+          Sunshine.dependencies.exist? @scm
 
         shell.call "test -d #{path} && rm -rf #{path} || echo false"
         shell.call "mkdir -p #{path}"

@@ -1,6 +1,6 @@
 # Dependencies that need fixing for ATTi VMs
 
-class Sunshine::Dependencies < Settler
+Sunshine.dependencies.instance_eval do
 
   tpkg 'git'
 

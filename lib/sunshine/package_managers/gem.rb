@@ -1,4 +1,4 @@
-class Settler
+module Sunshine
 
   ##
   # The Gem dependency class supports most of rubygem's installation features:

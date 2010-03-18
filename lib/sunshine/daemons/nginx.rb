@@ -47,7 +47,7 @@ module Sunshine
     private
 
     def setup_passenger shell
-      Dependencies.install 'passenger', :call => shell
+      Sunshine.dependencies.install 'passenger', :call => shell
       str = shell.call "gem list passenger -d"
       version = str.match(/passenger\s\((.*)\)$/)[1]
       gempath = str.match(/Installed\sat:\s(.*)$/)[1]
