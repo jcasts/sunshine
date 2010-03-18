@@ -49,7 +49,7 @@ module Sunshine
     def remove app_names, delete_dir=false
       each_app(*app_names) do |name, path|
         if delete_dir
-          @shell.call File.join(path, "stop")
+          @shell.call File.join(path, "stop") rescue nil
           @shell.call "rm -rf #{path}"
 
           Crontab.new(name, @shell).delete!
