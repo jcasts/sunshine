@@ -78,10 +78,70 @@ module Sunshine
 
 
     ##
-    # Write a file - used for compatibility with DeployServer.
+    # Returns true. Compatibility method with RemoteShell.
+
+    def connect
+      true
+    end
+
+
+    ##
+    # Returns true. Compatibility method with RemoteShell.
+
+    def connected?
+      true
+    end
+
+
+    ##
+    # Returns true. Compatibility method with RemoteShell.
+
+    def disconnect
+      true
+    end
+
+
+    ##
+    # Copies a file. Compatibility method with RemoteShell.
+
+    def download from_path, to_path, options={}, &block
+      Sunshine.logger.info @host, "Copying #{from_path} -> #{to_path}" do
+        FileUtils.cp_r from_path, to_path
+      end
+    end
+
+    alias :upload :download
+
+
+    ##
+    # Expands the path. Compatibility method with RemoteShell.
+
+    def expand_path path
+      File.expand_path path
+    end
+
+
+    ##
+    # Checks if file exists. Compatibility method with RemoteShell.
+
+    def file? filepath
+      File.file? filepath
+    end
+
+    ##
+    # Write a file. Compatibility method with RemoteShell.
+
 
     def make_file filepath, content, options={}
       File.open(filepath, "w+"){|f| f.write(content)}
+    end
+
+
+    ##
+    # Get the name of the OS
+
+    def os_name
+      @os_name ||= call("uname -s").strip.downcase
     end
 
 
@@ -132,6 +192,14 @@ module Sunshine
       else
         cmd
       end
+    end
+
+
+    ##
+    # Force symlinking a directory.
+
+    def symlink target, symlink_name
+      call "ln -sfT #{target} #{symlink_name}" rescue false
     end
 
 

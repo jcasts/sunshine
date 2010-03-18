@@ -171,22 +171,6 @@ module Sunshine
 
 
     ##
-    # Get the name of the OS
-
-    def os_name
-      @os_name ||= call("uname -s").strip.downcase
-    end
-
-
-    ##
-    # Force symlinking a remote directory
-
-    def symlink target, symlink_name
-      call "ln -sfT #{target} #{symlink_name}" rescue false
-    end
-
-
-    ##
     # Uploads a file via rsync
 
     def upload from_path, to_path, options={}, &block
