@@ -145,6 +145,7 @@ module Sunshine
 
         build_control_scripts
         build_deploy_info_file
+        build_crontab
 
         register_as_deployed
         remove_old_deploys
@@ -198,7 +199,18 @@ module Sunshine
 
 
     ##
-    # Add a command to a control script to be generated on deploy servers:
+    # Add a command to the crontab to be generated remotely:
+    #   add_to_crontab "reboot", "@reboot /path/to/app/start", :role => :web
+
+    def add_to_crontab name, cronjob, options=nil
+      with_server_apps options do |server_app|
+        server_app.crontab[name] = cronjob
+      end
+    end
+
+
+    ##
+    # Add a command to a control script to be generated remotely:
     #   add_to_script :start, "do this on start"
     #   add_to_script :start, "start_mail", :role => :mail
 
@@ -228,6 +240,19 @@ module Sunshine
       with_server_apps options,
         :msg  => "Building control scripts",
         :send => :build_control_scripts
+    end
+
+
+    ##
+    # Writes the crontab on all or selected server apps.
+    # To add or remove from the crontab, see App#add_to_crontab and
+    # App#remove_cronjob.
+
+    def build_crontab options=nil
+      with_server_apps options,
+        :msg => "Building the crontab" do |server_app|
+        server_app.crontab.write!
+      end
     end
 
 
@@ -464,12 +489,30 @@ module Sunshine
 
 
     ##
-    # Adds the app to the deploy servers deployed-apps list
+    # Adds the app to the deploy servers deployed-apps list.
 
     def register_as_deployed options=nil
       with_server_apps options,
         :msg  => "Registering app with deploy servers",
         :send => :register_as_deployed
+    end
+
+
+    ##
+    # Remove a cron job from the remote crontabs:
+    #   remove_cronjob "reboot", :role => :web
+    #   remove_cronjob :all
+    #   #=> deletes all cronjobs related to this app
+
+    def remove_cronjob name, options=nil
+      with_server_apps options,
+        :msg => "Removing cronjob #{name.inspect}" do |server_app|
+        if name == :all
+          server_app.crontab.clear
+        else
+          server_app.crontab.delete(name)
+        end
+      end
     end
 
 
