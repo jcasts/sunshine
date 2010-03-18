@@ -19,6 +19,25 @@ module Sunshine
 
     LOGIN_TIMEOUT = 30
 
+
+    ##
+    # Closes all remote shell connections.
+
+    def self.disconnect_all
+      return unless defined?(@remote_shells)
+      @remote_shells.each{|rs| rs.disconnect}
+    end
+
+
+    ##
+    # Registers a remote shell for global access from the class.
+    # Handled automatically on initialization.
+
+    def self.register remote_shell
+      (@remote_shells ||= []) << remote_shell
+    end
+
+
     attr_reader :host, :user
     attr_accessor :ssh_flags, :rsync_flags
 
@@ -52,6 +71,8 @@ module Sunshine
       @ssh_flags.concat [*options[:ssh_flags]] if options[:ssh_flags]
 
       @pid, @inn, @out, @err = nil
+
+      self.class.register self
     end
 
 

@@ -144,6 +144,52 @@ module Sunshine
 
 
   ##
+  # Adds an INT trap with description on the stack. Returns a trap_item Array.
+
+  def self.add_trap desc, &block
+    trap_item = [desc, block]
+    (@trap_stack ||= []).unshift trap_item
+    trap_item
+  end
+
+  add_trap "Disconnecting all remote shells." do
+    RemoteShell.disconnect_all
+  end
+
+
+  ##
+  # Call a trap item and display it's message.
+
+  def self.call_trap trap_item
+    return unless trap_item
+
+    msg, block = trap_item
+
+    logger.info :INT, msg do
+      block.call
+    end
+  end
+
+
+  ##
+  # Remove a trap_item from the stack.
+
+  def self.delete_trap trap_item
+    @trap_stack.delete trap_item
+  end
+
+
+  trap "INT" do
+    $stderr << "\n\n"
+    logger.indent = 0
+    logger.fatal :INT, "Caught INT signal!"
+
+    call_trap @trap_stack.shift
+    Kernel.exit 1
+  end
+
+
+  ##
   # Global value of sudo to use. Returns true, nil, or a username.
   # This value can be assigned by default in ~/.sunshine
   # or with the --sudo [username] option. Defaults to nil.

@@ -15,7 +15,7 @@ module Sunshine
       Logger::DEBUG   => :cyan,
     }
 
-    attr_reader :logger, :indent, :level
+    attr_accessor :logger, :indent, :level
 
     def initialize(options={})
       @logger = Logger.new options[:output] || $stdout
@@ -32,6 +32,8 @@ module Sunshine
     def print(title, message, options={})
       severity = options[:level] || Logger::DEBUG
       color = COLORS[severity]
+
+      options[:indent] = 0 if options[:indent] < 0
       indent = " " * (options[:indent].to_i * 2)
 
       print_string = message.split("\n")

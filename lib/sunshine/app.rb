@@ -132,6 +132,10 @@ module Sunshine
         connect options
       end
 
+      deploy_trap = Sunshine.add_trap "Reverting deploy of #{@name}" do
+        revert! options
+      end
+
       with_filter options do |app|
         make_app_directories
         checkout_codebase
@@ -151,27 +155,19 @@ module Sunshine
         remove_old_deploys
       end
 
-    rescue DeployError => e
-      handle_deploy_error e
+    rescue => e
+      message = "#{e.class}: #{e.message}"
+
+      Sunshine.logger.error :app, message do
+        Sunshine.logger.error '>>', e.backtrace.join("\n")
+        revert!
+      end
 
     ensure
+      Sunshine.delete_trap deploy_trap
+
       Sunshine.logger.info :app, "Ending deploy of #{@name}" do
         disconnect options
-      end
-    end
-
-
-    ##
-    # Figure out what to do based on what kind of deploy error was received.
-
-    def handle_deploy_error e
-      message = "#{e.class}: #{e.message}"
-      log_method = FatalDeployError === e ? :fatal : :error
-
-      Sunshine.logger.send(log_method, :app, message) do
-        Sunshine.logger.error '>>', e.backtrace.join("\n")
-
-        revert! if CriticalDeployError === e
       end
     end
 
