@@ -144,7 +144,8 @@ module Sunshine
 
 
   ##
-  # Adds an INT trap with description on the stack. Returns a trap_item Array.
+  # Adds an INT signal trap with its description on the stack.
+  # Returns a trap_item Array.
 
   def self.add_trap desc, &block
     trap_item = [desc, block]

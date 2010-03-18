@@ -6,6 +6,8 @@
 
 * Improvements:
 
+  * Added INT signal handling to exit deploys and close connections gracefully.
+
   * Added dependency installation methods apt_install, gem_install,
     tpkg_install and yum_install to App and ServerApp.
 
