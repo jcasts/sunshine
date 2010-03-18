@@ -44,7 +44,7 @@ module Sunshine
 
 
     ##
-    # Remove all cron jobs that reference crontab.name
+    # Remove all cron jobs that reference crontab.name.
 
     def delete!
       crontab = read_crontab
@@ -60,6 +60,8 @@ module Sunshine
     # Write the crontab on the given shell
 
     def write!
+      return unless modified?
+
       crontab = read_crontab
       crontab = delete_jobs crontab
       crontab = build crontab
@@ -67,6 +69,14 @@ module Sunshine
       write_crontab crontab
 
       crontab
+    end
+
+
+    ##
+    # Checks if the crontab was modified for crontab.name.
+
+    def modified?
+      !@jobs.nil?
     end
 
 
