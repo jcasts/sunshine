@@ -4,7 +4,7 @@ module Sunshine
   # The Apt dependency class supports basic apt-get features:
   #
   #   dependency_lib.instance_eval do
-  #     apt_get "ruby", :version => '1.9'
+  #     apt "ruby", :version => '1.9'
   #   end
   #
   # See the Dependency class for more info.
