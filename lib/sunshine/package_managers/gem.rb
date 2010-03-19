@@ -3,7 +3,7 @@ module Sunshine
   ##
   # The Gem dependency class supports most of rubygem's installation features:
   #
-  #   class MyDeps < Settler
+  #   dependency_lib.instance_eval do
   #     gem "rdoc", :version => '~>0.8',
   #                 :source  => 'http://gemcutter.org',
   #                 :opts    => '--use-lib blah' # Anything after --

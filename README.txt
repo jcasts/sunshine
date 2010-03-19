@@ -137,6 +137,20 @@ to the @app.deploy block.
 
 And that's it! Try running your Sunshine rake tasks!
 
+  rake sunshine:app             # Instantiate Sunshine
+  rake sunshine:db_migrate      # Run db:migrate on remote :db servers
+  rake sunshine:deploy          # Deploy the app
+  rake sunshine:health          # Get the health state
+  rake sunshine:health:disable  # Turn off health check
+  rake sunshine:health:enable   # Turn on health check
+  rake sunshine:health:remove   # Remove health check
+  rake sunshine:info            # Get deployed app info
+  rake sunshine:restart         # Run the remote restart script
+  rake sunshine:start           # Run the remote start script
+  rake sunshine:status          # Check if the deployed app is running
+  rake sunshine:stop            # Run the remote stop script
+  
+
 
 == Dependencies
 
@@ -166,7 +180,7 @@ with Sunshine:
   server = RemoteShell.new "user@myserver.com"
   server.connect
 
-  %w{postgresql libxslt ruby-full rubygems} do |dep_name|
+  %w{postgresql libxslt ruby-full rubygems}.each do |dep_name|
     Sunshine::Apt.new(dep_name).install! :call => server
   end
 

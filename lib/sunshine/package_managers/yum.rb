@@ -3,7 +3,7 @@ module Sunshine
   ##
   # The Yum dependency class supports most of yum's installation features:
   #
-  #   class MyDeps < Settler
+  #   dependency_lib.instance_eval do
   #     yum "ruby", :version => '1.9',
   #                 :rel     => 'release-num',
   #                 :arch    => 'i386',
