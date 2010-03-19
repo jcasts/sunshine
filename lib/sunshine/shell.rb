@@ -110,7 +110,7 @@ module Sunshine
       end
     end
 
-    alias :upload :download
+    alias upload download
 
 
     ##
@@ -128,9 +128,9 @@ module Sunshine
       File.file? filepath
     end
 
+
     ##
     # Write a file. Compatibility method with RemoteShell.
-
 
     def make_file filepath, content, options={}
       File.open(filepath, "w+"){|f| f.write(content)}

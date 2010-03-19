@@ -75,7 +75,7 @@ module Sunshine
 
   ##
   # Sunshine version.
-  VERSION = '0.0.5'
+  VERSION = '0.0.6'
 
 
   ##
@@ -358,8 +358,6 @@ module Sunshine
   require 'sunshine/package_managers/gem'
   require 'sunshine/package_managers/tpkg'
 
-  require 'sunshine/dependencies'
-
   require 'sunshine/repo'
   require 'sunshine/repos/svn_repo'
   require 'sunshine/repos/git_repo'
@@ -392,3 +390,6 @@ module Sunshine
   require 'commands/stop'
 end
 
+
+Sunshine.setup
+require 'sunshine/dependencies'

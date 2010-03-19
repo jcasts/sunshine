@@ -2,8 +2,12 @@
 
 == Description
 
-Sunshine provides a light, consistant, object-oriented api for rack 
-application deployment.
+Sunshine is an object-oriented api for rack application deployment.
+
+Sunshine is open and it can do a lot! It's meant to be dug into and understood.
+Knowing how it works will let you do really neat things: classes are
+decoupled as much as possible to allow for optimal flexibility,
+and most can be used independently.
 
 
 == Setup
@@ -103,88 +107,104 @@ In this example, :prod inherits top level values from :qa (only :repo in this
 instance). The :inherits key also supports an array as its value.
 
 
+== Using rake is great!
+
+Although Sunshine comes with it's own bundle of commands, they should be used
+to control deployed apps on remote servers in instances where deploy information
+(e.g. your deploy yaml file) is unavailable. Their purpose is to query a server
+where Sunshine apps have been deployed and have a nominal amount of information
+and control over them. Sunshine control commands are run on a per-server basis.
+
+Most of the time though, you'll want to control the deploy on a per-app basis.
+You have the deploy information and you need to do things involving that
+specific deploy. Rake tasks are great for that, and Sunshine comes with a
+template rake file that you can modify to fit your needs.
+
+You can copy the template rake file to lib/tasks/ by running:
+  sunshine --rakefile lib/tasks/.
+
+If you open the file, you'll see a variety of tasks that handle deployment, to
+application start/stop/restart-ing, to health checks. Most likely, the two tasks
+you'll need to update are the :app (for instantiation) and the :deploy tasks.
+
+First off, if you're using rails, you'll probably want to update "task :app" to
+"task :app => :environment" in order to get all the rails environment goodness.
+You'll also want to make sure that the @app object gets instantiated with the
+proper hash value or yaml file.
+
+Second, you need to update your :deploy task. Add whatever instructions you need
+to the @app.deploy block.
+
+And that's it! Try running your Sunshine rake tasks!
+
+
 == Dependencies
 
 Sunshine has simple, basic dependency support, and relies mostly on preexisting
-package manager tools such as yum or rubygems. Sunshine's default dependencies
-are defined in the Sunshine::Dependencies class and can be overridden as needed:
+package manager tools such as apt, yum, or rubygems. Dependencies or packages
+can be defined independently, or as a part of a dependency tree
+(see Sunshine::DependencyLib). Sunshine has its own internal dependency tree
+which can be modified but users can also create their own.
 
-  class Sunshine::Dependencies < Settler
 
-    yum 'svn', :pkg => 'subversion'
+=== User Dependencies
 
-    yum 'git'
+The most common way of using dependencies is through ServerApp:
 
-    yum 'nginx'
-    ...
+  server_app.apt_install 'postgresql', 'libxslt'
+  server_app.gem_install 'json', :version => '>=1.0.0'
+
+This should be plenty for most users. You can however create simple standalone
+package definitions:
+
+  postgresql = Sunshine::Apt.new('postgresql')
+  postgresql.install! :call => server_app.shell
+
+You can imagine how this would be useful to do server configuration
+with Sunshine:
+
+  server = RemoteShell.new "user@myserver.com"
+  server.connect
+
+  %w{postgresql libxslt ruby-full rubygems} do |dep_name|
+    Sunshine::Apt.new(dep_name).install! :call => server
   end
 
-
-Dependencies are uniquely named to the Settler class they belong to, which means
-using a different package manager is as simple as redefining the dependencies:
-
-  class Sunshine::Dependencies < Settler
-
-    apt_get 'svn', :pkg => 'subversion'
-
-    apt_get 'git'
-
-    apt_get 'nginx'
-    ...
-  end
+Warning: If the :call options isn't specified, the dependency will attempt to
+install on the local system.
 
 
-If you would like to define a custom dependency or dependency type, you can do
-so by either subclassing Settler::Dependency, or by using the plain
-Settler::dependency method and defining custom install, uninstall, and check
-bash commands. If passed a String these commands rely on the shell's exit
-status; if passed a block it will use the block's return value:
+=== Internal Sunshine Dependencies (advanced)
 
-  class Sunshine::Dependencies < Settler
+Sunshine's default dependencies are defined in Sunshine.dependencies and can
+be overridden as needed:
 
-    dependency 'rubygems' do
-      requires  'ruby', 'irb'
+  Sunshine.dependencies.get 'rubygems', :type => Sunshine::Yum
+  #=> <Sunshine::Yum ... version='1.3.5' >
+  # Not what you want? Replace it:
 
-      install 'yum install -y rubygems && gem update --system --no-ri --no-rdoc'
+  Sunshine.dependencies.yum 'rubygems', :version => '1.3.2'
 
-      uninstall 'yum remove rubygems'
+Any dependencies added or modified in Sunshine.dependencies are used as a part
+of the internal Sunshine workings. Also to note: ServerApp#pkg_manager is
+crucial in defining which dependency to use. By default, a server_app's
+package manager will be either Yum or Apt depending on availability. That can
+be overridden with something like:
 
-      check do |shell|
-        shell.call("gem -v || echo 0").strip >= '1.3.5'
-      end
-    end
-  end
+  server_app.pkg_manager = Sunshine::Yum
 
+An array can also be given and the server_app will attempt to install available
+dependencies according to that type order:
 
-Installing dependencies can be done by calling Settler::install or
-directly on the dependency object with Dependency#install!:
+  server_app.pkg_manager = [Sunshine::Tpkg, Sunshine::Yum]
 
-  Sunshine::Dependencies.install 'nginx', 'rubygems'
+In this instance, if no Tpkg dependency was defined in Sunshine.dependencies,
+the server_app will look for a Yum dependency. If you want to ensure all your
+server_apps use the same dependency definition, you may consider:
 
-  # Equivalent to:
-
-  Sunshine::Dependencies['nginx'].install!
-  Sunshine::Dependencies['rubygems'].install!
-
-
-By default dependencies are run by Sunshine::shell which is a representation
-of the local shell. However, Settler dependencies may use any object that
-responds to a #call method and takes a single argument, such as
-Sunshine::RemoteShell objects:
-
-  Sunshine::Dependencies.install 'nginx', :call => remote_shell
-
-  # Equivalent to:
-
-  Sunshine::Dependencies['nginx'].install! :call => remote_shell
-
-
-Note: To install Sunshine dependencies for a given Sunshine::App object, use
-Sunshine::App#install_deps to install on all the app's deploy servers:
-
-    app.install_deps 'nginx', 'rubygems'
-
-    app.install_deps 'postgres', 'pgserver', :role => 'db'
+  Sunshine.dependencies.yum 'rubygems', :version => '1.3.2'
+  Sunshine.dependencies.apt 'rubygems', :version => '1.3.2'
+  # ... and so on
 
 
 == Deployed Application Control
