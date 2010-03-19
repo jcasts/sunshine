@@ -507,7 +507,7 @@ fi
         end
       end
 
-      files = Dir.glob("templates/tasks/*") if files.empty?
+      files = Dir.glob("#{Sunshine::ROOT}/templates/tasks/*") if files.empty?
 
       files.each do |file|
         remote_file = File.join remote_path, File.basename(file)
