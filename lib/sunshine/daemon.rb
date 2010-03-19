@@ -81,7 +81,10 @@ module Sunshine
 
       @app    = app
       @target = options[:point_to] || @app
-      @name   = self.class.underscore self.class.to_s.split("::").last
+
+      @short_class_name = self.class.underscore self.class.to_s.split("::").last
+
+      @name        = config[:name] || @short_class_name
 
       @pid         = options[:pid] || "#{@app.shared_path}/pids/#{@name}.pid"
       @bin         = options[:bin] || @name
@@ -90,7 +93,9 @@ module Sunshine
       @dep_name    = options[:dep_name] || @name
       @processes   = options[:processes] || 1
 
-      @config_template = options[:config_template] || "templates/#{@name}/*"
+      @config_template   = options[:config_template]
+      @config_template ||= "#{Sunshine::ROOT}/templates/#{@short_class_name}/*"
+
       @config_path     = options[:config_path] ||
         "#{@app.current_path}/daemons/#{@name}"
       @config_file     = options[:config_file] || "#{@name}.conf"
