@@ -140,9 +140,8 @@ module Sunshine
     # Returns a response hash (see ListCommand#each_app).
 
     def details(*app_names)
-      each_app(*app_names) do |name, path|
-        output = @shell.call "cat #{path}/info"
-        "\n#{output}"
+      each_app(*app_names) do |server_app|
+        "\n#{server_app.deploy_details.to_yaml}"
       end
     end
 
@@ -152,8 +151,8 @@ module Sunshine
     # Returns a response hash (see ListCommand#each_app).
 
     def exist?(*app_names)
-      each_app(*app_names) do |name, path|
-        path
+      each_app(*app_names) do |server_app|
+        server_app.root_path
       end
     end
 
@@ -165,11 +164,9 @@ module Sunshine
     def health(*app_names)
       action = app_names.delete_at(0) if Symbol === app_names.first
 
-      each_app(*app_names) do |name, path|
-        health = Healthcheck.new "#{path}/shared", @shell
-        health.send action if action
-
-        health.status.values.first
+      each_app(*app_names) do |server_app|
+        server_app.health.send action if action
+        server_app.health.status
       end
     end
 
@@ -179,55 +176,39 @@ module Sunshine
     # Returns a response hash (see ListCommand#each_app).
 
     def status(*app_names)
-      each_app(*app_names) do |name, path|
-        text_status path
+      each_app(*app_names) do |server_app|
+        server_app.status
       end
     end
 
 
     ##
-    # Runs a command and returns the text_status for each app_name:
+    # Runs a command and returns the status for each app_name:
     #   status_after_command 'restart', ['app1', 'app2']
 
     def status_after_command cmd, app_names
-      each_app(*app_names) do |name, path|
+      each_app(*app_names) do |server_app|
 
-        yield(name, path) if block_given?
+        yield(server_app) if block_given?
 
         begin
-          @shell.call "#{path}/#{cmd}"
-          text_status path
+          server_app.send cmd.to_sym
+          server_app.running? ? 'running' : 'down'
 
         rescue CmdError => e
-          raise "Failed running #{cmd}: #{text_status(path)}"
+          raise "Failed running #{cmd}: #{server_app.status}"
         end
       end
     end
 
 
-    ##
-    # Get an app's status
-
-    def text_status path
-      running?(path) && "running" || "down"
-    end
-
-
-    ##
-    # Check if an app is running
-
-    def running? path
-      @shell.call "#{path}/status" rescue false
-    end
-
-    # Do something with each server app it to a set of app names
-    # and build a response hash:
-    #   each_app do |name, path|
+    # Do something with each server app and build a response hash:
+    #   each_app do |server_app|
     #     ...
     #   end
     #
     # Restrict it to a set of apps if they are present on the server:
-    #   each_app('app1', 'app2') do |name, path|
+    #   each_app('app1', 'app2') do |server_app|
     #     ...
     #   end
     #
@@ -242,7 +223,9 @@ module Sunshine
 
         raise "Application not found." unless path
 
-        yield(name, path) if block_given?
+        server_app = ServerApp.new name, @shell, :root_path => path
+
+        yield(server_app) if block_given?
       end
     end
 

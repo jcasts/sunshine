@@ -41,9 +41,9 @@ module Sunshine
     # Start specified apps.
 
     def start app_names, force=false
-      status_after_command :start, app_names do |name, path|
+      status_after_command :start, app_names do |server_app|
 
-        @shell.call "#{path}/stop" if running?(path) && force
+        server_app.stop if server_app.running? && force
       end
     end
 

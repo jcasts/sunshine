@@ -453,6 +453,14 @@ fi
 
 
     ##
+    # Get the app's status: :running or :down.
+
+    def status
+      running? ? :running : :down
+    end
+
+
+    ##
     # Run the app's stop script.
     # Post-deploy only.
 

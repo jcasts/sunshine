@@ -47,15 +47,15 @@ module Sunshine
     # Remove a registered app on a given deploy server
 
     def remove app_names, delete_dir=false
-      each_app(*app_names) do |name, path|
+      each_app(*app_names) do |server_app|
         if delete_dir
-          @shell.call File.join(path, "stop") rescue nil
-          @shell.call "rm -rf #{path}"
+          server_app.stop rescue nil
+          server_app.shell.call "rm -rf #{server_app.root_path}"
 
-          Crontab.new(name, @shell).delete!
+          server_app.crontab.delete!
         end
 
-        @app_list.delete name
+        @app_list.delete server_app.name
       end
     end
 

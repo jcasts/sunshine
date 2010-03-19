@@ -620,7 +620,7 @@ module Sunshine
       statuses = {}
 
       with_server_apps options, :msg => "Querying app status..." do |server_app|
-        statuses[server_app.shell.host] = server_app.running? ? :running : :down
+        statuses[server_app.shell.host] = server_app.status
       end
 
       statuses
