@@ -350,11 +350,11 @@ fi
 
 
     ##
-    # Run the app's restart script
+    # Run the app's restart script. Returns false on failure.
     # Post-deploy only.
 
     def restart
-      @shell.call "#{self.root_path}/restart"
+      @shell.call "#{self.root_path}/restart" rescue false
     end
 
 
@@ -370,11 +370,11 @@ fi
       if last_deploy && !last_deploy.empty?
         @shell.symlink "#{self.deploys_path}/#{last_deploy}", self.current_path
 
-        started = start(:force => true) rescue false
-
         Sunshine.logger.info @shell.host, "Reverted to #{last_deploy}"
 
-        Sunshine.logger.error @shell.host, "Failed #{@name} startup" if !started
+        unless start :force => true
+          Sunshine.logger.error @shell.host, "Failed #{@name} startup"
+        end
 
       else
         @crontab.delete!
@@ -437,7 +437,7 @@ fi
 
 
     ##
-    # Run the app's start script.
+    # Run the app's start script. Returns false on failure.
     # Post-deploy only.
 
     def start options=nil
@@ -448,7 +448,7 @@ fi
         stop
       end
 
-      @shell.call "#{self.root_path}/start"
+      @shell.call "#{self.root_path}/start" rescue false
     end
 
 
@@ -461,11 +461,11 @@ fi
 
 
     ##
-    # Run the app's stop script.
+    # Run the app's stop script. Returns false on failure.
     # Post-deploy only.
 
     def stop
-      @shell.call "#{self.root_path}/stop"
+      @shell.call "#{self.root_path}/stop" rescue false
     end
 
 
