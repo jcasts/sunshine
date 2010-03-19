@@ -84,7 +84,7 @@ module Sunshine
 
       @short_class_name = self.class.underscore self.class.to_s.split("::").last
 
-      @name        = config[:name] || @short_class_name
+      @name        = options[:name] || @short_class_name
 
       @pid         = options[:pid] || "#{@app.shared_path}/pids/#{@name}.pid"
       @bin         = options[:bin] || @name

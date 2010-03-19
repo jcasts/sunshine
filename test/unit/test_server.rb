@@ -220,7 +220,8 @@ class TestServer < Test::Unit::TestCase
 
 
   def test_config_template_files
-    files = Dir["templates/rainbows/*"].select{|f| File.file?(f)}
+    files =
+      Dir["#{Sunshine::ROOT}/templates/rainbows/*"].select{|f| File.file?(f)}
     assert_equal files, @rainbows.config_template_files
   end
 
@@ -295,7 +296,7 @@ class TestServer < Test::Unit::TestCase
       :server_name => nil,
       :config_file => "server.conf",
       :config_path => "#{@app.current_path}/daemons/server",
-      :config_template => "templates/server/*",
+      :config_template => "#{Sunshine::ROOT}/templates/server/*",
       :stderr => "#{@app.log_path}/server_stderr.log",
       :stdout => "#{@app.log_path}/server_stdout.log"
     }.merge(user_config)

@@ -401,7 +401,7 @@ class TestServerApp < Test::Unit::TestCase
     assert_server_call "mkdir -p #{@app.checkout_path}/lib/tasks"
 
     files.each do |f|
-      args = ["templates/tasks/#{f}.rake",
+      args = ["#{Sunshine::ROOT}/templates/tasks/#{f}.rake",
               "#{@app.checkout_path}/lib/tasks/#{f}.rake"]
 
       assert @sa.shell.method_called?(:upload, :args => args)

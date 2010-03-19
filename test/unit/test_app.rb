@@ -443,14 +443,16 @@ class TestApp < Test::Unit::TestCase
   def test_upload_tasks_simple
     @app.upload_tasks
 
-    tasks = Dir.glob("templates/tasks/*").map{|t| File.basename t}
     path  = "#{@app.checkout_path}/lib/tasks"
+
+    tasks =
+      Dir.glob("#{Sunshine::ROOT}/templates/tasks/*").map{|t| File.basename t}
 
     each_remote_shell do |ds|
       assert_ssh_call "mkdir -p #{path}"
 
       tasks.each do |task|
-        from = "templates/tasks/#{task}"
+        from = "#{Sunshine::ROOT}/templates/tasks/#{task}"
         to   = "#{ds.host}:#{path}/#{task}"
 
         assert_rsync from, to
