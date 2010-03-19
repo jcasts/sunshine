@@ -4,6 +4,8 @@
 
   * Removed DeployServerDispatcher. Dispatching now happens at the App level.
 
+  * Moved Settler into Sunshine and renamed it to DependencyLib.
+
 * Improvements:
 
   * Added INT signal handling to exit deploys and close connections gracefully.

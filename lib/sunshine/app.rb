@@ -125,7 +125,7 @@ module Sunshine
 
     ##
     # Deploy the application to deploy servers and
-    # call user's post-deploy code.
+    # call user's post-deploy code. Supports any App#find options.
 
     def deploy options=nil
       Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
