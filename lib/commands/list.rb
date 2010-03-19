@@ -56,6 +56,7 @@ module Sunshine
       success   = true
 
       shells.each do |shell|
+        shell.connect
 
         begin
           state, response = yield(shell)
@@ -67,6 +68,8 @@ module Sunshine
         host            = shell.host
         success         = state if success
         responses[host] = build_response state, response
+
+        shell.disconnect
       end
 
       output = format ? self.send(format, responses) : responses
@@ -128,9 +131,7 @@ module Sunshine
     attr_accessor :app_list, :shell
 
     def initialize shell
-      @shell = shell
-      @shell.connect rescue nil
-
+      @shell    = shell
       @app_list = self.class.load_list @shell
     end
 
