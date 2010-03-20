@@ -237,7 +237,7 @@ module Sunshine
     end
 
 
-    %w{gem yum apt tpkg}.each do |dep_type|
+    %w{gem yum apt}.each do |dep_type|
       self.class_eval <<-STR, __FILE__, __LINE__ + 1
         ##
         # Install one or more #{dep_type} packages.
@@ -481,8 +481,8 @@ fi
     # Upload common rake tasks from a local path or the sunshine lib.
     #   app.upload_tasks
     #     #=> upload all tasks
-    #   app.upload_tasks 'tpkg', 'common', ...
-    #     #=> upload tpkg and common rake files
+    #   app.upload_tasks 'app', 'common', ...
+    #     #=> upload app and common rake files
     #
     # File paths may also be used instead of the file's base name but
     # directory structures will not be followed:

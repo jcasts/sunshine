@@ -370,7 +370,7 @@ module Sunshine
     end
 
 
-    %w{gem yum apt tpkg}.each do |dep_type|
+    %w{gem yum apt}.each do |dep_type|
       self.class_eval <<-STR, __FILE__, __LINE__ + 1
         ##
         # Install one or more #{dep_type} packages.
@@ -698,8 +698,8 @@ module Sunshine
     # Upload common rake tasks from the sunshine lib.
     #   app.upload_tasks
     #     #=> upload all tasks
-    #   app.upload_tasks 'tpkg', 'common', :role => :web
-    #     #=> upload tpkg and common rake files
+    #   app.upload_tasks 'app', 'common', :role => :web
+    #     #=> upload app and common rake files
     #
     # Allows standard DeployServerDispatcher#find options, plus:
     # :remote_path:: str - the remote absolute path to upload the files to
