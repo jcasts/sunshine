@@ -3,10 +3,9 @@ Manifest.txt
 README.txt
 Rakefile
 bin/sunshine
-examples/buzz.rb
-examples/envoy.rb
-examples/envoy_standalone.rb
-examples/envoy_sunshine.rake
+examples/deploy.rb
+examples/deploy_tasks.rake
+examples/standalone_deploy.rb
 lib/commands/add.rb
 lib/commands/default.rb
 lib/commands/list.rb

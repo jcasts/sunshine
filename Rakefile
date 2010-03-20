@@ -8,7 +8,7 @@ task :manifest do
   manifest_file = "Manifest.txt"
 
   gem_files = record_files do |f|
-    next if f =~ /^(tmp|pkg)/
+    next if f =~ /^(tmp|pkg|deploy_tests)/
     puts(f)
     true
   end
