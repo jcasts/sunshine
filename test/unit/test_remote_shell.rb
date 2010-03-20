@@ -7,7 +7,7 @@ class TestRemoteShell < Test::Unit::TestCase
 
     @app = Sunshine::App.new TEST_APP_CONFIG_FILE
 
-    @host = "jcastagna@jcast.np.wc1.yellowpages.com"
+    @host = "user@some_server.com"
 
     @remote_shell = mock_remote_shell @host
   end

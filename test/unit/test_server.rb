@@ -74,8 +74,8 @@ class TestServer < Test::Unit::TestCase
 
     assert_ssh_call "mkdir -p #{server.send(:remote_dirs).join(" ")}"
 
-    assert_rsync(/rainbows\.conf/, "jcast.np.wc1.yellowpages.com:"+
-      "/usr/local/nextgen/envoy/current/daemons/rainbows/rainbows.conf")
+    assert_rsync(/rainbows\.conf/, "some_server.com:"+
+      "/usr/local/my_user/other_app/current/daemons/rainbows/rainbows.conf")
 
     assert server.has_setup?
   end

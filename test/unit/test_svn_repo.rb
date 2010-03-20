@@ -11,8 +11,8 @@ class TestSvnRepo < Test::Unit::TestCase
   def test_get_repo_info
     info = @svn.get_repo_info "path/to/checkout", @ds
 
-    assert_equal "786",        info[:revision]
-    assert_equal "jcastagna",  info[:committer]
+    assert_equal "777",        info[:revision]
+    assert_equal "user",  info[:committer]
     assert_equal "somebranch", info[:branch]
 
     assert_equal "finished testing server.rb", info[:message]
@@ -49,7 +49,7 @@ class TestSvnRepo < Test::Unit::TestCase
     svn.name
     raise "SvnRepo didn't catch invalid naming scheme: #{svn.url}"
   rescue => e
-    assert_equal "SVN url must match #{Sunshine::SvnRepo::NAME_MATCH.inspect}",
+    assert_equal "Svn url must match #{Sunshine::SvnRepo::NAME_MATCH.inspect}",
       e.message
   end
 end

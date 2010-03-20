@@ -21,7 +21,7 @@ end
 
 
 def mock_remote_shell host=nil
-  host ||= "jcastagna@jcast.np.wc1.yellowpages.com"
+  host ||= "user@some_server.com"
   remote_shell = Sunshine::RemoteShell.new host
 
   remote_shell.extend MockOpen4
@@ -35,14 +35,14 @@ end
 
 
 def mock_svn_response url=nil
-  url ||= "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
+  url ||= "svn://subversion/path/to/my_app/trunk"
 
   svn_response = <<-STR
     <?xml version="1.0"?>
     <log>
     <logentry
-      revision="786">
-    <author>jcastagna</author>
+      revision="777">
+    <author>user</author>
     <date>2010-01-26T01:49:17.372152Z</date>
     <msg>finished testing server.rb</msg>
     </logentry>

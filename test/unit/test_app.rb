@@ -4,12 +4,12 @@ class TestApp < Test::Unit::TestCase
 
   def setup
     mock_remote_shell_popen4
-    @svn_url = "svn://subversion.flight.yellowpages.com/argo/parity/trunk"
+    @svn_url = "svn://subversion/path/to/app_name/trunk"
 
-    @config = {:name => "parity",
+    @config = {:name => "app_name",
                :repo => {:type => "svn", :url => @svn_url},
-               :remote_shells => ["jcastagna@jcast.np.wc1.yellowpages.com"],
-               :root_path => "/usr/local/nextgen/parity"}
+               :remote_shells => ["user@some_server.com"],
+               :root_path => "/usr/local/my_user/app_name"}
 
     @app = Sunshine::App.new @config
     @app.each do |server_app|
@@ -29,9 +29,9 @@ class TestApp < Test::Unit::TestCase
 
   def test_initialize_without_name
     app = Sunshine::App.new :repo => {:type => "svn", :url => @svn_url},
-            :remote_shells => ["jcastagna@jcast.np.wc1.yellowpages.com"]
+            :remote_shells => ["user@some_server.com"]
 
-    assert_equal "parity", app.name
+    assert_equal "app_name", app.name
   end
 
 
@@ -424,7 +424,7 @@ class TestApp < Test::Unit::TestCase
     path = "/path/to/tasks"
 
     @app.upload_tasks 'common', 'tpkg',
-      :host => 'jcast.np.wc1.yellowpages.com',
+      :host => 'some_server.com',
       :remote_path => path
 
     each_remote_shell do |ds|

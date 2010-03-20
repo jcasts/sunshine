@@ -1,11 +1,11 @@
 :default:
-  :name: envoy
+  :name: other_app
   :repo:
     :type: svn
-    :url:  svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/tags/200912.2-WAT-235-release
+    :url:  svn://subversion/path/to/other_app/tags/release001
 
-  :root_path: /usr/local/nextgen/envoy
+  :root_path: /usr/local/my_user/other_app
 
   :remote_shells:
-    - - "jcastagna@jcast.np.wc1.yellowpages.com"
+    - - "user@some_server.com"
       - :roles: web db app
