@@ -34,11 +34,7 @@ lib/sunshine/output.rb
 lib/sunshine/package_managers/apt.rb
 lib/sunshine/package_managers/dependency.rb
 lib/sunshine/package_managers/gem.rb
-lib/sunshine/package_managers/tpkg.rb
 lib/sunshine/package_managers/yum.rb
-lib/sunshine/presets/atti.rb
-lib/sunshine/presets/atti/atti_app.rb
-lib/sunshine/presets/atti/dependencies.rb
 lib/sunshine/remote_shell.rb
 lib/sunshine/repo.rb
 lib/sunshine/repos/git_repo.rb
@@ -51,10 +47,7 @@ templates/nginx/nginx.conf.erb
 templates/nginx/nginx_optimize.conf
 templates/nginx/nginx_proxy.conf
 templates/rainbows/rainbows.conf.erb
-templates/tasks/app.rake
-templates/tasks/common.rake
 templates/tasks/sunshine.rake
-templates/tasks/tpkg.rake
 templates/unicorn/unicorn.conf.erb
 test/fixtures/app_configs/test_app.yml
 test/fixtures/sunshine_test/test_upload
@@ -62,7 +55,6 @@ test/mocks/mock_object.rb
 test/mocks/mock_open4.rb
 test/test_helper.rb
 test/unit/test_app.rb
-test/unit/test_atti_app.rb
 test/unit/test_binder.rb
 test/unit/test_crontab.rb
 test/unit/test_git_repo.rb
