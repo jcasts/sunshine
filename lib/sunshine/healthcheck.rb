@@ -7,12 +7,15 @@ module Sunshine
 
   class Healthcheck
 
+    ENABLED_FILE  = "health.enabled"
+    DISABLED_FILE = "health.disabled"
+
     attr_accessor :shell, :enabled_file, :disabled_file
 
     def initialize path, shell
       @shell = shell
-      @enabled_file = "#{path}/health.enabled"
-      @disabled_file = "#{path}/health.disabled"
+      @enabled_file  = File.join path, ENABLED_FILE
+      @disabled_file = File.join path, DISABLED_FILE
     end
 
 
