@@ -72,7 +72,7 @@ module Sunshine
     def name
       @url.match(NAME_MATCH)[2]
     rescue
-      raise RepoError, "SVN url must match #{NAME_MATCH.inspect}"
+      raise RepoError, "Svn url must match #{NAME_MATCH.inspect}"
     end
   end
 end
