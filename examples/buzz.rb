@@ -1,4 +1,4 @@
-require 'sunshine/presets/atti'
+require 'atti_sunshine'
 
 
 Sunshine::AttiApp.deploy do |app|
