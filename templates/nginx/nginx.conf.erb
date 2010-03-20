@@ -26,11 +26,11 @@ http {
   include       mime.types;
   default_type  application/octet-stream;
 
-  log_format atti_main '$remote_addr - $remote_user [$time_local] '
+  log_format sunshine '$remote_addr - $remote_user [$time_local] '
                       '"$request" $status $body_bytes_sent "$http_referer" '
                       '"$http_user_agent" "$http_cookie" $request_time '
                       '$upstream_http_x_urid';
-  access_log <%= expand_path log_file(:stdout) %> atti_main;
+  access_log <%= expand_path log_file(:stdout) %> sunshine;
 
   
   # This should be some other include file
@@ -76,40 +76,7 @@ http {
 
     root <%= expand_path app.current_path %>/public;
 
-    log_format partner_api '$remote_addr - $remote_user [$time_local] '
-                           '"$request" $status $body_bytes_sent "$http_referer" '
-                           '"$http_user_agent" "$http_cookie" $request_time '
-                           '$upstream_status $upstream_response_time';
 
-    <% if log_file(:impressions) %>
-    location = /images/li.gif {
-      empty_gif;
-      access_log <%= expand_path log_file(:impressions) %> atti_main;
-      break;
-    }
-    <% end %>
-
-    location ~* /images/(accepted_li|logging_impressions|logging_clicks|logging_requests|xlc|xlr|xli|api_result|lni).gif$ {
-      empty_gif;
-    }
-
-    ##
-    # Protect system controller.
-    location /_priv/ {
-      allow 10.0.0.0/8;
-      allow 12.186.229.30;
-      allow 12.186.229.32;
-      allow 12.186.229.34;
-      allow 12.186.229.36;
-      allow 12.186.229.38;
-      allow 12.186.229.40;
-      allow 198.87.24.254;
-      allow 198.87.24.253;
-      deny all;
-
-      proxy_pass http://app_server;
-    }
-    
     ##
     # Main proxy
     location / {
