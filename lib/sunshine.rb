@@ -24,12 +24,9 @@ require 'fileutils'
 #   }
 #
 #   Sunshine::App.deploy(options) do |app|
-#     sqlite = Sunshine.dependencies.yum 'sqlite3'
-#     sqlgem = Sunshine.dependencies.gem 'sqlite3'
 #
-#     app.install_deps sqlite, sqlgem
-#
-#     app.install_gems    # Install gems defined by bundler or geminstaller conf
+#     app.yum_install 'sqlite'
+#     app.gem_install 'sqlite3-ruby'
 #
 #     app.rake "db:migrate"
 #
