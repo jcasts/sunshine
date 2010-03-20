@@ -16,10 +16,11 @@ namespace :sunshine do
         :type => :svn,
         :url  => "svn://subversion.flight.yellowpages.com/webtools/webservices/envoy/tags/200912.2-WAT-235-release"
       },
-      :remote_shells => %w{jcast.np.wc1.yellowpages.com}
+      :remote_shells => %w{jcastagna@jcast.np.wc1.yellowpages.com}
     }
 
     @app = Sunshine::App.new app_hash
+    @app.add_shell_paths '/home/ypc/sbin'
   end
 
 

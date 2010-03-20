@@ -310,7 +310,7 @@ fi
 
     def pkg_manager
       @pkg_manager ||=
-        (@shell.call("yum -v") && Yum) rescue Apt
+        (@shell.call("yum --version") && Yum) rescue Apt
     end
 
 
