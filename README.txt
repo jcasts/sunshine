@@ -1,5 +1,7 @@
 = Sunshine
 
+http://betalabs.yellowpages.com/
+
 == Description
 
 Sunshine is an object-oriented api for rack application deployment.
@@ -9,6 +11,8 @@ Knowing how it works will let you do really neat things: classes are
 decoupled as much as possible to allow for optimal flexibility,
 and most can be used independently.
 
+This gem was made possible by the sponsoring of AT&T Interactive
+(http://attinteractive.com).
 
 == Setup
 
