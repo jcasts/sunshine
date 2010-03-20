@@ -356,7 +356,6 @@ module Sunshine
   require 'sunshine/package_managers/apt'
   require 'sunshine/package_managers/yum'
   require 'sunshine/package_managers/gem'
-  require 'sunshine/package_managers/tpkg'
 
   require 'sunshine/repo'
   require 'sunshine/repos/svn_repo'
