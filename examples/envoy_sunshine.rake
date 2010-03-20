@@ -1,5 +1,4 @@
 require 'sunshine'
-require 'sunshine/presets/atti'
 
 namespace :sunshine do
 
@@ -20,7 +19,7 @@ namespace :sunshine do
       :remote_shells => %w{jcast.np.wc1.yellowpages.com}
     }
 
-    @app = Sunshine::AttiApp.new app_hash
+    @app = Sunshine::App.new app_hash
   end
 
 
@@ -33,13 +32,8 @@ namespace :sunshine do
       rainbows = Sunshine::Rainbows.new(app, :port => 5001)
 
       nginx = Sunshine::Nginx.new(app, :point_to => rainbows, :port => 5000)
-      nginx.log_files :impressions => "#{app.log_path}/impressions.log",
-                      :stderr      => "#{app.log_path}/error.log",
-                      :stdout      => "#{app.log_path}/access.log"
 
       app.run_geminstaller
-
-      app.upload_tasks 'app', 'common', 'tpkg'
 
       rainbows.setup
       nginx.setup

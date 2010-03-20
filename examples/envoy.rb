@@ -1,25 +1,16 @@
-require 'sunshine/presets/atti'
-
 ##
 # Deploy!
 
-Sunshine::AttiApp.deploy do |app|
+Sunshine::App.deploy do |app|
 
   rainbows = Sunshine::Rainbows.new(app, :port => 5001)
 
   nginx = Sunshine::Nginx.new(app, :point_to => rainbows, :port => 5000)
-  nginx.log_files :impressions => "#{app.log_path}/impressions.log",
-                  :stderr      => "#{app.log_path}/error.log",
-                  :stdout      => "#{app.log_path}/access.log"
 
   app.run_geminstaller
 
-  app.upload_tasks 'app', 'common', 'tpkg'
-
   rainbows.restart
   nginx.restart
-
-  app.health.enable
 end
 
 
