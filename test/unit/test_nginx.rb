@@ -84,7 +84,8 @@ passenger (2.2.4)
     @nginx.setup do |ds, binder|
       assert !binder.sudo
       assert !binder.use_passenger?
-      assert_equal nil, binder.passenger_root
+      assert_equal "/Library/Ruby/Gems/1.8/gems/passenger-2.2.4",
+        binder.passenger_root
     end
   end
 

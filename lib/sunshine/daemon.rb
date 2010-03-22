@@ -135,13 +135,6 @@ module Sunshine
 
         each_server_app do |server_app|
 
-          begin
-            server_app.install_deps @dep_name
-          rescue => e
-            raise DependencyError.new(e,
-              "Failed installing dependency #{@dep_name}")
-          end if Sunshine.dependencies.exist?(@dep_name)
-
           # Build erb binding
           binder = config_binding server_app.shell
 
@@ -149,6 +142,9 @@ module Sunshine
             :sudo => binder.sudo
 
           yield(server_app, binder) if block_given?
+
+          server_app.install_deps @dep_name if
+            Sunshine.dependencies.exist?(@dep_name)
 
           upload_config_files(server_app.shell, binder.get_binding)
         end

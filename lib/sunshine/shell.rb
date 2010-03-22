@@ -58,6 +58,14 @@ module Sunshine
 
 
     ##
+    # Prompt the user to agree.
+
+    def agree(*args, &block)
+      sync{ @input.agree(*args, &block) }
+    end
+
+
+    ##
     # Execute a command on the local system and return the output.
 
     def call cmd, options={}, &block
@@ -282,7 +290,7 @@ module Sunshine
           Sunshine.logger.send log_methods[stream],
             "#{@host}:#{stream_name}", data
 
-          yield(stream_name, data) if block_given?
+          yield(stream_name, data, inn) if block_given?
         end
 
 

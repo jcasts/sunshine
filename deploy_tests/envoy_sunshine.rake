@@ -29,14 +29,10 @@ namespace :sunshine do
     Sunshine.setup 'trace' => true
 
     @app.deploy do |app|
-
-      rainbows = Sunshine::Rainbows.new(app, :port => 5001)
-
-      nginx = Sunshine::Nginx.new(app, :point_to => rainbows, :port => 5000)
+      nginx = Sunshine::Nginx.new app, :port => 88
 
       app.run_geminstaller
 
-      rainbows.setup
       nginx.setup
     end
 
