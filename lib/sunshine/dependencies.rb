@@ -12,6 +12,9 @@ Sunshine.dependencies.instance_eval do
   apt 'git', :pkg => 'git-core'
   yum 'git', :pkg => 'git-core'
 
+  apt 'apache2'
+  yum 'apache2'
+
   apt 'nginx'
   yum 'nginx'
 

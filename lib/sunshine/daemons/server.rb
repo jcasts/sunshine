@@ -35,8 +35,57 @@ module Sunshine
 
       super app, options
 
-      @port        = options[:port] || 80
-      @server_name = options[:server_name]
+      @port          = options[:port] || 80
+      @server_name   = options[:server_name]
+      @supports_rack = false
+    end
+
+
+    ##
+    # Check if passenger is required to run the application.
+    # Returns true if the server's target is a Sunshine::App
+
+    def use_passenger?
+      Sunshine::App === @target && !supports_rack?
+    end
+
+
+    ##
+    # Gets the root of the installer passenger gem.
+
+    def passenger_root shell
+      str     = shell.call "gem list passenger -d"
+      version = $1 if str =~ /passenger\s\((.*)\)$/
+      gempath = $1 if str =~ /Installed\sat:\s(.*)$/
+
+      return unless version && gempath
+
+      File.join(gempath, "gems/passenger-#{version}")
+    end
+
+
+    ##
+    # Add passenger information to the binder at setup time.
+
+    def setup
+      super do |server_app, binder|
+
+        binder.forward :use_passenger?
+
+        binder.set :passenger_root do
+          passenger_root server_app.shell
+        end
+
+        yield(server_app, binder) if block_given?
+      end
+    end
+
+
+    ##
+    # Defines if this server supports interfacing with rack.
+
+    def supports_rack?
+      @supports_rack
     end
 
 

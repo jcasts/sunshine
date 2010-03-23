@@ -1,3 +1,14 @@
+=== 1.0.0 / 2010-03-26
+
+* Improvements:
+
+  * Removed all Atti-specific code for public release.
+
+* Bugfixes:
+
+  * Fixed Nginx passenger implementation.
+
+
 === 0.0.6 / 2010-03-19
 
 * Major:

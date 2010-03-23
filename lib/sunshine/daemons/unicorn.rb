@@ -7,7 +7,10 @@ module Sunshine
 
     def initialize app, options={}
       super
+
       @timeout = options[:timeout] || 3.0
+
+      @supports_rack = true
     end
 
 

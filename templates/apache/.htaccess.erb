@@ -1,0 +1,49 @@
+PidFile <%= pid %>
+MaxClients 1024
+
+ThreadLimit <%= processes %>
+
+<% if sudo == true || sudo == 'root' %>
+User nobody
+Group nobody
+<% end %>
+
+Listen <%= port %>
+NameVirtualHosts *:<%= port %>
+
+<% if use_passenger? %>
+LoadModule passenger_module <%= passenger_root %>/ext/apache2/mod_passenger.so
+
+PassengerRuby <%= shell.call "which ruby" %>
+PassengerRoot <%= passenger_root %>
+PassengerMaxPoolSize <%= processes %>
+<% end %>
+
+<VirtualHost *:<%= port %>>
+  ServerName  <%= server_name %>
+  ErrorLog    <%= expand_path log_file(:stderr) %>
+  TransferLog <%= expand_path log_file(:stdout) %>
+
+  <% if Sunshine::App === target %>
+
+  DocumentRoot <%= expand_path app.current_path %>/public
+
+  <Directory <%= app.current_path %>/public>
+      Allow from all
+      Options -MultiViews
+  </Directory>
+
+  <% else %>
+
+  ProxyRequests Off
+
+  <Proxy *>
+      Order deny,allow
+      Allow from all
+  </Proxy>
+
+  ProxyPass / http://0.0.0.0:<%= target.port %>/
+  ProxyPassReverse / http://0.0.0.0:<%= target.port %>/
+
+  <% end %>
+</VirtualHost>
