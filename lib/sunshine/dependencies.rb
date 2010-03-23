@@ -61,7 +61,32 @@ Sunshine.dependencies.instance_eval do
 
   gem 'rake', :version => ">=0.8"
 
-  gem 'passenger', :version => ">=2.2"
+  gem 'passenger-nginx', :pkg => 'passenger' do
+    install do |shell, sudo|
+
+      shell.call "gem install passenger --no-ri --no-rdoc", :sudo => sudo
+
+      shell.call 'passenger-install-nginx-module --auto --auto-download',
+                                        :sudo => true do |stream, data, inn|
+
+        if data =~ /Please specify a prefix directory \[(.*)\]:/
+
+          dir = $1
+          inn.puts dir
+
+          required_dirs = [
+            File.join(dir, 'fastcgi_temp'),
+            File.join(dir, 'proxy_temp')
+          ]
+
+          shell.call "mkdir -p #{required_dirs.join(" ")}", :sudo => true
+
+          err_log = File.join(dir, "logs/error.log")
+          shell.call "touch #{err_log} && chmod a+rw #{err_log}", :sudo => true
+        end
+      end
+    end
+  end
 
   gem 'geminstaller', :version => ">=0.5"
 

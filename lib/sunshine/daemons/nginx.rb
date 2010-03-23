@@ -7,7 +7,10 @@ module Sunshine
 
     def initialize app, options={}
       super
+
       @sudo ||= @port < 1024
+
+      @dep_name = use_passenger? ? 'passenger-nginx' : 'nginx'
     end
 
 
@@ -26,9 +29,8 @@ module Sunshine
     def setup
       super do |server_app, binder|
 
-        setup_passenger server_app if use_passenger?
-
         binder.forward :use_passenger?
+
         binder.set :passenger_root do
           passenger_root server_app.shell
         end
@@ -48,7 +50,7 @@ module Sunshine
     # Returns true if the server's target is a Sunshine::App
 
     def use_passenger?
-      @target.is_a?(Sunshine::App)
+      Sunshine::App === @target
     end
 
 
@@ -78,14 +80,7 @@ module Sunshine
 
         if data =~ /Please specify a prefix directory \[(.*)\]:/
 
-          dir = if Sunshine.interactive?
-                  server_app.shell.ask \
-                    "Where do you want to install Nginx [#{$1}]?"
-                else
-                  $1
-                end
-
-          dir = $1 if dir.strip.empty?
+          dir = $1
           inn.puts dir
 
           required_dirs = [

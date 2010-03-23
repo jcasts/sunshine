@@ -69,11 +69,7 @@ module Sunshine
     # Execute a command on the local system and return the output.
 
     def call cmd, options={}, &block
-      sudo_val = @sudo
-      sudo_val = options[:sudo] if options.has_key?(:sudo)
-      cmd      = sudo_cmd(cmd, sudo_val) if sudo_val
-
-      execute cmd, &block
+      execute sudo_cmd(cmd, options), &block
     end
 
 
@@ -186,7 +182,14 @@ module Sunshine
 
 
     ##
-    # Build a command with sudo
+    # Build a command with sudo.
+    # If sudo_val is nil, it is considered to mean "pass-through"
+    # and the default shell sudo will be used.
+    # If sudo_val is false, the cmd will be returned unchanged.
+    # If sudo_val is true, the returned command will be prefaced
+    # with sudo -H
+    # If sudo_val is a String, the command will be prefaced
+    # with sudo -H -u string_value
 
     def sudo_cmd cmd, sudo_val=nil
       sudo_val = sudo_val[:sudo] if Hash === sudo_val

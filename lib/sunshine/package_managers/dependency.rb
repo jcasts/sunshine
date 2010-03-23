@@ -82,7 +82,7 @@ module Sunshine
       @parents  = []
       @children = []
 
-      @cmd = Sunshine.shell
+      @shell = Sunshine.shell
 
       requires(*options[:requires]) if options[:requires]
 
@@ -112,8 +112,8 @@ module Sunshine
     #
     #   dep.check "test -s 'yum list installed depname'"
 
-    def check cmd_str=nil
-      @check = cmd_str
+    def check cmd_str=nil, &block
+      @check = cmd_str || block
     end
 
 
@@ -132,8 +132,8 @@ module Sunshine
     #
     #   dep.install "yum install depname"
 
-    def install cmd
-      @install = cmd
+    def install cmd=nil, &block
+      @install = cmd || block
     end
 
 
@@ -250,8 +250,8 @@ module Sunshine
     #
     #   dep.uninstall "yum remove depname"
 
-    def uninstall cmd
-      @uninstall = cmd
+    def uninstall cmd=nil, &block
+      @uninstall = cmd || block
     end
 
 
@@ -305,13 +305,14 @@ module Sunshine
 
     private
 
-    def run_command(command, options={})
-      cmd = options[:call] || @cmd
+    def run_command command, options={}
+      shell = options[:call] || @shell
 
-      unless self.class.sudo.nil?
-        cmd.call command, :sudo => self.class.sudo
+      if Proc === command
+        command.call shell, self.class.sudo
+
       else
-        cmd.call command
+        shell.call command, :sudo => self.class.sudo
       end
     end
 
