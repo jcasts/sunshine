@@ -33,6 +33,11 @@ module Sunshine
           passenger_root server_app.shell
         end
 
+        binder.set :nginx_conf_path do
+          nginx_bin = server_app.shell.call "which nginx"
+          File.join File.dirname(nginx_bin), '..', 'conf'
+        end
+
         yield(server_app, binder) if block_given?
       end
     end
@@ -82,6 +87,19 @@ module Sunshine
 
           dir = $1 if dir.strip.empty?
           inn.puts dir
+
+          required_dirs = [
+            File.join(dir, 'fastcgi_temp'),
+            File.join(dir, 'proxy_temp')
+          ]
+
+          server_app.shell.call \
+            "mkdir -p #{required_dirs.join(" ")}", :sudo => true
+
+          error_log = File.join(dir, "logs/error.log")
+
+          server_app.shell.call \
+            "touch #{error_log} && chmod a+rw #{error_log}", :sudo => true
 
           server_app.add_shell_paths File.join(dir, 'sbin')
         end

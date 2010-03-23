@@ -23,7 +23,7 @@ http {
   client_body_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
   proxy_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
 
-  include       mime.types;
+  include       <%= File.join nginx_conf_path, 'mime.types' %>;
   default_type  application/octet-stream;
 
   log_format sunshine '$remote_addr - $remote_user [$time_local] '
@@ -70,12 +70,13 @@ http {
     port_in_redirect off; # needed for the F5, unfortunately
     server_name_in_redirect off;
 
-    <% if use_passenger? %>
-    passenger_enabled on;
-    <% end %>
 
     root <%= expand_path app.current_path %>/public;
 
+  <% if use_passenger? %>
+    passenger_enabled on;
+
+  <% else %>
 
     ##
     # Main proxy
@@ -90,15 +91,19 @@ http {
       include  <%= expand_path config_path %>/nginx_proxy.conf;
       expires -1;
 
+      <% if target.is_a?(Sunshine::Server) %>
       if (!-f $request_filename) {
         proxy_pass http://app_server;
         break;
       }
+      <% end %>
+
       error_page   500 502 503 504  /500.html;
       location = /500.html {
         root <%= expand_path app.current_path %>/public;
       }
     }
+  <% end %>
   }
 
 }

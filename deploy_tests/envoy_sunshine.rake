@@ -29,7 +29,7 @@ namespace :sunshine do
     Sunshine.setup 'trace' => true
 
     @app.deploy do |app|
-      nginx = Sunshine::Nginx.new app, :port => 88
+      nginx = Sunshine::Nginx.new app, :port => 5000
 
       app.run_geminstaller
 
