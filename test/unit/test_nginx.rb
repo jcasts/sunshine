@@ -100,7 +100,7 @@ passenger (2.2.4)
 
   def stop_cmd svr, sudo=false
     sudo = sudo ? "sudo " : ""
-    cmd = "#{sudo }test -f #{svr.pid} && kill -QUIT $(cat #{svr.pid})"+
+    cmd = "#{sudo }test -f #{svr.pid} && kill -USR1 $(cat #{svr.pid})"+
       " || echo 'No #{svr.name} process to stop for #{svr.app.name}';"
     cmd << "sleep 2 ; rm -f #{svr.pid};"
   end

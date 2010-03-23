@@ -82,6 +82,16 @@ module Sunshine
 
 
     ##
+    # Default server stop command.
+
+    def stop_cmd
+      cmd = "test -f #{@pid} && kill -USR1 $(cat #{@pid})"+
+        " || echo 'No #{@name} process to stop for #{@app.name}';"
+      cmd << "sleep 2 ; rm -f #{@pid};"
+    end
+
+
+    ##
     # Defines if this server supports interfacing with rack.
 
     def supports_rack?

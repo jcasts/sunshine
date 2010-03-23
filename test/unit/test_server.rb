@@ -173,25 +173,6 @@ class TestServer < Test::Unit::TestCase
   end
 
 
-  def test_missing_start_stop_cmd
-    server = Sunshine::Server.new @app
-
-    begin
-      server.start_cmd
-      raise "Should have thrown CriticalDeployError but didn't :("
-    rescue Sunshine::CriticalDeployError => e
-      assert_equal "@start_cmd undefined. Can't start server", e.message
-    end
-
-    begin
-      server.stop_cmd
-      raise "Should have thrown CriticalDeployError but didn't :("
-    rescue Sunshine::CriticalDeployError => e
-      assert_equal "@stop_cmd undefined. Can't stop server", e.message
-    end
-  end
-
-
   def test_log_files
     @server.log_files :test_log => "/path/test_log.log",
                       :another_test => "/path/another_test.log"
