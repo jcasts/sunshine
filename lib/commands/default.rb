@@ -15,7 +15,7 @@ module Sunshine
     # and optionally an accompanying message.
 
     def self.exec argv, config
-      template_rakefile = "#{Sunshine::ROOT}/templates/tasks/sunshine.rake"
+      template_rakefile = "#{Sunshine::ROOT}/templates/sunshine/sunshine.rake"
 
       target_rakefile = config['rakefile']
 
