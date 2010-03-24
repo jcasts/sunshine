@@ -9,9 +9,11 @@ Sunshine.setup 'sudo'          => 'nextgen',
 
 Sunshine::App.deploy :name => 'envoy' do |app|
 
+  app.add_shell_paths '/usr/sbin'
+
   rainbows = Sunshine::Rainbows.new(app, :port => 5001)
 
-  nginx = Sunshine::Nginx.new(app, :point_to => rainbows, :port => 5000)
+  nginx = Sunshine::Apache.new(app, :point_to => rainbows, :port => 5000)
 
   app.run_geminstaller
 
@@ -29,4 +31,4 @@ __END__
 
   :remote_shells:
 #   - <%= deploy_env %>-<%= name %>.np.wc1.yellowpages.com
-    - jcastagna@jcast.np.wc1.yellowpages.com
+    - sunny.np.wc1.yellowpages.com

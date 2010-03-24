@@ -12,8 +12,8 @@ Sunshine.dependencies.instance_eval do
   apt 'git', :pkg => 'git-core'
   yum 'git', :pkg => 'git-core'
 
-  apt 'apache2'
-  yum 'apache2'
+  apt 'apache2', :pkg => 'apache2-mpm-prefork'
+  yum 'apache2', :pkg => 'httpd'
 
   apt 'nginx'
   yum 'nginx'

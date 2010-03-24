@@ -1,7 +1,5 @@
 PidFile <%= pid %>
-MaxClients 1024
-
-ThreadLimit <%= processes %>
+MaxClients <%= processes %>
 
 <% if sudo == true || sudo == 'root' %>
 User nobody
@@ -9,7 +7,12 @@ Group nobody
 <% end %>
 
 Listen <%= port %>
-NameVirtualHosts *:<%= port %>
+
+LoadModule log_config_module modules/mod_log_config.so
+LoadModule authz_host_module modules/mod_authz_host.so
+
+ErrorLog    <%= expand_path log_file(:stderr) %>
+TransferLog <%= expand_path log_file(:stdout) %>
 
 <% if use_passenger? %>
 LoadModule passenger_module <%= passenger_root %>/ext/apache2/mod_passenger.so
@@ -19,10 +22,16 @@ PassengerRoot <%= passenger_root %>
 PassengerMaxPoolSize <%= processes %>
 <% end %>
 
+<% unless Sunshine::App === target %>
+LoadModule proxy_module         modules/mod_proxy.so
+LoadModule proxy_connect_module modules/mod_proxy_connect.so
+LoadModule proxy_http_module    modules/mod_proxy_http.so
+<% end %>
+
+NameVirtualHost *:<%= port %>
+
 <VirtualHost *:<%= port %>>
   ServerName  <%= server_name %>
-  ErrorLog    <%= expand_path log_file(:stderr) %>
-  TransferLog <%= expand_path log_file(:stdout) %>
 
   <% if Sunshine::App === target %>
 

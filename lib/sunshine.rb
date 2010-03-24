@@ -361,6 +361,7 @@ module Sunshine
 
   require 'sunshine/daemon'
   require 'sunshine/daemons/server'
+  require 'sunshine/daemons/apache'
   require 'sunshine/daemons/nginx'
   require 'sunshine/daemons/unicorn'
   require 'sunshine/daemons/rainbows'
