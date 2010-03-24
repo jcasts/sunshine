@@ -10,8 +10,10 @@ Sunshine.dependencies.instance_eval do
   apt 'git', :pkg => 'git-core'
   yum 'git', :pkg => 'git-core'
 
+  yum 'httpd-devel'
+
   apt 'apache2', :pkg => 'apache2-mpm-prefork'
-  yum 'apache2', :pkg => 'httpd'
+  yum 'apache2', :pkg => 'httpd', :requires => 'httpd-devel'
 
   apt 'nginx'
   yum 'nginx'
@@ -54,18 +56,15 @@ Sunshine.dependencies.instance_eval do
   yum 'sqlite-devel'
 
 
-  # Define gems used by Sunshine
+  ##
+  # Define phusion passenger dependencies
 
-  gem 'bundler', :version => ">=0.9"
+  gem 'passenger', :version => ">=2.2.11"
 
-  gem 'isolate', :version => ">=1.3.0"
+  dependency 'passenger-nginx' do
+    requires 'passenger'
 
-  gem 'rake', :version => ">=0.8"
-
-  gem 'passenger-nginx', :pkg => 'passenger' do
     install do |shell, sudo|
-
-      shell.call "gem install passenger --no-ri --no-rdoc", :sudo => sudo
 
       shell.call 'passenger-install-nginx-module --auto --auto-download',
                                         :sudo => true do |stream, data, inn|
@@ -90,10 +89,34 @@ Sunshine.dependencies.instance_eval do
 
 
     check do |shell, sudo|
-      shell.call("gem list passenger -i", :sudo => sudo) &&
       shell.call("nginx -V 2>&1") =~ /gems\/passenger-\d+(\.\d+)+\/ext\/nginx/
     end
   end
+
+
+  dependency 'passenger-apache' do
+    requires 'passenger', 'apache2'
+
+    install do |shell, sudo|
+      shell.call 'passenger-install-apache2-module --auto',
+                                        :sudo => true do |stream, data, inn|
+      end
+    end
+
+    check do |shell, sudo|
+      @test = defined?(@test) ? false : true
+    end
+  end
+
+
+  ##
+  # Define gems used by Sunshine
+
+  gem 'bundler', :version => ">=0.9"
+
+  gem 'isolate', :version => ">=1.3.0"
+
+  gem 'rake', :version => ">=0.8"
 
   gem 'geminstaller', :version => ">=0.5"
 
