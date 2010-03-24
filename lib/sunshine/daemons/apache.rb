@@ -12,6 +12,11 @@ module Sunshine
 
       @sudo = options[:sudo] || @port < 1024
 
+      @sigkill = 'WINCH'
+
+      # FUTURE: have a separate max_clients and processes
+      @max_clients = options[:max_clients] || options[:processes] || 128
+
       @dep_name = options[:dep_name] ||
         use_passenger? ? 'passenger-apache' : 'apache2'
     end
@@ -19,6 +24,14 @@ module Sunshine
 
     def start_cmd
       "#{@bin} -f #{self.config_file_path}"
+    end
+
+
+    def setup
+      super do |server_app, binder|
+        binder.set :max_clients, @max_clients
+        yield(server_app, binder) if block_given?
+      end
     end
   end
 end

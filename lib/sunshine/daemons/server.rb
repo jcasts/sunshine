@@ -17,6 +17,7 @@ module Sunshine
 
 
     attr_reader :server_name, :port
+    attr_accessor :sigkill
 
 
     # Server objects need only an App object to be instantiated.
@@ -37,6 +38,7 @@ module Sunshine
 
       @port          = options[:port] || 80
       @server_name   = options[:server_name]
+      @sigkill       = 'QUIT'
       @supports_rack = false
     end
 
@@ -85,9 +87,8 @@ module Sunshine
     # Default server stop command.
 
     def stop_cmd
-      cmd = "test -f #{@pid} && kill -USR1 $(cat #{@pid})"+
-        " || echo 'No #{@name} process to stop for #{@app.name}';"
-      cmd << "sleep 2 ; rm -f #{@pid};"
+      "test -f #{@pid} && kill -#{@sigkill} $(cat #{@pid}) && sleep 1 && "+
+        "rm -f #{@pid} || echo 'No #{@name} process to stop for #{@app.name}';"
     end
 
 

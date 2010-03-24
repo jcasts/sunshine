@@ -92,16 +92,14 @@ passenger (2.2.4)
 
   ## Helper methods
 
-  def start_cmd svr, sudo=false
-    sudo = sudo ? "sudo " : ""
-    "#{sudo}#{svr.bin} -c #{svr.config_file_path}"
+  def start_cmd svr
+    "#{svr.bin} -c #{svr.config_file_path}"
   end
 
 
-  def stop_cmd svr, sudo=false
-    sudo = sudo ? "sudo " : ""
-    cmd = "#{sudo }test -f #{svr.pid} && kill -USR1 $(cat #{svr.pid})"+
-      " || echo 'No #{svr.name} process to stop for #{svr.app.name}';"
-    cmd << "sleep 2 ; rm -f #{svr.pid};"
+  def stop_cmd svr
+    "test -f #{svr.pid} && kill -#{svr.sigkill} $(cat #{svr.pid}) && "+
+      "sleep 1 && rm -f #{svr.pid} || "+
+      "echo 'No #{svr.name} process to stop for #{svr.app.name}';"
   end
 end

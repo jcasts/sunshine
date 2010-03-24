@@ -1,13 +1,3 @@
-PidFile <%= expand_path pid %>
-MaxClients <%= processes %>
-
-<% if sudo == true || sudo == 'root' %>
-User nobody
-Group nobody
-<% end %>
-
-Listen <%= port %>
-
 LoadModule log_config_module modules/mod_log_config.so
 LoadModule authz_host_module modules/mod_authz_host.so
 
@@ -28,6 +18,18 @@ LoadModule proxy_connect_module modules/mod_proxy_connect.so
 LoadModule proxy_http_module    modules/mod_proxy_http.so
 <% end %>
 
+
+PidFile <%= expand_path pid %>
+MaxClients <%= max_clients %>
+
+<% if sudo == true || sudo == 'root' %>
+User nobody
+Group nobody
+<% end %>
+
+Listen <%= port %>
+
+
 NameVirtualHost *:<%= port %>
 
 <VirtualHost *:<%= port %>>
@@ -45,8 +47,9 @@ NameVirtualHost *:<%= port %>
 
   <% else %>
 
-  ProxyPass / http://0.0.0.0:<%= target.port %>/
-  ProxyPassReverse / http://0.0.0.0:<%= target.port %>/
+  <% target_server = target.server_name || server_name %>
+  ProxyPass / http://<%= target_server %>:<%= target.port %>/
+  ProxyPassReverse / http://<%= target_server %>:<%= target.port %>/
 
   <% end %>
 </VirtualHost>
