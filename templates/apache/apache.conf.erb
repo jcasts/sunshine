@@ -1,4 +1,4 @@
-PidFile <%= pid %>
+PidFile <%= expand_path pid %>
 MaxClients <%= processes %>
 
 <% if sudo == true || sudo == 'root' %>
@@ -32,6 +32,7 @@ NameVirtualHost *:<%= port %>
 
 <VirtualHost *:<%= port %>>
   ServerName  <%= server_name %>
+  ServerAlias www.<%= server_name %>
 
   <% if Sunshine::App === target %>
 
@@ -43,13 +44,6 @@ NameVirtualHost *:<%= port %>
   </Directory>
 
   <% else %>
-
-  ProxyRequests Off
-
-  <Proxy *>
-      Order deny,allow
-      Allow from all
-  </Proxy>
 
   ProxyPass / http://0.0.0.0:<%= target.port %>/
   ProxyPassReverse / http://0.0.0.0:<%= target.port %>/
