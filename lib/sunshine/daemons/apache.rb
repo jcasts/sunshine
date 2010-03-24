@@ -14,7 +14,7 @@ module Sunshine
 
       @sigkill = 'WINCH'
 
-      # FUTURE: have a separate max_clients and processes
+      # TODO: have a separate max_clients and processes
       @max_clients = options[:max_clients] || options[:processes] || 128
 
       @dep_name = options[:dep_name] ||

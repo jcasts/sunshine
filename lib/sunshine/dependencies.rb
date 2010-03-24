@@ -4,8 +4,6 @@
 #class Sunshine::Dependencies < Settler
 Sunshine.dependencies.instance_eval do
 
-  yum 'tpkg'
-
   apt 'svn', :pkg => 'subversion'
   yum 'svn', :pkg => 'subversion'
 
