@@ -97,14 +97,14 @@ Sunshine.dependencies.instance_eval do
   dependency 'passenger-apache' do
     requires 'passenger', 'apache2'
 
-    install do |shell, sudo|
-      shell.call 'passenger-install-apache2-module --auto',
-                                        :sudo => true do |stream, data, inn|
-      end
-    end
+    install 'passenger-install-apache2-module --auto'
 
     check do |shell, sudo|
-      @test = defined?(@test) ? false : true
+      passenger_dir = Server.passenger_root shell
+      passenger_mod = File.join passenger_dir, 'ext/apache2/mod_passenger.so'
+
+      shell.call("test -f #{passenger_mod}", :sudo => true) &&
+        shell.call("apachectl -v")
     end
   end
 

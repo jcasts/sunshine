@@ -55,7 +55,7 @@ module Sunshine
     ##
     # Gets the root of the installer passenger gem.
 
-    def passenger_root shell
+    def self.passenger_root shell
       str     = shell.call "gem list passenger -d"
       version = $1 if str =~ /passenger\s\((.*)\)$/
       gempath = $1 if str =~ /Installed\sat:\s(.*)$/
@@ -75,7 +75,7 @@ module Sunshine
         binder.forward :use_passenger?
 
         binder.set :passenger_root do
-          passenger_root server_app.shell
+          Server.passenger_root server_app.shell
         end
 
         yield(server_app, binder) if block_given?

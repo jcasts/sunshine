@@ -23,7 +23,7 @@ module Sunshine
 
 
     def start_cmd
-      "#{@bin} -f #{self.config_file_path}"
+      "#{@bin} -f #{self.config_file_path} -E #{log_file :stderr}"
     end
 
 
