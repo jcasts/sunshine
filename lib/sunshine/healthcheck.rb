@@ -5,9 +5,12 @@ module Sunshine
   # load balancers by touching health.enabled and health.disabled files on
   # an app's shell.
   #
-  # If you would like to use Sunshine's healthcheck rack middleware, simply
-  # specify the following in your config.ru:
-  #   require 'sunshine_health'
+  # If you would like to use Sunshine's healthcheck rack middleware, use
+  # the following command:
+  #   sunshine --middleware your_middleware_dir
+  #
+  # Then simply specify the following in your config.ru:
+  #   require 'your_middleware_dir/health'
   #   use SunshineHealth
   #
   # SunshineHealth supports the following options:

@@ -2,6 +2,10 @@
 
 * Improvements:
 
+  * Added healthcheck middleware support.
+
+  * Added support for Apache2 and its passenger implementation.
+
   * Removed all Atti-specific code for public release.
 
 * Bugfixes:

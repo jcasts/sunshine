@@ -15,13 +15,35 @@ module Sunshine
     # and optionally an accompanying message.
 
     def self.exec argv, config
+
+      copy_rakefile(config['rakefile'])     if config.has_key? 'rakefile'
+      copy_middleware(config['middleware']) if config.has_key? 'middleware'
+
+      return true
+    end
+
+
+    ##
+    # Copy template rakefile to specified location.
+
+    def self.copy_rakefile path
       template_rakefile = "#{Sunshine::ROOT}/templates/sunshine/sunshine.rake"
 
-      target_rakefile = config['rakefile']
+      FileUtils.cp template_rakefile, path
 
-      FileUtils.cp template_rakefile, target_rakefile
+      puts "Copied Sunshine template rakefile to #{path}"
+    end
 
-      return true, "Copied Sunshine template rakefile to #{target_rakefile}"
+
+    ##
+    # Copy middleware to specified location.
+
+    def self.copy_middleware path
+      middleware_dir = "#{Sunshine::ROOT}/templates/sunshine/middleware/."
+
+      FileUtils.cp_r middleware_dir, path
+
+      puts "Copied Sunshine middleware to #{path}"
     end
 
 
@@ -81,6 +103,12 @@ Sunshine is an object oriented deploy tool for rack applications.
         opt.on('--rakefile [PATH]',
                'Copy the Sunshine template rakefile.') do |path|
           options['rakefile'] = path || File.join(Dir.pwd, "sunshine.rake")
+        end
+
+        opt.on('--middleware [PATH]',
+               'Copy Sunshine rack middleware files.') do |path|
+          options['middleware'] =
+            path || File.join(Dir.pwd, ".")
         end
 
         opt.separator nil

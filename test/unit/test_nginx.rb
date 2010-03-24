@@ -22,6 +22,9 @@ passenger (2.2.4)
 
     Apache module for Ruby on Rails support.
     STR
+
+    @nginx_passenger_check =
+      "/opt/ruby-ypc/lib/ruby/gems/1.8/gems/passenger-2.2.11/ext/nginx"
   end
 
 
@@ -66,7 +69,10 @@ passenger (2.2.4)
 
   def test_setup_passenger
     ds = @passenger.app.server_apps.first.shell
-    ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
+
+    ds.set_mock_response 0,
+      "gem list passenger -d" => [:out, @gemout],
+      "nginx -V 2>&1" => [:out, @nginx_passenger_check]
 
     @passenger.setup do |ds, binder|
       assert binder.sudo
