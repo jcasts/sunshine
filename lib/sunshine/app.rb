@@ -145,7 +145,7 @@ module Sunshine
 
         run_post_user_lambdas
 
-        health :enable
+        setup_healthcheck
 
         build_control_scripts
         build_deploy_info_file
@@ -581,6 +581,18 @@ module Sunshine
         :send => [:sass, *sass_names]
     end
 
+
+    def setup_healthcheck options=nil
+      with_server_apps options,
+        :msg => "Setting up healthcheck" do |server_app|
+        server_app.health.enable
+
+        health_middleware =
+          File.join Sunshine::ROOT, "templates/sunshine/sunshine_health.rb"
+
+        server_app.shell.upload health_middleware, "#{@checkout_path}/."
+      end
+    end
 
     ##
     # Set and return the remote shell env variables.

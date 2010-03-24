@@ -4,6 +4,18 @@ module Sunshine
   # Healthcheck objects handle enabling and disabling health checking for
   # load balancers by touching health.enabled and health.disabled files on
   # an app's shell.
+  #
+  # If you would like to use Sunshine's healthcheck rack middleware, simply
+  # specify the following in your config.ru:
+  #   require 'sunshine_health'
+  #   use SunshineHealth
+  #
+  # SunshineHealth supports the following options:
+  # :uri_path::    The path that healthcheck will be used on.
+  # :health_file:: The file to check for health.
+  #
+  #   use SunshineHealth, :uri_path    => "/health.txt",
+  #                       :health_file => "health.txt"
 
   class Healthcheck
 
