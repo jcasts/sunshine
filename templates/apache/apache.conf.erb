@@ -47,9 +47,8 @@ NameVirtualHost *:<%= port %>
 
   <% else %>
 
-  <% target_server = target.server_name || server_name %>
-  ProxyPass / http://<%= target_server %>:<%= target.port %>/
-  ProxyPassReverse / http://<%= target_server %>:<%= target.port %>/
+  ProxyPass / http://0.0.0.0:<%= target.port %>/
+  ProxyPassReverse / http://0.0.0.0:<%= target.port %>/
 
   <% end %>
 </VirtualHost>

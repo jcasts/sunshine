@@ -342,6 +342,10 @@ module Sunshine
         shell.expand_path path
       end
 
+      binder.set :target_server do
+        target.server_name || server_name
+      end
+
       binder
     end
 
