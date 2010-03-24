@@ -87,6 +87,12 @@ Sunshine.dependencies.instance_eval do
         end
       end
     end
+
+
+    check do |shell, sudo|
+      shell.call("gem list passenger -i", :sudo => sudo) &&
+      shell.call("nginx -V 2>&1") =~ /gems\/passenger-\d+(\.\d+)+\/ext\/nginx/
+    end
   end
 
   gem 'geminstaller', :version => ">=0.5"

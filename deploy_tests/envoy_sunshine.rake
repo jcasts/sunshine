@@ -20,7 +20,8 @@ namespace :sunshine do
     }
 
     @app = Sunshine::App.new app_hash
-    @app.add_shell_paths '/opt/nginx/sbin', '/home/ypc/sbin'
+    @app.add_shell_paths '/opt/nginx/sbin',
+      '/home/ypc/sbin', '/opt/ruby-ypc/bin'
   end
 
 

@@ -18,6 +18,7 @@ http {
 
   <% if use_passenger? %>
   passenger_root <%= passenger_root %>;
+  passenger_ruby <%= shell.call "which ruby" %>;
   <% end %>
 
   client_body_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
