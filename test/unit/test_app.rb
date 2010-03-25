@@ -233,6 +233,23 @@ class TestApp < Test::Unit::TestCase
   end
 
 
+  def test_call
+    calls = 0
+
+    @app.call "test call", :sudo => true do |type, data, inn|
+      calls += 1
+    end
+
+    assert_equal calls, @app.server_apps.length
+
+    args = ["test call", {:sudo => true}]
+
+    @app.each do |server_app|
+      assert server_app.shell.method_called?(:call, :args => args)
+    end
+  end
+
+
   def test_checkout_codebase
     @app.checkout_codebase
 

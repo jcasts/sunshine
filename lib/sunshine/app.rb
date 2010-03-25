@@ -90,7 +90,18 @@ module Sunshine
 
 
     ##
-    # Connect server apps.
+    # Call a command on specified server apps.
+    # Supports any App#find and Shell#call options.
+
+    def call cmd, options=nil, &block
+      with_server_apps options, :msg => "Running #{cmd}" do |server_app|
+        server_app.shell.call cmd, options, &block
+      end
+    end
+
+
+    ##
+    # Connect server apps. Supports any App#find options.
 
     def connect options=nil
       with_server_apps options,
@@ -101,7 +112,7 @@ module Sunshine
 
 
     ##
-    # Check if server apps are connected.
+    # Check if server apps are connected. Supports any App#find options.
 
     def connected? options=nil
       with_server_apps options, :no_threads => true do |server_app|
@@ -113,7 +124,7 @@ module Sunshine
 
 
     ##
-    # Disconnect server apps.
+    # Disconnect server apps. Supports any App#find options.
 
     def disconnect options=nil
       with_server_apps options,
@@ -174,7 +185,7 @@ module Sunshine
 
     ##
     # Symlink current directory to previous checkout and remove
-    # the current deploy directory.
+    # the current deploy directory. Supports any App#find options.
 
     def revert!(options=nil)
       with_server_apps options,
