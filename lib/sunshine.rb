@@ -92,6 +92,14 @@ module Sunshine
 
 
   ##
+  # Automatically install dependencies as needed. Defaults to true.
+  # Overridden in the ~/.sunshine config file or at setup time.
+
+  def self.auto_dependencies?
+    @config['auto_dependencies']
+  end
+
+  ##
   # Returns the main Sunshine dependencies library.
 
   def self.dependencies
@@ -101,8 +109,8 @@ module Sunshine
 
   ##
   # The default directory where apps should be deployed to:
-  # '/var/www' by default. Overridden in the ~/.sunshine config file.
-  # See also App#deploy_path.
+  # '/var/www' by default. Overridden in the ~/.sunshine config file
+  # or at setup time. See also App#deploy_path.
 
   def self.web_directory
     @config['web_directory']
@@ -226,7 +234,8 @@ module Sunshine
     'deploy_env'          => :development,
     'auto'                => false,
     'max_deploy_versions' => 5,
-    'web_directory'       => '/var/www'
+    'web_directory'       => '/var/www',
+    'auto_dependencies'   => true
   }
 
   ##

@@ -257,8 +257,11 @@ module Sunshine
 
     ##
     # Install dependencies previously defined in Sunshine.dependencies.
+    # Will not execute if Sunshine.auto_dependencies? is false.
 
     def install_deps(*deps)
+      return unless Sunshine.auto_dependencies?
+
       options = {:call => @shell, :prefer => pkg_manager}
       options.merge! deps.delete_at(-1) if Hash === deps.last
 

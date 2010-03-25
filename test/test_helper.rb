@@ -183,6 +183,8 @@ unless MockObject === Sunshine.shell
   Sunshine.shell.mock :write, :return => nil
 end
 
+YAML.extend MockObject unless MockObject === YAML
+
 unless Sunshine::Dependency.include? MockObject
   Sunshine::Dependency.send(:include, MockObject)
 end

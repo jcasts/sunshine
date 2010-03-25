@@ -3,6 +3,7 @@ require 'test/test_helper'
 class TestSunshine < Test::Unit::TestCase
 
   def setup
+    mock_yaml_load_file
   end
 
 
@@ -64,10 +65,10 @@ class TestSunshine < Test::Unit::TestCase
 
       assert_equal servers, Sunshine.setup['servers']
 
-
       Sunshine.run %w{thing1 thing2 -v}.unshift(name)
       servers = [Sunshine.shell]
 
+      args = [%w{thing1 thing2}, Sunshine.setup]
       assert_command cmd, args
 
       assert_equal servers, Sunshine.setup['servers']
@@ -152,6 +153,11 @@ class TestSunshine < Test::Unit::TestCase
       def exit *args
       end
     end
+  end
+
+  def mock_yaml_load_file
+    YAML.mock :load_file, :args   => [Sunshine::USER_CONFIG_FILE],
+                          :return => Sunshine::DEFAULT_CONFIG
   end
 
 end
