@@ -147,6 +147,7 @@ module Sunshine
     # Checks out the app's codebase to the checkout path.
 
     def checkout_repo repo
+      install_deps repo.scm
       @info[:scm] = repo.checkout_to self.checkout_path, @shell
     end
 

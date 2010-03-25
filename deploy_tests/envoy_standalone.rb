@@ -2,7 +2,8 @@ require 'sunshine'
 
 Sunshine.setup 'sudo'          => 'nextgen',
                'trace'         => true,
-               'web_directory' => "~nextgen"
+               'web_directory' => "~nextgen",
+               'auto_dependencies' => false
 
 ##
 # Deploy!

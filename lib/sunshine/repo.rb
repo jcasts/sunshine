@@ -57,7 +57,7 @@ module Sunshine
     end
 
 
-    attr_reader :url
+    attr_reader :url, :scm
 
     def initialize url, options={}
       @scm = self.class.name.split("::").last.sub('Repo', '').downcase
@@ -77,9 +77,6 @@ module Sunshine
 
       Sunshine.logger.info @scm,
         "Checking out to #{shell.host} #{path}" do
-
-        Sunshine.dependencies.install @scm, :call => shell if
-          Sunshine.dependencies.exist? @scm
 
         shell.call "test -d #{path} && rm -rf #{path} || echo false"
         shell.call "mkdir -p #{path}"
