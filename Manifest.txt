@@ -19,6 +19,7 @@ lib/sunshine/app.rb
 lib/sunshine/binder.rb
 lib/sunshine/crontab.rb
 lib/sunshine/daemon.rb
+lib/sunshine/daemons/apache.rb
 lib/sunshine/daemons/ar_sendmail.rb
 lib/sunshine/daemons/delayed_job.rb
 lib/sunshine/daemons/nginx.rb
@@ -41,12 +42,14 @@ lib/sunshine/repos/rsync_repo.rb
 lib/sunshine/repos/svn_repo.rb
 lib/sunshine/server_app.rb
 lib/sunshine/shell.rb
+templates/apache/apache.conf.erb
 templates/logrotate/logrotate.conf.erb
 templates/nginx/nginx.conf.erb
 templates/nginx/nginx_optimize.conf
 templates/nginx/nginx_proxy.conf
 templates/rainbows/rainbows.conf.erb
-templates/tasks/sunshine.rake
+templates/sunshine/middleware/health.rb
+templates/sunshine/sunshine.rake
 templates/unicorn/unicorn.conf.erb
 test/fixtures/app_configs/test_app.yml
 test/fixtures/sunshine_test/test_upload
@@ -56,6 +59,7 @@ test/test_helper.rb
 test/unit/test_app.rb
 test/unit/test_binder.rb
 test/unit/test_crontab.rb
+test/unit/test_daemon.rb
 test/unit/test_git_repo.rb
 test/unit/test_healthcheck.rb
 test/unit/test_nginx.rb
