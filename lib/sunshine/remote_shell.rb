@@ -228,7 +228,9 @@ module Sunshine
     end
 
 
-    def ssh_cmd string, options={}
+    def ssh_cmd string, options=nil
+      options ||= {}
+
       cmd = sh_cmd string
       cmd = env_cmd cmd
       cmd = sudo_cmd cmd, options

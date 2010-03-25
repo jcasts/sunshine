@@ -252,15 +252,25 @@ class TestApp < Test::Unit::TestCase
 
 
   def test_deployed?
+    set_mock_response_for @app, 0,
+      "cat #{@app.current_path}/info" => [:out,
+          "---\n:deploy_name: '#{@app.deploy_name}'"]
+
     deployed = @app.deployed?
 
     state = true
     @app.server_apps.each do |sa|
       assert sa.method_called? :deployed?
+
+      set_mock_response_for sa.shell, 0,
+        "cat #{@app.current_path}/info" => [:out,
+            "---\n:deploy_name: '#{@app.deploy_name}'"]
+
       state = false unless sa.deployed?
     end
 
     assert_equal state, deployed
+    assert deployed
   end
 
 
@@ -324,6 +334,43 @@ class TestApp < Test::Unit::TestCase
         assert_ssh_call install, ds, :sudo => gem_sudo
       end
     end
+  end
+
+
+  def test_find_all
+    app = Sunshine::App.new :repo => {:type => "svn", :url => @svn_url},
+            :remote_shells => [
+              "user@some_server.com",
+              ["server2.com", {:roles => "web db"}]
+            ]
+
+    server_apps = app.server_apps
+
+    assert_equal server_apps, app.find
+    assert_equal server_apps, app.find({})
+    assert_equal server_apps, app.find(:all)
+    assert_equal server_apps, app.find(nil)
+  end
+
+
+  def test_find
+    app = Sunshine::App.new :repo => {:type => "svn", :url => @svn_url},
+            :remote_shells => [
+              "user@some_server.com",
+              ["server2.com", {:roles => "web db"}]
+            ]
+
+    server_apps = app.server_apps
+
+    assert_equal server_apps, app.find(:role => :web)
+    assert_equal server_apps, app.find(:role => :db)
+
+    assert_equal [server_apps[0]], app.find(:role => :all)
+    assert_equal [server_apps[0]], app.find(:role => :blarg)
+    assert_equal [server_apps[0]], app.find(:user => 'user')
+    assert_equal [server_apps[0]], app.find(:host => 'some_server.com')
+
+    assert_equal [server_apps[1]], app.find(:host => 'server2.com')
   end
 
 
