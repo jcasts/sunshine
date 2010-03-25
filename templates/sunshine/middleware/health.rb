@@ -1,55 +1,58 @@
-class SunshineHealth
+module Sunshine
 
-  ##
-  # Default healthcheck request path.
+  class Health
 
-  DEFAULT_REQUEST_PATH = '/_health'
+    ##
+    # Default healthcheck request path.
 
-
-  ##
-  # The healthcheck-enabled file.
-
-  HEALTHCHECK_FILE = 'health.enabled'
+    DEFAULT_REQUEST_PATH = '/_health'
 
 
-  ##
-  # Creates a new SunshineHealth middleware. Supported options are:
-  # :uri_path::    The path that healthcheck will be used on.
-  # :health_file:: The file to check for health.
+    ##
+    # The healthcheck-enabled file.
 
-  def initialize app, options={}
-    @app              = app
-    @uri_path         = options[:uri_path]    || DEFAULT_REQUEST_PATH
-    @healthcheck_file = options[:health_file] || HEALTHCHECK_FILE
-  end
+    HEALTHCHECK_FILE = 'health.enabled'
 
 
-  def call env
-    check_health?(env) ? health_response : @app.call(env)
-  end
+    ##
+    # Creates a new SunshineHealth middleware. Supported options are:
+    # :uri_path::    The path that healthcheck will be used on.
+    # :health_file:: The file to check for health.
+
+    def initialize app, options={}
+      @app              = app
+      @uri_path         = options[:uri_path]    || DEFAULT_REQUEST_PATH
+      @healthcheck_file = options[:health_file] || HEALTHCHECK_FILE
+    end
 
 
-  ##
-  # Given the rack env, do we need to perform a health check?
-
-  def check_health? env
-    env['REQUEST_PATH'] == @uri_path
-  end
+    def call env
+      check_health?(env) ? health_response : @app.call(env)
+    end
 
 
-  ##
-  # Check if healthcheck is enabled.
+    ##
+    # Given the rack env, do we need to perform a health check?
 
-  def health_enabled?
-    File.file? @healthcheck_file
-  end
+    def check_health? env
+      env['REQUEST_PATH'] == @uri_path
+    end
 
 
-  ##
-  # Get a rack response for the current health status.
+    ##
+    # Check if healthcheck is enabled.
 
-  def health_response
-    status, body = health_enabled? ? [200, "OK"] : [404, "404"]
-    [status, {'Content-Type' => 'text/html'}, body]
+    def health_enabled?
+      File.file? @healthcheck_file
+    end
+
+
+    ##
+    # Get a rack response for the current health status.
+
+    def health_response
+      status, body = health_enabled? ? [200, "OK"] : [404, "404"]
+      [status, {'Content-Type' => 'text/html'}, body]
+    end
   end
 end

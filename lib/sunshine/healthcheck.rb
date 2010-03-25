@@ -11,9 +11,9 @@ module Sunshine
   #
   # Then simply specify the following in your config.ru:
   #   require 'your_middleware_dir/health'
-  #   use SunshineHealth
+  #   use Sunshine::Health
   #
-  # SunshineHealth supports the following options:
+  # Sunshine::Health supports the following options:
   # :uri_path::    The path that healthcheck will be used on.
   # :health_file:: The file to check for health.
   #
