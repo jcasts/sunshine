@@ -37,11 +37,11 @@ module Sunshine
 
     def self.detect path=".", shell=nil
 
-      if SvnRepo.valid? path, shell
+      if SvnRepo.valid? path
         info = SvnRepo.get_info path, shell
         SvnRepo.new info[:url], info
 
-      elsif GitRepo.valid? path, shell
+      elsif GitRepo.valid? path
         info = GitRepo.get_info path, shell
         GitRepo.new info[:url], info
       end
