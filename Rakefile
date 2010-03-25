@@ -40,6 +40,7 @@ Hoe.spec 'sunshine' do |p|
   self.extra_deps << ['open4',    '>= 1.0.1']
   self.extra_deps << ['rainbow',  '>= 1.0.4']
   self.extra_deps << ['highline', '>= 1.5.1']
+  self.extra_deps << ['json',     '>= 1.2.0']
 end
 
 # vim: syntax=Ruby

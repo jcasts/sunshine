@@ -2,7 +2,8 @@ require 'rubygems'
 require 'open4'
 require 'rainbow'
 require 'highline'
-require 'tmpdir'
+require 'json'
+
 
 require 'yaml'
 require 'erb'
@@ -10,6 +11,7 @@ require 'logger'
 require 'optparse'
 require 'time'
 require 'fileutils'
+require 'tmpdir'
 
 ##
 # Sunshine is an object oriented deploy tool for rack applications.
