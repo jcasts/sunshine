@@ -142,7 +142,6 @@ module Sunshine
     end
 
 
-
     ##
     # Checks out the app's codebase to the checkout path.
 

@@ -2,6 +2,8 @@
 
 * Improvements:
 
+  * Added auto_dependencies config to turn on/off auto installing things.
+
   * Added healthcheck middleware support.
 
   * Added support for Apache2 and its passenger implementation.
