@@ -35,7 +35,7 @@ module Sunshine
     # Given the rack env, do we need to perform a health check?
 
     def check_health? env
-      env['REQUEST_PATH'] == @uri_path
+      env['PATH_INFO'] == @uri_path
     end
 
 
