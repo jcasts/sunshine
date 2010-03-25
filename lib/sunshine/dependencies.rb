@@ -97,7 +97,9 @@ Sunshine.dependencies.instance_eval do
   dependency 'passenger-apache' do
     requires 'passenger', 'apache2'
 
-    install 'passenger-install-apache2-module --auto'
+    install do |shell, sudo|
+      shell.call 'passenger-install-apache2-module --auto', :sudo => true
+    end
 
     check do |shell, sudo|
       passenger_dir = Server.passenger_root shell

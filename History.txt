@@ -1,4 +1,18 @@
-=== 1.0.0 / 2010-03-26
+=== 1.0.2 / 2010-03-25
+
+* Bugfixes:
+
+  * Fixed apache passenger dependency to run as sudo.
+
+  * Fixed a bug in Repo::detect
+
+=== 1.0.1 / 2010-03-25
+
+* Bugfixes:
+
+  * Added json dependency
+
+=== 1.0.0 / 2010-03-25
 
 * Improvements:
 
