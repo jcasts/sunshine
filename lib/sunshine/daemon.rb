@@ -138,7 +138,8 @@ module Sunshine
           # Build erb binding
           binder = config_binding server_app.shell
 
-          server_app.shell.call "mkdir -p #{remote_dirs.join(" ")}"
+          configure_remote_dirs server_app.shell
+          touch_log_files server_app.shell
 
           yield(server_app, binder) if block_given?
 
@@ -276,7 +277,7 @@ module Sunshine
     # Append or override daemon log file paths:
     #   daemon.log_files :stderr => "/all_logs/stderr.log"
 
-    def log_files(hash)
+    def log_files hash
       @log_files.merge!(hash)
     end
 
@@ -286,7 +287,7 @@ module Sunshine
     #  daemon.log_file(:stderr)
     #  #=> "/all_logs/stderr.log"
 
-    def log_file(key)
+    def log_file key
       @log_files[key]
     end
 
@@ -354,11 +355,30 @@ module Sunshine
     end
 
 
-    def remote_dirs
+    def configure_remote_dirs shell
       dirs = @log_files.values.map{|f| File.dirname(f)}
-      dirs.concat [@config_path, File.dirname(@pid)]
+
+      dirs << File.dirname(@pid)
+      dirs << @config_path
       dirs.delete_if{|d| d == "."}
-      dirs
+      dirs = dirs.join(" ")
+
+      shell.call "mkdir -p #{dirs}"
+    end
+
+
+    def touch_log_files shell
+      files = @log_files.values.join(" ")
+
+      user = case pick_sudo shell
+             when true then 'root'
+             when String then sudo
+             else
+               nil
+             end
+
+      shell.call "touch #{files}", :sudo => true
+      shell.call "chown #{user} #{files}", :sudo => true if user
     end
 
 
@@ -368,10 +388,17 @@ module Sunshine
           sudo = pick_sudo sa.shell
 
           %w{start stop restart status}.each do |script|
-            cmd = send "#{script}_cmd".to_sym
-            cmd = sa.shell.sudo_cmd(cmd, sudo)
+            script_file = "#{@config_path}/#{script}"
 
-            sa.scripts[script.to_sym] << cmd.join(" ")
+            cmd = send "#{script}_cmd".to_sym
+
+            sa.shell.make_file script_file, cmd,
+              :flags => '--chmod=ugo=rwx'
+
+
+            cmd = sa.shell.sudo_cmd script_file, sudo
+
+            sa.scripts[script.to_sym] << [*cmd].join(" ")
           end
         end
       end
