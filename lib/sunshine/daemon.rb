@@ -370,7 +370,8 @@ module Sunshine
     def touch_log_files shell
       files = @log_files.values.join(" ")
 
-      user = case pick_sudo shell
+      sudo = pick_sudo(shell)
+      user = case sudo
              when true then 'root'
              when String then sudo
              else

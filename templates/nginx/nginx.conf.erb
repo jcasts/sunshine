@@ -17,6 +17,7 @@ events {
 http {
 
   <% if use_passenger? %>
+  passenger_default_user nobody;
   passenger_root <%= passenger_root %>;
   passenger_ruby <%= shell.call "which ruby" %>;
   <% end %>

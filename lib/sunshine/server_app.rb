@@ -398,7 +398,8 @@ fi
 
     def run_geminstaller
       install_deps 'geminstaller', :type => Gem
-      @shell.call "cd #{self.checkout_path} && geminstaller -e"
+      # Without sudo gems get installed to ~user/.gems
+      @shell.call "cd #{self.checkout_path} && geminstaller -e", :sudo => true
     end
 
 
