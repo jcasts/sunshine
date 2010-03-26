@@ -348,7 +348,7 @@ fi
       rm_deploys = deploys[0..-lim]
       rm_deploys.map!{|d| "#{self.deploys_path}/#{d}"}
 
-      @shell.call("rm -rf #{rm_deploys.join(" ")}")
+      @shell.call "rm -rf #{rm_deploys.join(" ")}"
     end
 
 

@@ -4,6 +4,8 @@
 
   * Added App#call method.
 
+  * Added App#with_session and Shell#with_session to reduce login prompts.
+
 * Bugfixes:
 
   * Fixed healthcheck middleware.

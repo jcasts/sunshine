@@ -54,20 +54,20 @@ module Sunshine
       success   = true
 
       shells.each do |shell|
-        shell.connect
+        shell.with_session do
 
-        begin
-          state, response = yield(shell)
-        rescue => e
-          state = false
-          response = "#{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
+          begin
+            state, response = yield(shell)
+
+          rescue => e
+            state = false
+            response = "#{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
+          end
+
+          host            = shell.host
+          success         = state if success
+          responses[host] = build_response state, response
         end
-
-        host            = shell.host
-        success         = state if success
-        responses[host] = build_response state, response
-
-        shell.disconnect
       end
 
       output = format ? self.send(format, responses) : responses

@@ -29,12 +29,15 @@ namespace :sunshine do
   task :deploy => :app do
     Sunshine.setup 'trace' => true
 
-    @app.deploy do |app|
-      app.run_geminstaller
-      Sunshine::Nginx.new(app, :port => 5000).setup
-    end
+    @app.with_session do
 
-    @app.start :force => true
+      @app.deploy do |app|
+        app.run_geminstaller
+        Sunshine::Nginx.new(app, :port => 5000).setup
+      end
+
+      @app.start :force => true
+    end
   end
 
 

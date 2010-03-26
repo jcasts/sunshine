@@ -255,6 +255,23 @@ module Sunshine
 
 
     ##
+    # Runs the passed block within a connection session.
+    # If the shell is already connected, connecting and disconnecting
+    # is ignored; otherwise, the session method will ensure that
+    # the shell's connection gets closed after the block has been
+    # executed.
+
+    def with_session
+      prev_connection = connected?
+      connect unless prev_connection
+
+      yield
+
+      disconnect unless prev_connection
+    end
+
+
+    ##
     # Write string to stdout (by default).
 
     def write str

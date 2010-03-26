@@ -29,6 +29,18 @@ namespace :sunshine do
   task :deploy => :app do
     Sunshine.setup 'trace' => true
 
+    # If you're not able to add your public key to remote servers,
+    # you can setup your tasks to use the App#with_session method
+    # to avoid having to login multiple times:
+    #
+    #   @app.with_session do
+    #     @app.deploy do |app|
+    #       ...
+    #     end
+    #
+    #     @app.start :force => true
+    #   end
+
     @app.deploy do |app|
 
       # Do deploy-specific stuff here, e.g.

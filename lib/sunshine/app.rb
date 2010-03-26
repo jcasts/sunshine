@@ -139,32 +139,38 @@ module Sunshine
     # call user's post-deploy code. Supports any App#find options.
 
     def deploy options=nil
-      Sunshine.logger.info :app, "Beginning deploy of #{@name}" do
-        connect options
-      end
+      prev_connection = connected?
 
       deploy_trap = Sunshine.add_trap "Reverting deploy of #{@name}" do
         revert! options
+        disconnect options unless prev_connection
       end
 
-      with_filter options do |app|
-        make_app_directories
-        checkout_codebase
-        symlink_current_dir
+      Sunshine.logger.info :app, "Beginning deploy of #{@name}"
 
-        yield(self) if block_given?
+      with_session options do
 
-        run_post_user_lambdas
+        with_filter options do |app|
+          make_app_directories
+          checkout_codebase
+          symlink_current_dir
 
-        health :enable
+          yield(self) if block_given?
 
-        build_control_scripts
-        build_deploy_info_file
-        build_crontab
+          run_post_user_lambdas
 
-        register_as_deployed
-        remove_old_deploys
+          health :enable
+
+          build_control_scripts
+          build_deploy_info_file
+          build_crontab
+
+          register_as_deployed
+          remove_old_deploys
+        end
       end
+
+      Sunshine.logger.info :app, "Ending deploy of #{@name}"
 
     rescue => e
       message = "#{e.class}: #{e.message}"
@@ -172,14 +178,11 @@ module Sunshine
       Sunshine.logger.error :app, message do
         Sunshine.logger.error '>>', e.backtrace.join("\n")
         revert!
+        disconnect options unless prev_connection
       end
 
     ensure
       Sunshine.delete_trap deploy_trap
-
-      Sunshine.logger.info :app, "Ending deploy of #{@name}" do
-        disconnect options
-      end
     end
 
 
@@ -783,6 +786,21 @@ module Sunshine
       else
         block.call
       end
+    end
+
+
+    ##
+    # Runs block ensuring a connection to remote_shells.
+    # Connecting and disconnecting will be ignored if a session
+    # already exists. Supports all App#find options.
+
+    def with_session options=nil
+      prev_connection = connected? options
+      connect options unless prev_connection
+
+      yield
+
+      disconnect options unless prev_connection
     end
 
 
