@@ -97,7 +97,7 @@ Sunshine is an object oriented deploy tool for rack applications.
     start     Start a deployed app
     stop      Stop a deployed app
 
-   Options:
+  Options:
         EOF
 
         opt.on('--rakefile [PATH]',

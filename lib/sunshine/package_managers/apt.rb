@@ -11,6 +11,8 @@ module Sunshine
 
   class Apt < Dependency
 
+    self.sudo = true
+
     def initialize(name, options={}, &block)
       super(name, options) do
         pkg_name = build_pkg_name @pkg.dup, options

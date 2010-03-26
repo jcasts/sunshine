@@ -143,6 +143,7 @@ module Sunshine
 
       deploy_trap = Sunshine.add_trap "Reverting deploy of #{@name}" do
         revert! options
+        start options
         disconnect options unless prev_connection
       end
 
@@ -153,6 +154,9 @@ module Sunshine
         with_filter options do |app|
           make_app_directories
           checkout_codebase
+
+          stop
+
           symlink_current_dir
 
           yield(self) if block_given?
@@ -177,7 +181,8 @@ module Sunshine
 
       Sunshine.logger.error :app, message do
         Sunshine.logger.error '>>', e.backtrace.join("\n")
-        revert!
+        revert! options
+        start options
         disconnect options unless prev_connection
       end
 

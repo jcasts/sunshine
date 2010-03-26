@@ -102,11 +102,10 @@ Sunshine.dependencies.instance_eval do
     end
 
     check do |shell, sudo|
-      passenger_dir = Server.passenger_root shell
+      passenger_dir = Sunshine::Server.passenger_root shell
       passenger_mod = File.join passenger_dir, 'ext/apache2/mod_passenger.so'
 
-      shell.call("test -f #{passenger_mod}", :sudo => true) &&
-        shell.call("apachectl -v")
+      shell.call("test -f #{passenger_mod} && apachectl -v")
     end
   end
 

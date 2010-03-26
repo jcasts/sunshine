@@ -375,10 +375,6 @@ fi
 
         Sunshine.logger.info @shell.host, "Reverted to #{last_deploy}"
 
-        unless start :force => true
-          Sunshine.logger.error @shell.host, "Failed #{@name} startup"
-        end
-
       else
         @crontab.delete!
 
@@ -411,7 +407,8 @@ fi
     # Post-deploy only.
 
     def running?
-      @shell.call "#{self.root_path}/status" rescue false
+      # Permissions are handled by the script, use: :sudo => false
+      @shell.call "#{self.root_path}/status", :sudo => false rescue false
     end
 
 
@@ -451,7 +448,8 @@ fi
         stop
       end
 
-      @shell.call "#{self.root_path}/start" rescue false
+      # Permissions are handled by the script, use: :sudo => false
+      @shell.call "#{self.root_path}/start", :sudo => false rescue false
     end
 
 
@@ -468,7 +466,8 @@ fi
     # Post-deploy only.
 
     def stop
-      @shell.call "#{self.root_path}/stop" rescue false
+      # Permissions are handled by the script, use: :sudo => false
+      @shell.call "#{self.root_path}/stop", :sudo => false rescue false
     end
 
 

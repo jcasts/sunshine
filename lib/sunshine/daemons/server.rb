@@ -37,6 +37,7 @@ module Sunshine
       super app, options
 
       @port          = options[:port] || 80
+      @sudo          = options[:sudo] || @port < 1024
       @server_name   = options[:server_name]
       @sigkill       = 'QUIT'
       @supports_rack = false

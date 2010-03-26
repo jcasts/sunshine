@@ -20,7 +20,7 @@ namespace :sunshine do
     }
 
     @app = Sunshine::App.new app_hash
-    @app.add_shell_paths '/opt/nginx/sbin',
+    @app.add_shell_paths '/opt/nginx/sbin', '/usr/sbin',
       '/home/ypc/sbin', '/opt/ruby-ypc/bin'
   end
 
@@ -33,7 +33,7 @@ namespace :sunshine do
 
       @app.deploy do |app|
         app.run_geminstaller
-        Sunshine::Nginx.new(app, :port => 5000).setup
+        Sunshine::Apache.new(app).setup
       end
 
       @app.start :force => true

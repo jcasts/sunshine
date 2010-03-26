@@ -138,8 +138,7 @@ module Sunshine
           # Build erb binding
           binder = config_binding server_app.shell
 
-          server_app.shell.call "mkdir -p #{remote_dirs.join(" ")}",
-            :sudo => binder.sudo
+          server_app.shell.call "mkdir -p #{remote_dirs.join(" ")}"
 
           yield(server_app, binder) if block_given?
 
@@ -351,14 +350,7 @@ module Sunshine
 
 
     def pick_sudo shell
-      case shell.sudo
-      when true
-        self.sudo || shell.sudo
-      when String
-        String === self.sudo ? self.sudo : shell.sudo
-      else
-        self.sudo
-      end
+      self.sudo.nil? ? shell.sudo : self.sudo
     end
 
 
@@ -373,10 +365,14 @@ module Sunshine
     def register_after_user_script
       @app.after_user_script do |app|
         each_server_app do |sa|
-          sa.scripts[:start]   << start_cmd
-          sa.scripts[:stop]    << stop_cmd
-          sa.scripts[:restart] << restart_cmd
-          sa.scripts[:status]  << status_cmd
+          sudo = pick_sudo sa.shell
+
+          %w{start stop restart status}.each do |script|
+            cmd = send "#{script}_cmd".to_sym
+            cmd = sa.shell.sudo_cmd(cmd, sudo)
+
+            sa.scripts[script.to_sym] << cmd.join(" ")
+          end
         end
       end
     end

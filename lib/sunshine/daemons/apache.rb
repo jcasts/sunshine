@@ -10,8 +10,6 @@ module Sunshine
 
       @bin = options[:bin] || 'apachectl'
 
-      @sudo = options[:sudo] || @port < 1024
-
       @sigkill = 'WINCH'
 
       # TODO: have a separate max_clients and processes

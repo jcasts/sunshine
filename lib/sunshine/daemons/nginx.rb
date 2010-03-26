@@ -8,8 +8,6 @@ module Sunshine
     def initialize app, options={}
       super
 
-      @sudo = options[:sudo] || @port < 1024
-
       @dep_name = options[:dep_name] ||
         use_passenger? ? 'passenger-nginx' : 'nginx'
     end
