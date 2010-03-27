@@ -33,10 +33,10 @@ Sunshine.dependencies.instance_eval do
   apt 'irb'
   yum 'irb', :pkg => 'ruby-irb'
 
-  apt 'rubygems', :version => '1.3.5' do
+  apt 'rubygems' do
     requires 'ruby', 'ruby-devel'
   end
-  yum 'rubygems', :version => '1.3.5' do
+  yum 'rubygems' do
     requires 'ruby', 'ruby-devel'
   end
 
