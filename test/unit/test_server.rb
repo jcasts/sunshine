@@ -65,14 +65,14 @@ class TestServer < Test::Unit::TestCase
       assert_equal @rainbows.send(:pick_sudo, sa.shell), binder.sudo
     end
 
-    args = ["rainbows"]
     server.each_server_app do |sa|
-      assert sa.method_called?(:install_deps, :args => args)
+      assert sa.method_called?(:install_deps, :args => ["rainbows"])
+
+      assert server.method_called?(:configure_remote_dirs, :args => [sa.shell])
+      assert server.method_called?(:touch_log_files, :args => [sa.shell])
+      assert server.method_called?(:upload_config_files, :args => [sa.shell])
     end
 
-    assert server.method_called?(:upload_config_files)
-
-    assert_ssh_call "mkdir -p #{server.send(:remote_dirs).join(" ")}"
 
     assert_rsync(/rainbows\.conf/, "some_server.com:"+
       "/usr/local/my_user/other_app/current/daemons/rainbows/rainbows.conf")
@@ -103,13 +103,12 @@ class TestServer < Test::Unit::TestCase
     @server_app.shell.mock :file?, :args => [server.config_file_path],
                                    :return => false
 
-    server.start do |ds|
-      assert_equal @server_app, ds
+    server.start do |sa|
+      assert_equal @server_app, sa
+      assert_ssh_call server.start_cmd, sa.shell, :sudo => true
     end
 
     assert server.method_called?(:setup)
-
-    assert_ssh_call server.start_cmd
   end
 
 
@@ -118,31 +117,32 @@ class TestServer < Test::Unit::TestCase
     @server_app.shell.mock :file?, :args => [server.config_file_path],
                                    :return => true
 
-    server.start
+    server.start do |sa|
+      assert_equal @server_app, sa
+      assert_ssh_call server.start_cmd, sa.shell, :sudo => true
+    end
 
     assert !server.method_called?(:setup)
-
-    assert_ssh_call server.start_cmd
   end
 
 
   def test_stop
     server = @rainbows
 
-    server.stop do |ds|
-      assert_equal @server_app, ds
+    server.stop do |sa|
+      assert_equal @server_app, sa
+      assert_ssh_call server.stop_cmd, sa.shell, :sudo => true
     end
-
-    assert_ssh_call server.stop_cmd
   end
 
 
   def test_restart
     server = @rainbows
 
-    server.restart
-
-    assert_ssh_call server.restart_cmd
+    server.restart do |sa|
+      assert_equal @server_app, sa
+      assert_ssh_call server.restart_cmd, sa.shell, :sudo => true
+    end
   end
 
 
@@ -152,10 +152,7 @@ class TestServer < Test::Unit::TestCase
                                    :return => true
 
     server.restart
-
     assert !server.method_called?(:setup)
-
-    assert_ssh_call server.restart_cmd
   end
 
 
@@ -166,10 +163,12 @@ class TestServer < Test::Unit::TestCase
     @server_app.shell.mock :file?, :args => [server.config_file_path],
                                    :return => false
 
-    server.restart
+    server.restart do |sa|
+      assert_equal @server_app, sa
+      assert_ssh_call server.restart_cmd, sa.shell, :sudo => true
+    end
 
     assert server.method_called?(:setup)
-    assert_ssh_call server.restart_cmd
   end
 
 
@@ -207,18 +206,6 @@ class TestServer < Test::Unit::TestCase
   end
 
 
-  def test_remote_dirs
-    server = @rainbows
-
-    dirs = server.send :remote_dirs
-
-    assert_dir_in dirs, server.pid
-    assert_dir_in dirs, server.config_file_path
-    assert_dir_in dirs, server.log_file(:stderr)
-    assert_dir_in dirs, server.log_file(:stdout)
-  end
-
-
   def test_register_after_user_script
     server = @rainbows
 
@@ -227,11 +214,12 @@ class TestServer < Test::Unit::TestCase
     @app.run_post_user_lambdas
 
     server.each_server_app do |sa|
+      %w{start stop restart status}.each do |script|
+        script_file = "#{server.config_path}/#{script}"
+        cmd = sa.shell.sudo_cmd script_file, server.send(:pick_sudo, sa.shell)
 
-      assert sa.scripts[:start].include?(server.start_cmd)
-      assert sa.scripts[:stop].include?(server.stop_cmd)
-      assert sa.scripts[:status].include?(server.status_cmd)
-      assert sa.scripts[:restart].include?(server.restart_cmd)
+        assert sa.scripts[script.to_sym].include?(cmd.join(" "))
+      end
 
       assert_equal server.port, sa.info[:ports][server.pid]
     end
@@ -240,18 +228,18 @@ class TestServer < Test::Unit::TestCase
 
   def test_pick_sudo
     ds = @rainbows.app.server_apps.first.shell
-    assert_equal nil, @rainbows.send(:pick_sudo, ds)
+    assert_equal true, @rainbows.send(:pick_sudo, ds)
 
     @rainbows.sudo = true
     assert_equal true, @rainbows.send(:pick_sudo, ds)
 
     ds.sudo = true
     @rainbows.sudo = false
-    assert_equal true, @rainbows.send(:pick_sudo, ds)
+    assert_equal false, @rainbows.send(:pick_sudo, ds)
 
     ds.sudo = "blah"
     @rainbows.sudo = true
-    assert_equal "blah", @rainbows.send(:pick_sudo, ds)
+    assert_equal true, @rainbows.send(:pick_sudo, ds)
 
     @rainbows.sudo = "local"
     assert_equal "local", @rainbows.send(:pick_sudo, ds)

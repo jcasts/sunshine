@@ -280,8 +280,6 @@ class TestServerApp < Test::Unit::TestCase
 
     last_deploy = "#{@app.deploys_path}/ploy5"
     assert_server_call "ln -sfT #{last_deploy} #{@app.current_path}"
-
-    assert @sa.method_called?(:start, :args =>[:force => true])
   end
 
 

@@ -327,7 +327,8 @@ module Sunshine
     end
 
 
-    private
+    ##
+    # Create and setup a binding for a given shell.
 
     def config_binding shell
       binder = Binder.new self
@@ -350,10 +351,17 @@ module Sunshine
     end
 
 
+    ##
+    # Pick which sudo to use between the daemon sudo and shell sudo.
+    # (Useful when running servers on ports < 1024)
+
     def pick_sudo shell
       self.sudo.nil? ? shell.sudo : self.sudo
     end
 
+
+    ##
+    # Make sure all the remote directories needed by the daemon exist.
 
     def configure_remote_dirs shell
       dirs = @log_files.values.map{|f| File.dirname(f)}
@@ -366,6 +374,9 @@ module Sunshine
       shell.call "mkdir -p #{dirs}"
     end
 
+
+    ##
+    # Make sure log files are owned by the daemon's user.
 
     def touch_log_files shell
       files = @log_files.values.join(" ")
@@ -382,6 +393,9 @@ module Sunshine
       shell.call "chown #{user} #{files}", :sudo => true if user
     end
 
+
+    ##
+    # Setup what should be run after the user block on App#deploy.
 
     def register_after_user_script
       @app.after_user_script do |app|
