@@ -13,6 +13,7 @@ module Sunshine
     def initialize url, options={}
       super
       @flags << "-r"
+      @url << "/" unless @url[-1..-1] == "/"
     end
 
 

@@ -62,7 +62,7 @@ module Sunshine
     def initialize url, options={}
       @scm = self.class.name.split("::").last.sub('Repo', '').downcase
 
-      @url   = url
+      @url   = url.to_s
       @flags = [*options[:flags]].compact
     end
 
