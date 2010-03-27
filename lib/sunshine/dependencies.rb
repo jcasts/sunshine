@@ -10,6 +10,9 @@ Sunshine.dependencies.instance_eval do
   apt 'git', :pkg => 'git-core'
   yum 'git', :pkg => 'git-core'
 
+  apt 'rsync'
+  yum 'rsync'
+
   yum 'httpd-devel'
 
   apt 'apache2', :pkg => 'apache2-mpm-prefork'
