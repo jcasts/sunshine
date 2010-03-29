@@ -17,8 +17,7 @@ module Sunshine
     # for template rendering.
 
     def self.binder_methods
-      [:app, :name, :target, :bin, :pid, :port,
-      :processes, :config_path, :log_file, :timeout]
+      [:app, :name, :bin, :pid, :processes, :config_path, :log_file, :timeout]
     end
 
 
@@ -31,7 +30,7 @@ module Sunshine
     end
 
 
-    attr_reader :app, :name, :target
+    attr_reader :app, :name
 
     attr_accessor :bin, :pid, :processes, :timeout, :sudo, :server_apps
 
@@ -43,34 +42,31 @@ module Sunshine
     # Daemon objects need only an App object to be instantiated but many options
     # are available for customization:
     #
-    # :pid:: pid_path - set the pid; default: app.shared_path/pids/svr_name.pid
-    #                   defaults to app.shared_path/pids/svr_name.pid
+    # :bin:: bin_path - Set the daemon app bin path (e.g. usr/local/nginx)
+    # defaults to svr_name.
     #
-    # :bin:: bin_path - set the daemon app bin path (e.g. usr/local/nginx)
-    #                   defaults to svr_name
+    # :processes:: prcss_num - Number of processes daemon should run;
+    # defaults to 1.
     #
-    # :sudo:: bool|str - define if sudo should be used and with what user
+    # :config_file:: name - Remote file name the daemon should load;
+    # defaults to svr_name.conf
     #
-    # :timeout:: int|str - timeout to use for daemon config
-    #                      defaults to 1
+    # :config_path:: path - Remote path daemon configs will be uploaded to;
+    # defaults to app.current_path/daemons/svr_name
     #
-    # :processes:: prcss_num - number of processes daemon should run
-    #                          defaults to 0
+    # :config_template:: path - Glob path to tempates to render and upload;
+    # defaults to sunshine_path/templates/svr_name/*
     #
-    # :config_template:: path - glob path to tempates to render and upload
-    #                           defaults to sunshine_path/templates/svr_name/*
+    # :log_path:: path - Path to where the log files should be output;
+    # defaults to app.log_path.
     #
-    # :config_path:: path - remote path daemon configs will be uploaded to
-    #                       defaults to app.current_path/daemons/svr_name
+    # :pid:: pid_path - Set the pid; default: app.shared_path/pids/svr_name.pid
+    # defaults to app.shared_path/pids/svr_name.pid.
     #
-    # :config_file:: name - remote file name the daemon should load
-    #                       defaults to svr_name.conf
+    # :sudo:: bool|str - Define if sudo should be used to run the daemon,
+    # and/or with what user.
     #
-    # :log_path:: path - path to where the log files should be output
-    #                    defaults to app.log_path
-    #
-    # :point_to:: app|daemon - an abstract target to point to
-    #                                 defaults to the passed app
+    # :timeout:: int - Timeout to use for daemon config, defaults to 1.
     #
     # The Daemon constructor also supports any App#find options to narrow
     # the server apps to use. Note: subclasses such as Server already have
@@ -78,9 +74,7 @@ module Sunshine
 
     def initialize app, options={}
       @options = options
-
-      @app    = app
-      @target = options[:point_to] || @app
+      @app     = app
 
       @short_class_name = self.class.underscore self.class.to_s.split("::").last
 
@@ -341,10 +335,6 @@ module Sunshine
 
       binder.set :expand_path do |path|
         shell.expand_path path
-      end
-
-      binder.set :target_server do
-        target.server_name || server_name
       end
 
       binder

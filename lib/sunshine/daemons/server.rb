@@ -3,31 +3,37 @@ module Sunshine
   ##
   # An abstract class to wrap simple server software setup and start/stop.
   #
-  # Child classes are expected to at least provide a start and stop bash script
-  # by either overloading the start_cmd and stop_cmd methods, or by setting
-  # @start_cmd and @stop_cmd. A restart_cmd method or @restart_cmd attribute
-  # may also be specified if restart requires more functionality than simply
-  # calling start_cmd && stop_cmd.
+  # Child classes are expected to at least provide a start_cmd bash script
+  # by either overloading the start_cmd method, or by setting @start_cmd.
+  # A restart_cmd and stop_cmd method or attribute may also be specified
+  # if restart requires more functionality than simply calling
+  # start_cmd && stop_cmd.
 
   class Server < Daemon
 
     def self.binder_methods
-      [:server_name, :port].concat super
+      [:server_name, :port, :target].concat super
     end
 
 
-    attr_reader :server_name, :port
+    attr_reader :server_name, :port, :target
+
+    # When using the default stop_cmd, define what signal to use to
+    # kill the process
     attr_accessor :sigkill
 
 
     # Server objects need only an App object to be instantiated.
     # All Daemon init options are supported plus the following:
     #
-    # :port:: port_num - the port to run the server on
-    #                    defaults to 80
+    # :point_to:: app|server - An app or server to point to,
+    # defaults to the passed app. If a server object is given, will
+    # act as a proxy. (Only valid on front-end servers - Nginx, Apache)
     #
-    # :server_name:: myserver.com - host name used by server
-    #                               defaults to nil
+    # :port:: port_num - The port to run the server on defaults to 80.
+    #
+    # :server_name:: myserver.com - Host name used by server
+    # defaults to the individual remote host.
     #
     # By default, servers also assign the option :role => :web.
 
@@ -37,19 +43,23 @@ module Sunshine
       super app, options
 
       @port          = options[:port] || 80
-      @sudo          = options[:sudo] || @port < 1024 || nil
       @server_name   = options[:server_name]
       @sigkill       = 'QUIT'
-      @supports_rack = false
+      @sudo          = options[:sudo] || @port < 1024 || nil
+      @target        = options[:point_to] || @app
+
+      @supports_rack      = false
+      @supports_passenger = false
     end
 
 
     ##
     # Check if passenger is required to run the application.
-    # Returns true if the server's target is a Sunshine::App
+    # Returns true if the server's target is a Sunshine::App and if
+    # the server explicitely supports passenger.
 
     def use_passenger?
-      Sunshine::App === @target && !supports_rack?
+      Sunshine::App === @target && supports_passenger? && !supports_rack?
     end
 
 
@@ -68,7 +78,7 @@ module Sunshine
 
 
     ##
-    # Add passenger information to the binder at setup time.
+    # Adds passenger information to the binder at setup time.
 
     def setup
       super do |server_app, binder|
@@ -89,7 +99,15 @@ module Sunshine
 
     def stop_cmd
       "test -f #{@pid} && kill -#{@sigkill} $(cat #{@pid}) && sleep 1 && "+
-        "rm -f #{@pid} || echo 'No #{@name} process to stop for #{@app.name}';"
+        "rm -f #{@pid} || echo 'Could not kill #{@name} pid for #{@app.name}';"
+    end
+
+
+    ##
+    # Defines if this server has passenger support.
+
+    def supports_passenger?
+      @supports_passenger
     end
 
 
@@ -107,6 +125,10 @@ module Sunshine
       binder = super
 
       binder.set :server_name, (@server_name || shell.host)
+
+      binder.set :target_server do
+        target.server_name || server_name
+      end
 
       binder
     end

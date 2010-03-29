@@ -2,6 +2,8 @@ module Sunshine
 
   ##
   # Simple server wrapper for Rainbows setup and control.
+  # Rainbows is strictly a backend server and therefore does not support
+  # the :point_to proxying option.
 
   class Rainbows < Unicorn
 

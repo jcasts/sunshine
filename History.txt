@@ -1,4 +1,10 @@
-=== 1.0.3 / 2010
+=== 1.0.4 / 2010-04-02
+
+* Bugfixes:
+
+  * Fixed Rsync repo to auto append "/" to urls for correct rsyncing.
+
+=== 1.0.3 / 2010-03-26
 
  * Improvements:
 

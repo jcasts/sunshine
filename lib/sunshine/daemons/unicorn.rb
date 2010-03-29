@@ -2,6 +2,8 @@ module Sunshine
 
   ##
   # Simple server wrapper for Unicorn setup and control.
+  # Unicorn is strictly a backend server and therefore does not support
+  # the :point_to proxying option.
 
   class Unicorn < Server
 
@@ -10,7 +12,8 @@ module Sunshine
 
       @timeout = options[:timeout] || 3.0
 
-      @supports_rack = true
+      @supports_rack      = true
+      @supports_passenger = false
     end
 
 

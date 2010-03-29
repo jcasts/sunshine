@@ -8,6 +8,9 @@ module Sunshine
     def initialize app, options={}
       super
 
+      @supports_rack      = false
+      @supports_passenger = true
+
       @dep_name = options[:dep_name] ||
         use_passenger? ? 'passenger-nginx' : 'nginx'
     end

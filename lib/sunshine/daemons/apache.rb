@@ -12,6 +12,9 @@ module Sunshine
 
       @sigkill = 'WINCH'
 
+      @supports_rack      = false
+      @supports_passenger = true
+
       # TODO: have a separate max_clients and processes
       @max_clients = options[:max_clients] || options[:processes] || 128
 

@@ -33,7 +33,7 @@ namespace :sunshine do
 
       @app.deploy do |app|
         app.run_geminstaller
-        Sunshine::Nginx.new(app).setup
+        Sunshine::Nginx.new(app, :standalone => true).setup
       end
 
       @app.start :force => true

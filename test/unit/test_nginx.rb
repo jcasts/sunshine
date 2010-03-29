@@ -106,6 +106,6 @@ passenger (2.2.4)
   def stop_cmd svr
     "test -f #{svr.pid} && kill -#{svr.sigkill} $(cat #{svr.pid}) && "+
       "sleep 1 && rm -f #{svr.pid} || "+
-      "echo 'No #{svr.name} process to stop for #{svr.app.name}';"
+      "echo 'Could not kill #{svr.name} pid for #{svr.app.name}';"
   end
 end
