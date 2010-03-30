@@ -12,11 +12,11 @@ module Sunshine
   class Server < Daemon
 
     def self.binder_methods
-      [:server_name, :port, :target].concat super
+      [:server_name, :port, :target, :connections].concat super
     end
 
 
-    attr_reader :server_name, :port, :target
+    attr_reader :server_name, :port, :target, :connections
 
     # When using the default stop_cmd, define what signal to use to
     # kill the process
@@ -25,6 +25,9 @@ module Sunshine
 
     # Server objects need only an App object to be instantiated.
     # All Daemon init options are supported plus the following:
+    #
+    # :connections:: num - Number of connections allowed per server;
+    # defaults to 1024.
     #
     # :point_to:: app|server - An app or server to point to,
     # defaults to the passed app. If a server object is given, will
@@ -42,6 +45,7 @@ module Sunshine
 
       super app, options
 
+      @connections   = options[:connections] || 1024
       @port          = options[:port] || 80
       @server_name   = options[:server_name]
       @sigkill       = 'QUIT'

@@ -2,6 +2,8 @@ module Sunshine
 
   ##
   # A wrapper for configuring the apache2 server.
+  # Note: Due to Apache default limitations, the @connections attribute
+  # defaults to 256.
 
   class Apache < Server
 
@@ -15,8 +17,7 @@ module Sunshine
       @supports_rack      = false
       @supports_passenger = true
 
-      # TODO: have a separate max_clients and processes
-      @max_clients = options[:max_clients] || options[:processes] || 128
+      @connections = options[:connections] || 256
 
       @dep_name = options[:dep_name] ||
         use_passenger? ? 'passenger-apache' : 'apache2'

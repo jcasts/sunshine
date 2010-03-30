@@ -124,6 +124,8 @@ Sunshine.dependencies.instance_eval do
 
   gem 'geminstaller', :version => ">=0.5"
 
+  gem 'thin', :version => ">=1.2.7"
+
   gem 'unicorn', :version => ">=0.9"
 
   gem 'rainbows', :version => ">=0.90.2"

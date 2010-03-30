@@ -374,6 +374,7 @@ module Sunshine
   require 'sunshine/daemons/server'
   require 'sunshine/daemons/apache'
   require 'sunshine/daemons/nginx'
+  require 'sunshine/daemons/thin'
   require 'sunshine/daemons/unicorn'
   require 'sunshine/daemons/rainbows'
   require 'sunshine/daemons/ar_sendmail'

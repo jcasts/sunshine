@@ -1,5 +1,11 @@
 === 1.0.4 / 2010-04-02
 
+* Improvements:
+
+  * Added support for Thin.
+
+  * Added Server support for max connections configuration.
+
 * Bugfixes:
 
   * Fixed Rsync repo to auto append "/" to urls for correct rsyncing.

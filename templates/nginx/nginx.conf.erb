@@ -8,7 +8,7 @@ pid               <%= expand_path pid %>;
 error_log         <%= expand_path log_file(:stderr) %> info;
 
 events {
-  worker_connections  1024;
+  worker_connections  <%= connections %>;
   <% unless darwin %>
   use epoll;
   <% end %>

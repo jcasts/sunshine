@@ -66,7 +66,7 @@ module Sunshine
     # :sudo:: bool|str - Define if sudo should be used to run the daemon,
     # and/or with what user.
     #
-    # :timeout:: int - Timeout to use for daemon config, defaults to 1.
+    # :timeout:: int - Timeout to use for daemon config, defaults to 0.
     #
     # The Daemon constructor also supports any App#find options to narrow
     # the server apps to use. Note: subclasses such as Server already have

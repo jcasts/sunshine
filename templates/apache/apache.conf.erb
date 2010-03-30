@@ -20,7 +20,7 @@ LoadModule proxy_http_module    modules/mod_proxy_http.so
 
 
 PidFile <%= expand_path pid %>
-MaxClients <%= max_clients %>
+MaxClients <%= connections %>
 
 <% if sudo == true || sudo == 'root' %>
 User nobody
