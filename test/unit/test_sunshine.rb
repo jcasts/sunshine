@@ -28,12 +28,13 @@ class TestSunshine < Test::Unit::TestCase
 
   def test_find_command
     assert !Sunshine.find_command('st')
-    assert_equal 'start', Sunshine.find_command('sta')
-    assert_equal 'stop', Sunshine.find_command('sto')
-    assert_equal 'add', Sunshine.find_command('a')
+    assert_equal Sunshine::StartCommand, Sunshine.find_command('sta')
+    assert_equal Sunshine::StopCommand, Sunshine.find_command('sto')
+    assert_equal Sunshine::AddCommand, Sunshine.find_command('a')
 
     Sunshine::COMMANDS.each do |cmd|
-      assert_equal cmd, Sunshine.find_command(cmd)
+      const = Sunshine.const_get "#{cmd.capitalize}Command"
+      assert_equal const, Sunshine.find_command(cmd)
     end
   end
 
@@ -44,7 +45,7 @@ class TestSunshine < Test::Unit::TestCase
 
     Sunshine.run %w{run somefile.rb -l debug -e prod --no-trace}
 
-    assert_command Sunshine::RunCommand, [['somefile.rb'], Sunshine.setup]
+    assert_command Sunshine::RunCommand, [['somefile.rb'], Sunshine.config]
   end
 
 
@@ -56,23 +57,28 @@ class TestSunshine < Test::Unit::TestCase
 
       mock_sunshine_command cmd
 
-      Sunshine.run %w{thing1 thing2 -r remoteserver.com}.unshift(name)
+      argv = [name, 'thing1', 'thing2', '-r', 'remoteserver.com']
+
+      Sunshine.run argv
 
       servers = [Sunshine::RemoteShell.new("remoteserver.com")]
 
-      args = [%w{thing1 thing2}, Sunshine.setup]
+      args = [%w{thing1 thing2}, Sunshine.config]
       assert_command cmd, args
 
-      assert_equal servers, Sunshine.setup['servers']
+      assert_equal servers, Sunshine.config['servers']
 
-      Sunshine.run %w{thing1 thing2 -v}.unshift(name)
+
+      argv = [name, 'thing1', 'thing2', '-v']
+
+      Sunshine.run argv
       servers = [Sunshine.shell]
 
-      args = [%w{thing1 thing2}, Sunshine.setup]
+      args = [%w{thing1 thing2}, Sunshine.config]
       assert_command cmd, args
 
-      assert_equal servers, Sunshine.setup['servers']
-      assert Sunshine.setup['verbose']
+      assert_equal servers, Sunshine.config['servers']
+      assert Sunshine.config['verbose']
     end
   end
 

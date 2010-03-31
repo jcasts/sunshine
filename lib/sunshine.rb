@@ -76,13 +76,55 @@ module Sunshine
   # Sunshine version.
   VERSION = '1.0.3'
 
+  ##
+  # Path to the list of installed sunshine apps.
+  APP_LIST_PATH = "~/.sunshine_list"
 
   ##
-  # Handles input/output to the shell. See Sunshine::Shell.
+  # Commands supported by Sunshine.
+  COMMANDS = %w{add list restart rm run start stop}
 
-  def self.shell
-    @shell ||= Sunshine::Shell.new
+  ##
+  # File DATA from Sunshine run files.
+  DATA = defined?(::DATA) ? ::DATA : nil
+
+  ##
+  # Default configuration.
+  DEFAULT_CONFIG = {
+    'level'               => 'info',
+    'deploy_env'          => :development,
+    'auto'                => false,
+    'max_deploy_versions' => 5,
+    'web_directory'       => '/var/www',
+    'auto_dependencies'   => true
+  }
+
+  ##
+  # Path where Sunshine assumes repo information can be found if missing.
+  PATH = Dir.getwd
+
+  ##
+  # Root directory of the Sunshine gem.
+  ROOT = File.expand_path File.join(File.dirname(__FILE__), "..")
+
+  ##
+  # Default Sunshine config file
+  USER_CONFIG_FILE = File.expand_path("~/.sunshine")
+
+  ##
+  # Temp directory used by various sunshine classes
+  # for uploads, checkouts, etc...
+  TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
+  FileUtils.mkdir_p TMP_DIR
+
+
+  ##
+  # Returns the Sunshine config hash.
+
+  def self.config
+    @config ||= DEFAULT_CONFIG.dup
   end
+
 
   ##
   # The default deploy environment to use. Set with the -e option.
@@ -110,6 +152,14 @@ module Sunshine
 
 
   ##
+  # Handles input/output to the shell. See Sunshine::Shell.
+
+  def self.shell
+    @shell ||= Sunshine::Shell.new
+  end
+
+
+  ##
   # The default directory where apps should be deployed to:
   # '/var/www' by default. Overridden in the ~/.sunshine config file
   # or at setup time. See also App#deploy_path.
@@ -132,8 +182,7 @@ module Sunshine
   # Handles all output for sunshine. See Sunshine::Output.
 
   def self.logger
-    @logger ||= Sunshine::Output.new \
-      :level => Logger.const_get(@config['level'].upcase)
+    @logger
   end
 
 
@@ -194,15 +243,6 @@ module Sunshine
   end
 
 
-  trap "INT" do
-    $stderr << "\n\n"
-    logger.indent = 0
-    logger.fatal :INT, "Caught INT signal!"
-
-    call_trap @trap_stack.shift
-    Kernel.exit 1
-  end
-
 
   ##
   # Global value of sudo to use. Returns true, nil, or a username.
@@ -215,51 +255,6 @@ module Sunshine
 
 
   ##
-  # Path to the list of installed sunshine apps.
-  APP_LIST_PATH = "~/.sunshine_list"
-
-  READ_LIST_CMD = "test -f #{Sunshine::APP_LIST_PATH} && "+
-      "cat #{APP_LIST_PATH} || echo ''"
-
-  ##
-  # Commands supported by Sunshine
-  COMMANDS = %w{add list restart rm run start stop}
-
-  ##
-  # Default Sunshine config file
-  USER_CONFIG_FILE = File.expand_path("~/.sunshine")
-
-  ##
-  # Default configuration
-  DEFAULT_CONFIG = {
-    'level'               => 'info',
-    'deploy_env'          => :development,
-    'auto'                => false,
-    'max_deploy_versions' => 5,
-    'web_directory'       => '/var/www',
-    'auto_dependencies'   => true
-  }
-
-  ##
-  # Temp directory used by various sunshine classes
-  # for uploads, checkouts, etc...
-  TMP_DIR = File.join Dir.tmpdir, "sunshine_#{$$}"
-  FileUtils.mkdir_p TMP_DIR
-
-  ##
-  # Path where Sunshine assumes repo information can be found if missing.
-  PATH = Dir.getwd
-
-  ##
-  # File DATA from Sunshine run files.
-  DATA = defined?(::DATA) ? ::DATA : nil
-
-  ##
-  # Root directory of the Sunshine gem.
-  ROOT = File.expand_path File.join(File.dirname(__FILE__), "..")
-
-
-  ##
   # Cleanup after Sunshine has run, remove temp dirs, etc...
 
   def self.cleanup
@@ -268,32 +263,18 @@ module Sunshine
 
 
   ##
-  # Loads libraries or gems passed to the -R option.
+  # Loads a yaml config file to run setup with.
 
-  def self.require_libs(*libs)
-    libs.each do |lib|
-      require lib
-    end
+  def self.load_config_file conf
+    setup YAML.load_file(conf)
   end
 
 
   ##
-  # Setup Sunshine with a custom config:
-  #   Sunshine.setup 'level' => 'debug', 'deploy_env' => :production
+  # Loads the USER_CONFIG_FILE and runs setup. Creates the default
+  # config file and exits if not present.
 
-  def self.setup new_config={}, reset=false
-    @config = DEFAULT_CONFIG.dup if !defined?(@config) || reset
-    @config.merge! new_config
-    @config
-  end
-
-
-  ##
-  # Run Sunshine with the passed argv and exits with appropriate exitcode.
-  #   run %w{run my_script.rb -l debug}
-  #   run %w{list -d}
-
-  def self.run argv=ARGV
+  def self.load_user_config
     unless File.file? USER_CONFIG_FILE
       File.open(USER_CONFIG_FILE, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml}
 
@@ -303,17 +284,58 @@ module Sunshine
       self.exit 1, msg
     end
 
-    command_name = find_command argv.first
-    argv.shift if command_name
-    command_name ||= "default"
+    load_config_file USER_CONFIG_FILE
+  end
 
-    command = Sunshine.const_get("#{command_name.capitalize}Command")
 
-    config = YAML.load_file USER_CONFIG_FILE
-    config.merge! command.parse_args(argv)
+  ##
+  # Loads an array of libraries or gems.
 
-    self.setup config, true
-    self.require_libs(*config['require'])
+  def self.require_libs(*libs)
+    libs.compact.each{|lib| require lib }
+  end
+
+
+  ##
+  # Setup Sunshine with a custom config:
+  #   Sunshine.setup 'level' => 'debug', 'deploy_env' => :production
+
+  def self.setup new_config={}, reset=false
+    @config = DEFAULT_CONFIG.dup if reset
+
+    trap "INT" do
+      $stderr << "\n\n"
+      logger.indent = 0
+      logger.fatal :INT, "Caught INT signal!"
+
+      call_trap @trap_stack.shift
+      exit 1
+    end
+
+    require_libs(*new_config['require'])
+
+    config.merge! new_config
+
+    log_level = Logger.const_get config['level'].upcase rescue Logger::INFO
+    @logger   = Sunshine::Output.new :level => log_level
+
+    config
+  end
+
+
+  ##
+  # Run Sunshine with the passed argv and exits with appropriate exitcode.
+  #   run %w{run my_script.rb -l debug}
+  #   run %w{list -d}
+  #   run %w{--rakefile}
+
+  def self.run argv=ARGV
+    command = find_command argv.first
+    argv.shift if command
+
+    command ||= DefaultCommand
+
+    setup command.parse_args(argv)
 
     result = command.exec argv, config
 
@@ -324,12 +346,15 @@ module Sunshine
   ##
   # Find the sunshine command to run based on the passed name.
   # Handles partial command names if they can be uniquely mapped to a command.
-  #   find_command "dep" #=> "run"
-  #   find_command "zzz" #=> false
+  #   find_command "ru" #=> Sunshine::RunCommand
+  #   find_command "l" #=> Sunshine::ListCommand
+  #   find_command "zzz" #=> nil
 
   def self.find_command name
     commands = COMMANDS.select{|c| c =~ /^#{name}/}
-    commands.length == 1 && commands.first
+    return unless commands.length == 1 && commands.first
+
+    Sunshine.const_get "#{commands.first.capitalize}Command"
   end
 
 
@@ -411,6 +436,6 @@ module Sunshine
   require 'commands/stop'
 end
 
+Sunshine.load_user_config
 
-Sunshine.setup
 require 'sunshine/dependencies'

@@ -268,7 +268,9 @@ module Sunshine
     # Load the app list yaml file from the server.
 
     def self.load_list server
-      list = YAML.load(server.call(Sunshine::READ_LIST_CMD))
+      yml_list = server.call "cat #{Sunshine::APP_LIST_PATH} || echo ''"
+
+      list = YAML.load yml_list
       list = {} unless Hash === list
       list
     end
