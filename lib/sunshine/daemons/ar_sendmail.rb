@@ -18,11 +18,5 @@ module Sunshine
     def start_cmd
       "cd #{@app.current_path} && #{@bin} -p #{@pid} -d"
     end
-
-
-    def stop_cmd
-      "test -f #{@pid} && kill `cat #{@pid}` || "+
-        "echo 'No #{@name} process to stop for #{@app.name}'; rm -f #{@pid};"
-    end
   end
 end

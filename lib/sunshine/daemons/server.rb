@@ -18,9 +18,7 @@ module Sunshine
 
     attr_reader :server_name, :port, :target, :connections
 
-    # When using the default stop_cmd, define what signal to use to
-    # kill the process
-    attr_accessor :sigkill
+    attr_accessor :sigkill, :cluster
 
 
     # Server objects need only an App object to be instantiated.
@@ -45,12 +43,12 @@ module Sunshine
 
       super app, options
 
-      @connections   = options[:connections] || 1024
-      @port          = options[:port] || 80
+      @connections   = options[:connections]          || 1024
+      @port          = options[:port]                 || 80
       @server_name   = options[:server_name]
-      @sigkill       = 'QUIT'
+      # Setting @sudo to nil will let the server apps' shells handle sudo
       @sudo          = options[:sudo] || @port < 1024 || nil
-      @target        = options[:point_to] || @app
+      @target        = options[:point_to]             || @app
 
       @supports_rack      = false
       @supports_passenger = false
@@ -99,15 +97,6 @@ module Sunshine
 
 
     ##
-    # Default server stop command.
-
-    def stop_cmd
-      "test -f #{@pid} && kill -#{@sigkill} $(cat #{@pid}) && sleep 1 && "+
-        "rm -f #{@pid} || echo 'Could not kill #{@name} pid for #{@app.name}';"
-    end
-
-
-    ##
     # Defines if this server has passenger support.
 
     def supports_passenger?
@@ -142,7 +131,7 @@ module Sunshine
       super
 
       @app.after_user_script do |app|
-        next unless @port
+        next unless @port && has_setup?
 
         each_server_app do |sa|
           sa.info[:ports][@pid] = @port

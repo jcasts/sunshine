@@ -86,6 +86,7 @@ module Sunshine
       @timeout     = options[:timeout] || 0
       @dep_name    = options[:dep_name] || @name
       @processes   = options[:processes] || 1
+      @sigkill     = 'QUIT'
 
       @config_template   = options[:config_template]
       @config_template ||= "#{Sunshine::ROOT}/templates/#{@short_class_name}/*"
@@ -242,12 +243,11 @@ module Sunshine
 
 
     ##
-    # Gets the command that stops the daemon.
-    # Should be overridden by child classes.
+    # Default daemon stop command.
 
     def stop_cmd
-      return @stop_cmd ||
-        raise(CriticalDeployError, "@stop_cmd undefined. Can't stop #{@name}")
+      "test -f #{@pid} && kill -#{@sigkill} $(cat #{@pid}) && sleep 1 && "+
+        "rm -f #{@pid} || echo 'Could not kill #{@name} pid for #{@app.name}';"
     end
 
 
@@ -389,6 +389,8 @@ module Sunshine
 
     def register_after_user_script
       @app.after_user_script do |app|
+        next unless has_setup?
+
         each_server_app do |sa|
           sudo = pick_sudo sa.shell
 

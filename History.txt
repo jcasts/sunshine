@@ -1,4 +1,4 @@
-=== 1.0.4 / 2010-04-02
+=== 1.1.0 / 2010-04-02
 
 * Improvements:
 
@@ -9,6 +9,8 @@
   * Added Server support for max connections configuration.
 
 * Bugfixes:
+
+  * Daemons no longer create control scripts if they aren't used.
 
   * Fixed Rsync repo to auto append "/" to urls for correct rsyncing.
 

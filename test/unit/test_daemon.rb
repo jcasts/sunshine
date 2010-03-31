@@ -12,7 +12,7 @@ class TestDaemon < Test::Unit::TestCase
   end
 
 
-  def test_missing_start_stop_cmd
+  def test_missing_start_cmd
     daemon = Sunshine::Daemon.new @app
 
     begin
@@ -20,13 +20,6 @@ class TestDaemon < Test::Unit::TestCase
       raise "Should have thrown CriticalDeployError but didn't :("
     rescue Sunshine::CriticalDeployError => e
       assert_equal "@start_cmd undefined. Can't start daemon", e.message
-    end
-
-    begin
-      daemon.stop_cmd
-      raise "Should have thrown CriticalDeployError but didn't :("
-    rescue Sunshine::CriticalDeployError => e
-      assert_equal "@stop_cmd undefined. Can't stop daemon", e.message
     end
   end
 

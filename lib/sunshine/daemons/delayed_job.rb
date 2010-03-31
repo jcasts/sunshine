@@ -4,6 +4,7 @@ module Sunshine
   # Simple daemon wrapper for delayed_job daemon setup and control.
   # By default, uses server apps with the :dj role. Supports
   # the :processes option.
+  # Note: The pid location is fixed at [current_path]/tmp/pids/delayed_job.pid"
 
   class DelayedJob < Daemon
 
