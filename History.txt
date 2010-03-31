@@ -2,6 +2,8 @@
 
 * Improvements:
 
+  * Added the -R option for loading external libraries and gems.
+
   * Added support for Thin.
 
   * Added Server support for max connections configuration.

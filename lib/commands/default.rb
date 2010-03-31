@@ -58,10 +58,17 @@ module Sunshine
 
         yield opt if block_given?
 
-        opt.on('-S', '--sudo [USER]',
-               'Run remote commands using sudo or sudo -u USER.') do |value|
-          options['sudo'] = value || true
-        end if options
+        if options
+          opt.on('-R', '--require lib1,lib2', Array,
+                 'Require a library or gem.') do |value|
+            options['require'] = value
+          end
+
+          opt.on('-S', '--sudo [USER]',
+                 'Run remote commands using sudo or sudo -u USER.') do |value|
+            options['sudo'] = value || true
+          end
+        end
       end
     end
 

@@ -247,19 +247,20 @@ module Sunshine
   FileUtils.mkdir_p TMP_DIR
 
   ##
-  # Path where sunshine assumes repo information can be found if missing.
+  # Path where Sunshine assumes repo information can be found if missing.
   PATH = Dir.getwd
 
   ##
-  # File DATA from sunshine run files.
+  # File DATA from Sunshine run files.
   DATA = defined?(::DATA) ? ::DATA : nil
 
   ##
   # Root directory of the Sunshine gem.
   ROOT = File.expand_path File.join(File.dirname(__FILE__), "..")
 
+
   ##
-  # Cleanup after sunshine has run, remove temp dirs, etc...
+  # Cleanup after Sunshine has run, remove temp dirs, etc...
 
   def self.cleanup
     FileUtils.rm_rf TMP_DIR if Dir.glob("#{TMP_DIR}/*").empty?
@@ -267,7 +268,17 @@ module Sunshine
 
 
   ##
-  # Setup sunshine with a custom config:
+  # Loads libraries or gems passed to the -R option.
+
+  def self.require_libs(*libs)
+    libs.each do |lib|
+      require lib
+    end
+  end
+
+
+  ##
+  # Setup Sunshine with a custom config:
   #   Sunshine.setup 'level' => 'debug', 'deploy_env' => :production
 
   def self.setup new_config={}, reset=false
@@ -278,7 +289,7 @@ module Sunshine
 
 
   ##
-  # Run sunshine with the passed argv and exits with appropriate exitcode.
+  # Run Sunshine with the passed argv and exits with appropriate exitcode.
   #   run %w{run my_script.rb -l debug}
   #   run %w{list -d}
 
@@ -302,6 +313,7 @@ module Sunshine
     config.merge! command.parse_args(argv)
 
     self.setup config, true
+    self.require_libs(*config['require'])
 
     result = command.exec argv, config
 
