@@ -3,7 +3,7 @@ module Sunshine
   ##
   # Unregister a sunshine app.
   #
-  # Usage: sunshine rm app_name [more names...] [options]
+  # Usage: sunshine rm [options] app_name [more names...]
   #
   # Arguments:
   #     app_name      Name of the application to remove.
@@ -67,7 +67,7 @@ module Sunshine
       parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
-Usage: #{opt.program_name} rm app_name [more names...] [options]
+Usage: #{opt.program_name} rm [options] app_name [more names...]
 
 Arguments:
     app_name      Name of the application to remove.

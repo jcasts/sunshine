@@ -3,7 +3,7 @@ module Sunshine
   ##
   # Run one or more sunshine scripts.
   #
-  # Usage: sunshine run [run_file] [options]
+  # Usage: sunshine run [options] [run_file] ...
   #
   # Arguments:
   #     run_file     Load a script or app path. Defaults to ./Sunshine
@@ -113,7 +113,7 @@ module Sunshine
       opts = opt_parser(options) do |opt|
         opt.banner = <<-EOF
 
-Usage: #{opt.program_name} run [run_file] [options]
+Usage: #{opt.program_name} run [options] [run_file] ...
 
 Arguments:
     run_file     Load a script or app path. Defaults to ./Sunshine

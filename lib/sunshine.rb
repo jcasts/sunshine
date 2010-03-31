@@ -51,13 +51,13 @@ require 'tmpdir'
 #   Usage:
 #     sunshine -h/--help
 #     sunshine -v/--version
-#     sunshine command [arguments...] [options...]
+#     sunshine command [options...] [arguments...]
 #
 #   Examples:
 #     sunshine run deploy_script.rb
-#     sunshine restart myapp -r user@server.com,user@host.com
-#     sunshine list myapp myotherapp --health -r user@server.com
-#     sunshine list myapp --status
+#     sunshine restart -r user@server.com,user@host.com myapp
+#     sunshine list --health -r user@server.com myapp myotherapp
+#     sunshine list --status myapp
 #
 #   Commands:
 #     add       Register an app with sunshine

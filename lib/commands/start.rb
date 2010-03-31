@@ -3,7 +3,7 @@ module Sunshine
   ##
   # Runs the start script of all specified sunshine apps.
   #
-  # Usage: sunshine start app_name [more names...] [options]
+  # Usage: sunshine start [options] app_name [more names...]
   #
   # Arguments:
   #     app_name     Name of the application to start.
@@ -55,7 +55,7 @@ module Sunshine
       parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
-Usage: #{opt.program_name} start app_name [more names...] [options]
+Usage: #{opt.program_name} start [options] app_name [more names...]
 
 Arguments:
     app_name     Name of the application to start.

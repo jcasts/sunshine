@@ -3,7 +3,7 @@ module Sunshine
   ##
   # List and perform simple state actions on lists of sunshine apps.
   #
-  # Usage: sunshine list app_name [more names...] [options]
+  # Usage: sunshine list [options] app_name [more names...]
   #
   # Arguments:
   #   app_name      Name of an application to list.
@@ -290,7 +290,7 @@ module Sunshine
       parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
-Usage: #{opt.program_name} list app_name [more names...] [options]
+Usage: #{opt.program_name} list [options] app_name [more names...]
 
 Arguments:
     app_name      Name of an application to list.

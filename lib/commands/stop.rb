@@ -3,7 +3,7 @@ module Sunshine
   ##
   # Runs the stop script of all specified sunshine apps.
   #
-  # Usage: sunshine stop app_name [more names...] [options]
+  # Usage: sunshine stop [options] app_name [more names...]
   #
   # Arguments:
   #     app_name     Name of the application to stop.
@@ -48,7 +48,7 @@ module Sunshine
       parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
-Usage: #{opt.program_name} stop app_name [more names...] [options]
+Usage: #{opt.program_name} stop [options] app_name [more names...]
 
 Arguments:
     app_name     Name of the application to stop.

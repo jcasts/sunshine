@@ -3,7 +3,7 @@ module Sunshine
   ##
   # Registers a path as a sunshine application for control via sunshine.
   #
-  # Usage: sunshine add app_path [more paths...] [options]
+  # Usage: sunshine add [options] app_path [more paths...]
   #
   # Arguments:
   #     app_path    Path to the application to add.
@@ -83,7 +83,7 @@ module Sunshine
       parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
-Usage: #{opt.program_name} add app_path [more paths...] [options]
+Usage: #{opt.program_name} add [options] app_path [more paths...]
 
 Arguments:
     app_path      Path to the application to add.

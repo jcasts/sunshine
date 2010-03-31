@@ -3,7 +3,7 @@ module Sunshine
   ##
   # Runs the restart script of all specified sunshine apps.
   #
-  # Usage: sunshine restart app_name [more names...] [options]
+  # Usage: sunshine restart [options] app_name [more names...]
   #
   # Arguments:
   #     app_name     Name of the application to restart.
@@ -49,7 +49,7 @@ module Sunshine
       parse_remote_args(argv) do |opt, options|
         opt.banner = <<-EOF
 
-Usage: #{opt.program_name} restart app_name [more names...] [options]
+Usage: #{opt.program_name} restart [options] app_name [more names...]
 
 Arguments:
     app_name     Name of the application to restart.
