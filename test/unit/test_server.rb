@@ -98,6 +98,22 @@ class TestServer < Test::Unit::TestCase
   end
 
 
+  def test_new_cluster
+    cluster = Sunshine::Server.new_cluster 3, @app, :port => 5000
+
+    assert_equal Sunshine::ServerCluster, cluster.class
+    assert Array === cluster
+    assert_equal 3, cluster.length
+
+    cluster.each_with_index do |server, index|
+      port = 5000 + index
+      assert_equal Sunshine::Server, server.class
+      assert_equal port, server.port
+      assert_equal "server.#{port}", server.name
+    end
+  end
+
+
   def test_start
     server = @rainbows
     @server_app.shell.mock :file?, :args => [server.config_file_path],

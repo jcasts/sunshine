@@ -408,6 +408,7 @@ module Sunshine
   require 'sunshine/repos/rsync_repo'
 
   require 'sunshine/daemon'
+  require 'sunshine/daemons/server_cluster'
   require 'sunshine/daemons/server'
   require 'sunshine/daemons/apache'
   require 'sunshine/daemons/nginx'

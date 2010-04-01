@@ -11,6 +11,16 @@ module Sunshine
 
   class Server < Daemon
 
+    ##
+    # Creates a server cluster object:
+    #   Mongrel.new_cluster 3, app, :port => 5000
+    #   #=> [<# mongrel_5000 >, <# mongrel_5001 >, <# mongrel_5002 >]
+
+    def self.new_cluster count, app, options={}
+      ServerCluster.new self, count, app, options
+    end
+
+
     def self.binder_methods
       [:server_name, :port, :target, :connections].concat super
     end
