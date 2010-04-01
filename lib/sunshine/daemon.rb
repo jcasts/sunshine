@@ -27,7 +27,7 @@ module Sunshine
     #   #=> "daemon"
 
     def self.short_name
-      @short_name ||= self.class.underscore self.class.to_s.split("::").last
+      @short_name ||= self.underscore self.to_s.split("::").last
     end
 
 
