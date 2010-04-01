@@ -88,10 +88,10 @@ module Sunshine
 
       @name        = options[:name] || self.class.short_name
       @pid         = options[:pid]  || "#{@app.shared_path}/pids/#{@name}.pid"
-      @bin         = options[:bin]  || @name
+      @bin         = options[:bin]  || self.class.short_name
       @sudo        = options[:sudo]
       @timeout     = options[:timeout]   || 0
-      @dep_name    = options[:dep_name]  || @name
+      @dep_name    = options[:dep_name]  || self.class.short_name
       @processes   = options[:processes] || 1
       @sigkill     = 'QUIT'
 

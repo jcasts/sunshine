@@ -2,6 +2,10 @@
 
 * Improvements:
 
+  * Support for server clustering with the ServerCluster class.
+
+  * Added Daemon#status method.
+
   * Added the -R option for loading external libraries and gems.
 
   * Added support for Thin.
