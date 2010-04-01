@@ -415,6 +415,7 @@ module Sunshine
   require 'sunshine/daemons/thin'
   require 'sunshine/daemons/unicorn'
   require 'sunshine/daemons/rainbows'
+  require 'sunshine/daemons/mongrel_rails'
   require 'sunshine/daemons/ar_sendmail'
   require 'sunshine/daemons/delayed_job'
 

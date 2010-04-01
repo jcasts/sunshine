@@ -8,7 +8,7 @@
 
   * Added the -R option for loading external libraries and gems.
 
-  * Added support for Thin.
+  * Added support for Thin and MongrelRails.
 
   * Added Server support for max connections configuration.
 

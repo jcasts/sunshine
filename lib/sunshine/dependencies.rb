@@ -114,7 +114,7 @@ Sunshine.dependencies.instance_eval do
 
 
   ##
-  # Define gems used by Sunshine
+  # Define gems used by Sunshine remotely
 
   gem 'bundler', :version => ">=0.9"
 
@@ -123,6 +123,8 @@ Sunshine.dependencies.instance_eval do
   gem 'rake', :version => ">=0.8"
 
   gem 'geminstaller', :version => ">=0.5"
+
+  gem 'mongrel', :version => ">=1.1.5"
 
   gem 'thin', :version => ">=1.2.7"
 
