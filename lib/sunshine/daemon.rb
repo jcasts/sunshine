@@ -22,6 +22,16 @@ module Sunshine
 
 
     ##
+    # Returns the short, snake-case version of the class:
+    #   Sunshine::Daemon.short_name
+    #   #=> "daemon"
+
+    def self.short_name
+      @short_name ||= self.class.underscore self.class.to_s.split("::").last
+    end
+
+
+    ##
     # Turn camelcase into underscore. Used for Daemon#name.
 
     def self.underscore str
@@ -76,20 +86,17 @@ module Sunshine
       @options = options
       @app     = app
 
-      @short_class_name = self.class.underscore self.class.to_s.split("::").last
-
-      @name        = options[:name] || @short_class_name
-
-      @pid         = options[:pid] || "#{@app.shared_path}/pids/#{@name}.pid"
-      @bin         = options[:bin] || @name
+      @name        = options[:name] || self.class.short_name
+      @pid         = options[:pid]  || "#{@app.shared_path}/pids/#{@name}.pid"
+      @bin         = options[:bin]  || @name
       @sudo        = options[:sudo]
-      @timeout     = options[:timeout] || 0
-      @dep_name    = options[:dep_name] || @name
+      @timeout     = options[:timeout]   || 0
+      @dep_name    = options[:dep_name]  || @name
       @processes   = options[:processes] || 1
       @sigkill     = 'QUIT'
 
-      @config_template   = options[:config_template]
-      @config_template ||= "#{Sunshine::ROOT}/templates/#{@short_class_name}/*"
+      @config_template = options[:config_template] ||
+        "#{Sunshine::ROOT}/templates/#{self.class.short_name}/*"
 
       @config_path     = options[:config_path] ||
         "#{@app.current_path}/daemons/#{@name}"
@@ -187,6 +194,20 @@ module Sunshine
           end
         end
       end
+    end
+
+
+    ##
+    # Check if the daemon is running on all servers
+
+    def status
+      each_server_app do |server_app|
+        server_app.shell.call status_cmd, :sudo => pick_sudo(server_app.shell)
+      end
+      true
+
+    rescue CmdError => e
+      false
     end
 
 
@@ -298,7 +319,7 @@ module Sunshine
     # Upload config files and run them through erb with the provided
     # binding if necessary.
 
-    def upload_config_files(shell, setup_binding=binding)
+    def upload_config_files shell, setup_binding=binding
       config_template_files.each do |config_file|
 
         if File.extname(config_file) == ".erb"
