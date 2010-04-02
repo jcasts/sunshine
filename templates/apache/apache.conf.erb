@@ -13,9 +13,10 @@ PassengerMaxPoolSize <%= processes %>
 <% end -%>
 
 <% unless App === target -%>
-LoadModule proxy_module         modules/mod_proxy.so
-LoadModule proxy_connect_module modules/mod_proxy_connect.so
-LoadModule proxy_http_module    modules/mod_proxy_http.so
+LoadModule proxy_module          modules/mod_proxy.so
+LoadModule proxy_connect_module  modules/mod_proxy_connect.so
+LoadModule proxy_http_module     modules/mod_proxy_http.so
+LoadModule proxy_balancer_module modules/mod_proxy_balancer.so
 <% end -%>
 
 
@@ -36,7 +37,6 @@ NameVirtualHost *:<%= port %>
   ServerName  <%= server_name %>
   ServerAlias www.<%= server_name %>
 
-
   DocumentRoot <%= expand_path app.current_path %>/public
 
   <Directory <%= app.current_path %>/public>
@@ -46,14 +46,15 @@ NameVirtualHost *:<%= port %>
 
   <% unless App === target -%>
 
-  <Proxy balancer://<%= app.name %>>
+  <Proxy balancer://<%= proxy_name %>>
     <% [*target].each do |server| %>
-    BalancerMember http://0.0.0.0:<%= server.port %>/
+    BalancerMember http://0.0.0.0:<%= server.port %>
     <% end -%>
   </Proxy>
 
-  ProxyPass / balancer://<%= app.name %> timeout=<%= timeout %>
-  ProxyPassReverse / balancer://<%= app.name %>
+  # Using / after the proxy target is essential to the public dir.
+  ProxyPass / balancer://<%= proxy_name %>/ timeout=<%= timeout %>
+  ProxyPassReverse / balancer://<%= proxy_name %>/
   ProxyPreserveHost On
   
   <% end -%>

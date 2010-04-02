@@ -4,6 +4,8 @@ module Sunshine
   # A wrapper for configuring the apache2 server.
   # Note: Due to Apache default limitations, the @connections attribute
   # defaults to 256.
+  #
+  # Note: The minimum timeout supported by Apache is 1 second.
 
   class Apache < Server
 
@@ -18,6 +20,8 @@ module Sunshine
       @supports_passenger = true
 
       @connections = options[:connections] || 256
+
+      @timeout = 1 if @timeout < 1
 
       @dep_name = options[:dep_name] ||
         use_passenger? ? 'passenger-apache' : 'apache2'

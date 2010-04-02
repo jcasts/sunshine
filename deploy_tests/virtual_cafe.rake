@@ -39,7 +39,7 @@ namespace :sunshine do
         mongrels = Sunshine::MongrelRails.new_cluster 3, app, :port => 3000
         mongrels.setup
 
-        Sunshine::Nginx.new(app, :point_to => mongrels).setup
+        Sunshine::Apache.new(app, :point_to => mongrels).setup
       end
 
       @app.start :force => true
