@@ -17,8 +17,8 @@ module Sunshine
   # :uri_path::    The path that healthcheck will be used on.
   # :health_file:: The file to check for health.
   #
-  #   use SunshineHealth, :uri_path    => "/health.txt",
-  #                       :health_file => "health.txt"
+  #   use Sunshine::Health, :uri_path    => "/health.txt",
+  #                         :health_file => "health.txt"
 
   class Healthcheck
 

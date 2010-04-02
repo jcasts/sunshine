@@ -49,6 +49,91 @@ module Sunshine
   #   app.deploy :host => 'server1.com'
   #
   # See App#find for more information.
+  #
+  # App instantiation can be done in several ways:
+  #  App.new instantiation_hash
+  #  App.new "path/to/config.yml", optional_extra_hash
+  #  App.new #=> will attempt to load ruby's file DATA as yaml
+  #
+  # Yaml files must define settings on a per-environment basis. The default
+  # environment will be used if the deploy_env is not found in the config.
+  # Let's consider the following config:
+  #
+  #   #config.yml:
+  #   ---
+  #   :default:
+  #     :repo:
+  #       :type: :svn
+  #       :url:  http://subversion/repo/tags/release-001
+  #     :remote_shells: dev.myserver.com
+  #
+  #   :qa:
+  #     :remote_shells:
+  #       - qa1.myserver.com
+  #       - qa2.myserver.com
+  #
+  #   :qa_special:
+  #     :inherits: :qa
+  #     :root_path: /path/to/application
+  #
+  # By default, environment definitions inherit the :default environment. In
+  # this instance, :qa_special also inherits from :qa.
+  # With the given config, I could setup the App instance as so:
+  #
+  #   App.new "config.yml", :deploy_env => :development
+  #   # Note: by default, App will get the deploy_env value
+  #   # from Sunshine.deploy_env
+  #
+  # The above will simply load the default config. The following, however,
+  # will load the :qa_special config which inherits from
+  # both :qa and :default:
+  #
+  #   App.new "config.yml", :deploy_env => :qa_special
+  #
+  #
+  # Another way of instantiating an App is to pass it a hash. Unlike the yaml
+  # config file, the hash is not on a per-environment basis and isexpected
+  # to already have the correct values for the given environment.
+  # The following is equivalent to loading the above :default environment:
+  #
+  #   App.new :remote_shells => "dev.myserver.com",
+  #           :repo => {
+  #             :type => :svn,
+  #             :url => "http://subversion/repo/tags/release-001"
+  #           }
+  #
+  # In theory, the minimum amount of information required to instantiate
+  # an app is the repo and remote_shells. If the repo option is omitted,
+  # the App will attempt to detect if the pwd is a checkout out repo and
+  # use that information. If you would like to deploy an application that
+  # is not under source countrol, you may do so by using Sunshine::RsyncRepo,
+  # or passing :rsync in your hash as your repo type.
+  #
+  #
+  # Options supported by App.new are the following:
+  #
+  # :deploy_env:: String - specify the env to deploy with; defaults to
+  # Sunshine#deploy_env.
+  #
+  # :deploy_name:: String - if you want to specify a name for your deploy and
+  # checkout directory (affects the checkout_path); defaults to Time.now.to_i.
+  #
+  # :remote_shells:: String|Array|Sunshine::Shell - the shell(s) to use for
+  # deployment. Accepts any single instance or array of a Sunshine::Shell
+  # type instance or Sunshine::Shell instantiator-friendly arguments.
+  #
+  # :repo:: Hash|Sunshine::Repo - the scm and repo to use for deployment.
+  # Accepts any hash that can be passed to Sunshine::Repo::new_of_type
+  # or any Sunshine::Repo object.
+  #
+  # :root_path:: String - the absolute path the deployed application
+  # should live in; defaults to "#{Sunshine.web_directory}/#{@name}".
+  #
+  # :shell_env:: Hash - environment variables to add to deploy shells.
+  #
+  # :sudo:: true|false|nil|String - which sudo value should be assigned to
+  # deploy shells; defaults to Sunshine#sudo. For more information on using
+  # sudo, see the Using Permissions section in README.txt.
 
   class App
 
@@ -72,86 +157,6 @@ module Sunshine
     #  App.new instantiation_hash
     #  App.new "path/to/config.yml", optional_extra_hash
     #  App.new #=> will attempt to load ruby's file DATA as yaml
-    #
-    # Yaml files must define settings on a per-environment basis. The default
-    # environment will be used if the deploy_env is not found in the config.
-    # Let's consider the following config:
-    #
-    #   #config.yml:
-    #   ---
-    #   :default:
-    #     :repo:
-    #       :type: :svn
-    #       :url:  http://subversion/repo/tags/release-001
-    #     :remote_shells: dev.myserver.com
-    #
-    #   :qa:
-    #     :remote_shells:
-    #       - qa1.myserver.com
-    #       - qa2.myserver.com
-    #
-    #   :qa_special:
-    #     :inherits: :qa
-    #     :root_path: /path/to/application
-    #
-    # By default, environment definitions inherit the :default environment. In
-    # this instance, :qa_special also inherits from :qa.
-    # With the given config, I could setup the App instance as so:
-    #
-    #   App.new "config.yml", :deploy_env => :development
-    #   # Note: by default, App will get the deploy_env value
-    #   # from Sunshine.deploy_env
-    #
-    # The above will simply load the default config. The following, however,
-    # will load the :qa_special config which inherits from
-    # both :qa and :default:
-    #
-    #   App.new "config.yml", :deploy_env => :qa_special
-    #
-    #
-    # Another way of instantiating an App is to pass it a hash. Unlike the yaml
-    # config file, the hash is not on a per-environment basis and isexpected
-    # to already have the correct values for the given environment.
-    # The following is equivalent to loading the above :default environment:
-    #
-    #   App.new :remote_shells => "dev.myserver.com",
-    #           :repo => {
-    #             :type => :svn,
-    #             :url => "http://subversion/repo/tags/release-001"
-    #           }
-    #
-    # In theory, the minimum amount of information required to instantiate
-    # an app is the repo and remote_shells. If the repo option is omitted,
-    # the App will attempt to detect if the pwd is a checkout out repo and
-    # use that information. If you would like to deploy an application that
-    # is not under source countrol, you may do so by using Sunshine::RsyncRepo,
-    # or passing :rsync in your hash as your repo type.
-    #
-    #
-    # Options supported by App#initialize are the following:
-    #
-    # :deploy_env:: String - specify the env to deploy with; defaults to
-    # Sunshine#deploy_env.
-    #
-    # :deploy_name:: String - if you want to specify a name for your deploy and
-    # checkout directory (affects the checkout_path); defaults to Time.now.to_i.
-    #
-    # :remote_shells:: String|Array|Sunshine::Shell - the shell(s) to use for
-    # deployment. Accepts any single instance or array of a Sunshine::Shell
-    # type instance or Sunshine::Shell instantiator-friendly arguments.
-    #
-    # :repo:: Hash|Sunshine::Repo - the scm and repo to use for deployment.
-    # Accepts any hash that can be passed to Sunshine::Repo::new_of_type
-    # or any Sunshine::Repo object.
-    #
-    # :root_path:: String - the absolute path the deployed application
-    # should live in; defaults to "#{Sunshine.web_directory}/#{@name}".
-    #
-    # :shell_env:: Hash - environment variables to add to deploy shells.
-    #
-    # :sudo:: true|false|nil|String - which sudo value should be assigned to
-    # deploy shells; defaults to Sunshine#sudo. For more information on using
-    # sudo, see the Using Permissions section in README.txt.
 
     def initialize config_file=Sunshine::DATA, options={}
       options, config_file = config_file, Sunshine::DATA if Hash === config_file
@@ -934,13 +939,13 @@ module Sunshine
     #   server_apps_from_config ["svr1", "svr2", "svr3"]
     #   #=> [<ServerApp @host="svr1">,<ServerApp @host="svr2">, ...]
     #
-    #   d_servers = [["svr1", {:roles => "web db app"}], "svr2", "svr3"]
-    #   server_apps_from_config d_servers
+    #   remote_shells = [["svr1", {:roles => "web db app"}], "svr2", "svr3"]
+    #   server_apps_from_config remote_shells
     #   #=> [<ServerApp @host="svr1">,<ServerApp @host="svr2">, ...]
 
-    def server_apps_from_config d_servers
-      d_servers = [*d_servers].compact
-      d_servers.map{|ds| ServerApp.new(*[self,*ds]) }
+    def server_apps_from_config shells
+      shells = [*shells].compact
+      shells.map{|shell| ServerApp.new(*[self,*shell]) }
     end
 
 

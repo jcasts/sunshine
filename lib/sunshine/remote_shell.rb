@@ -51,7 +51,7 @@ module Sunshine
     # The constructor also supports the following options:
     # :env:: hash - hash of environment variables to set for the ssh session
     # :password:: string - password for ssh login; if missing the deploy server
-    #                      will attempt to prompt the user for a password.
+    # will attempt to prompt the user for a password.
 
     def initialize host, options={}
       super $stdout, options
@@ -78,7 +78,7 @@ module Sunshine
 
     ##
     # Runs a command via SSH. Optional block is passed the
-    # stream(stderr, stdout) and string data
+    # stream(stderr, stdout) and string data.
 
     def call command_str, options={}, &block
       Sunshine.logger.info @host, "Running: #{command_str}" do
@@ -204,6 +204,9 @@ module Sunshine
 
     private
 
+    ##
+    # Figure out which rsync flags to use.
+
     def build_rsync_flags options
       flags = @rsync_flags.dup
 
@@ -222,11 +225,17 @@ module Sunshine
     end
 
 
+    ##
+    # Creates an rsync command.
+
     def rsync_cmd from_path, to_path, options={}
       cmd  = ["rsync", build_rsync_flags(options), from_path, to_path]
       cmd.flatten.compact.join(" ")
     end
 
+
+    ##
+    # Wraps the command in an ssh call.
 
     def ssh_cmd string, options=nil
       options ||= {}

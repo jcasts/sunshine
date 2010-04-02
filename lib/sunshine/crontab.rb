@@ -1,8 +1,8 @@
 module Sunshine
 
   ##
-  # A simple namespaced grouping of cron jobs that can be written
-  # to a deploy server.
+  # A simple namespaced grouping of cron jobs that can be read and written
+  # to a shell.
 
   class Crontab
 
@@ -117,10 +117,16 @@ module Sunshine
 
     private
 
+    ##
+    # Write the string to the shell's crontab.
+
     def write_crontab content
       @shell.call("echo '#{content.gsub(/'/){|s| "'\\''"}}' | crontab")
     end
 
+
+    ##
+    # Deletes all jobs of a given namespace in a crontab string.
 
     def delete_jobs crontab, namespace=nil
       start_id, end_id = get_job_ids namespace
@@ -130,6 +136,9 @@ module Sunshine
       crontab
     end
 
+
+    ##
+    # Returns the cronjob begin and end flags.
 
     def get_job_ids namespace=nil
       namespace ||= "[^\n]*"

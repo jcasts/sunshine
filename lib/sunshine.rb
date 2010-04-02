@@ -4,7 +4,6 @@ require 'rainbow'
 require 'highline'
 require 'json'
 
-
 require 'yaml'
 require 'erb'
 require 'logger'
@@ -14,61 +13,7 @@ require 'fileutils'
 require 'tmpdir'
 
 ##
-# Sunshine is an object oriented deploy tool for rack applications.
-#
-# Writing a Sunshine config script is easy:
-#
-#   options = {
-#     :name => 'myapp',
-#     :repo => {:type => :svn, :url => 'svn://blah...'},
-#     :deploy_path => '/usr/local/myapp',
-#     :remote_shells => ['user@someserver.com']
-#   }
-#
-#   Sunshine::App.deploy(options) do |app|
-#
-#     app.yum_install 'sqlite'
-#     app.gem_install 'sqlite3-ruby'
-#
-#     app.rake "db:migrate"
-#
-#     app_server = Sunshine::Rainbows.new(app)
-#     app_server.restart
-#
-#     Sunshine::Nginx.new(app, :point_to => app_server).restart
-#
-#   end
-#
-# The App::deploy and App::new methods also support passing
-# a path to a yaml file:
-#
-#   app = Sunshine::App.new("path/to/config.yml")
-#   app.deploy{|app| Sunshine::Rainbows.new(app).restart }
-#
-#
-# Command line execution:
-#
-#   Usage:
-#     sunshine -h/--help
-#     sunshine -v/--version
-#     sunshine command [options...] [arguments...]
-#
-#   Examples:
-#     sunshine run deploy_script.rb
-#     sunshine restart -r user@server.com,user@host.com myapp
-#     sunshine list --health -r user@server.com myapp myotherapp
-#     sunshine list --status myapp
-#
-#   Commands:
-#     add       Register an app with sunshine
-#     list      Display deployed apps
-#     restart   Restart a deployed app
-#     rm        Unregister an app with sunshine
-#     run       Run a Sunshine script
-#     start     Start a deployed app
-#     stop      Stop a deployed app
-#
-#    For more help on sunshine commands, use 'sunshine COMMAND --help'
+# Main module, used for configuration and running commands.
 
 module Sunshine
 

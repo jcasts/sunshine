@@ -1,5 +1,7 @@
 = Sunshine
 
+http://github.com/yaksnrainbows/sunshine
+
 http://betalabs.yellowpages.com/
 
 
@@ -147,7 +149,7 @@ remote shell find options:
   app.rake 'db:migrate', :role => :db
   app.deploy :host => 'server1.com'
 
-See App#find for more information.
+See Sunshine::App#find for more information.
 
 
 === Working With Environments
@@ -423,8 +425,8 @@ Since the App class effectively owns the shells it uses, setting sudo on the
 App will permanently change the sudo value of its shells.
 
 Note: You may notice that you can set a sudo config value on the Sunshine
-module. This is used for the default value of App#sudo and is passed along
-to an app's shells on instantiation.
+module. This is used for the default value of Sunshine::App#sudo and is passed
+along to an app's shells on instantiation.
 
 
 ==== Dependencies
