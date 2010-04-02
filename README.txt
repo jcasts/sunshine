@@ -2,33 +2,119 @@
 
 http://betalabs.yellowpages.com/
 
+
 == Description
 
-Sunshine is an object-oriented api for rack application deployment.
-
-Sunshine is open and it can do a lot! It's meant to be dug into and understood.
-Knowing how it works will let you do really neat things: classes are
-decoupled as much as possible to allow for optimal flexibility,
-and most can be used independently.
+Sunshine is a framework for rack and rails application deployment.
 
 This gem was made possible by the sponsoring of AT&T Interactive
 (http://attinteractive.com).
 
-== Setup
+
+== Setup and Usage
 
 Installing sunshine:
 
   gem install sunshine
 
-You can either use sunshine by requiring the gem in your script or
-by calling the sunshine command:
+You can either use sunshine by requiring the gem in your script, such as
+in a rakefile (which is more common):
+
+  rake sunshine:deploy
+
+Or you can also call built-in sunshine commands:
 
   sunshine run my_deploy.rb -e qa
 
 
-== Deploy Scripts
+== Rake Deploy Tasks in 5 Minutes
 
-Writing a Sunshine script is easy:
+Although Sunshine comes with it's own bundle of commands, they should be used
+to control deployed apps on remote servers in instances where deploy information
+(e.g. your deploy yaml file) is unavailable. Their purpose is to query a server
+where Sunshine apps have been deployed and have a nominal amount of information
+and control over them. Sunshine control commands are run on a per-server basis.
+
+Most of the time, you'll want to control the deploy on a per-app basis.
+You have the deploy information and you need to do things involving that
+specific deploy. Rake tasks are great for that, and Sunshine comes with a
+template rake file that you can modify to fit your needs.
+
+You can copy the template rake file to lib/tasks/ by running:
+  sunshine --rakefile lib/tasks/.
+
+If you open the file, you'll see a variety of tasks that handle deployment, to
+application start/stop/restart-ing, to health checks. Most likely, the two tasks
+you'll need to update are the :app (for instantiation) and the :deploy tasks.
+
+First off, if you're using rails, you'll probably want to update "task :app" to
+"task :app => :environment" in order to get all the rails environment goodness.
+You'll also want to make sure that the @app object gets instantiated with the
+proper hash value or yaml file.
+
+Second, you need to update your :deploy task. Add whatever instructions you need
+to the @app.deploy block. Here's a sample of completed :app and :deploy tasks:
+
+  namespace :sunshine do
+
+    desc "Instantiate Sunshine"
+    task :app => :environment do
+      Sunshine.setup 'sudo'          => 'app_user',
+                     'web_directory' => '/var/www',
+                     'deploy_env'    => Rails.environment
+
+      @app = Sunshine::App.new \
+        :repo => Sunshine::SvnRepo.new("svn://subversion/repo/tags/release001"),
+        :remote_shells => 'user@my_server.com'
+    end
+
+
+    desc "Deploy the app"
+    task :deploy => :app do
+      Sunshine.setup 'trace' => true
+
+      @app.deploy do |app|
+
+        rainbows = Sunshine::Rainbows.new app, :port => 5001
+
+        nginx = Sunshine::Nginx.new app, :point_to => rainbows
+
+        app.run_geminstaller
+
+        rainbows.setup
+        nginx.setup
+      end
+
+      @app.start :force => true
+    end
+
+    ...
+  end
+
+And that's it! Try running your Sunshine rake tasks!
+
+  rake sunshine:app             # Instantiate Sunshine
+  rake sunshine:db_migrate      # Run db:migrate on remote :db servers
+  rake sunshine:deploy          # Deploy the app
+  rake sunshine:health          # Get the health state
+  rake sunshine:health:disable  # Turn off health check
+  rake sunshine:health:enable   # Turn on health check
+  rake sunshine:health:remove   # Remove health check
+  rake sunshine:info            # Get deployed app info
+  rake sunshine:restart         # Run the remote restart script
+  rake sunshine:start           # Run the remote start script
+  rake sunshine:status          # Check if the deployed app is running
+  rake sunshine:stop            # Run the remote stop script
+
+
+== Understanding Deployment
+
+=== The App Class
+
+Writing a Sunshine script is easy.
+App objects are the core of Sunshine deployment. The Sunshine paradygm
+is to construct an app object, and run custom deploy code by passing
+a block to its deploy method:
 
   options = {
     :name => 'myapp',
@@ -36,12 +122,13 @@ Writing a Sunshine script is easy:
     :root_path => '/usr/local/myapp'
   }
 
-  options[:remote_shells] = case Sunshine.deploy_env
-  when 'qa'
-    ['qa1.svr.com', 'qa2.svr.com']
-  else
-    'localhost'
-  end
+  options[:remote_shells] =
+    case Sunshine.deploy_env
+    when 'qa'
+      ['qa1.svr.com', 'qa2.svr.com']
+    else
+      'localhost'
+    end
 
   Sunshine::App.deploy(options) do |app|
 
@@ -52,15 +139,32 @@ Writing a Sunshine script is easy:
 
   end
 
+An App holds information about where to deploy an application to and
+how to deploy it, as well as many convenience methods to setup and
+manipulate the deployment process. Most of these methods support passing
+remote shell find options:
 
-The App::deploy and App::new methods also support passing
-a path to a yaml file:
+  app.rake 'db:migrate', :role => :db
+  app.deploy :host => 'server1.com'
+
+See App#find for more information.
+
+
+=== Working With Environments
+
+Environment specific setups can be accomplished in a few ways. The most
+obvious way is to create a different script for each environment. You can
+also define the App's constructor hash on a per-environment basis
+(as seen above), which gives you lots of control.
+That said, the App class also provides a mechanism for environment handling
+using configuration files.
+The App::new methods support passing a path to a yaml config file:
 
   app = Sunshine::App.new("path/to/config.yml")
   app.deploy{|app| Sunshine::Rainbows.new(app).restart }
 
 
-The yaml file can also be any IO stream whos output will parse to yaml.
+The yaml file can also be any IO stream who's output will parse to yaml.
 This can be ueful for passing the file's DATA and keep all the deploy
 information in one place:
 
@@ -109,51 +213,74 @@ Yaml files are read on a deploy-environment basis so its format reflects this:
 
 In this example, :prod inherits top level values from :qa (only :repo in this
 instance). The :inherits key also supports an array as its value.
+All environments also inherit from the :default environment. The :default is
+also used if the app's deploy_env is not found in the config.
+See Sunshine::App for more information.
 
 
-== Using rake is great!
+== Servers
 
-Although Sunshine comes with it's own bundle of commands, they should be used
-to control deployed apps on remote servers in instances where deploy information
-(e.g. your deploy yaml file) is unavailable. Their purpose is to query a server
-where Sunshine apps have been deployed and have a nominal amount of information
-and control over them. Sunshine control commands are run on a per-server basis.
+=== Basics
 
-Most of the time though, you'll want to control the deploy on a per-app basis.
-You have the deploy information and you need to do things involving that
-specific deploy. Rake tasks are great for that, and Sunshine comes with a
-template rake file that you can modify to fit your needs.
+Sunshine lets you install and setup server applications to run your app on.
+The typical approach to serving ruby applications is to run Nginx or Apache
+as a load balancer in front of a backend such as Thin, or Mongrels.
+Using Sunshine, this is most commonly defined as a part of the deploy process:
 
-You can copy the template rake file to lib/tasks/ by running:
-  sunshine --rakefile lib/tasks/.
+  app.deploy do |app|
+    backend = Sunshine::Thin.new app, :port => 5000
+    nginx   = Sunshine::Nginx.new app, :point_to => backend
 
-If you open the file, you'll see a variety of tasks that handle deployment, to
-application start/stop/restart-ing, to health checks. Most likely, the two tasks
-you'll need to update are the :app (for instantiation) and the :deploy tasks.
+    backend.setup
+    nginx.setup
+  end
 
-First off, if you're using rails, you'll probably want to update "task :app" to
-"task :app => :environment" in order to get all the rails environment goodness.
-You'll also want to make sure that the @app object gets instantiated with the
-proper hash value or yaml file.
+  app.start :force => true
 
-Second, you need to update your :deploy task. Add whatever instructions you need
-to the @app.deploy block.
+When a new Server is instantiated and its setup method is run, it is added to
+the app's control scripts. This means that when the deploy is complete, those
+servers can be controlled by the app's start/stop/restart/status methods.
 
-And that's it! Try running your Sunshine rake tasks!
 
-  rake sunshine:app             # Instantiate Sunshine
-  rake sunshine:db_migrate      # Run db:migrate on remote :db servers
-  rake sunshine:deploy          # Deploy the app
-  rake sunshine:health          # Get the health state
-  rake sunshine:health:disable  # Turn off health check
-  rake sunshine:health:enable   # Turn on health check
-  rake sunshine:health:remove   # Remove health check
-  rake sunshine:info            # Get deployed app info
-  rake sunshine:restart         # Run the remote restart script
-  rake sunshine:start           # Run the remote start script
-  rake sunshine:status          # Check if the deployed app is running
-  rake sunshine:stop            # Run the remote stop script
-  
+=== Load Balancing
+
+Since frontend servers support load balancing, you can also point them to
+server clusters:
+
+  backend = Sunshine::Thin.new_cluster 10, app, :port => 5000
+  nginx   = Sunshine::Nginx.new app, :point_to => backend
+
+  backend.setup
+  nginx.setup
+
+In this instance, Nginx will know to forward requests to the cluster of Thin
+servers created. You could do this more explicitely with the following:
+
+  backend = Array.new
+
+  5000.upto(5009) do |port|
+    thin = Sunshine::Thin.new app, :port => port, :name => "thin.#{port}"
+    thin.setup
+
+    backend << thin
+  end
+
+  Sunshine::Nginx.new app, :point_to => backend
+
+
+=== Phusion Passenger
+
+If you are running a lower traffic application, Phusion Passenger is available
+for both Nginx and Apache. Passenger will be used by default if no backend
+is specified. You could have an Nginx Passenger setup on port 80 with a
+single line:
+
+  Sunshine::Nginx.new(app).setup
+
+Easy!
+
+Servers let you do much more configuration with log files, config files, etc.
+For more information, see Sunshine::Server.
 
 
 == Dependencies
@@ -191,6 +318,7 @@ with Sunshine:
 Warning: If the :call options isn't specified, the dependency will attempt to
 install on the local system.
 
+See Sunshine::Dependency for more information.
 
 === Internal Sunshine Dependencies (advanced)
 
@@ -224,6 +352,151 @@ server_apps use the same dependency definition, you may consider:
   Sunshine.dependencies.apt 'rubygems', :version => '1.3.2'
   # ... and so on
 
+Note: You can disable automatic dependency installation by setting Sunshine's
+auto_dependencies config to false.
+
+
+== Using Permissions
+
+In order to deploy applications successfully, it's important to know how,
+where, and when to use permissions in Sunshine deploy scripts.
+
+=== The Shell Class
+
+The primary handler of permissions is the Sunshine::Shell class. Since all
+commands are run through a Shell object, it naturally handles permission
+changes. The following will create a new remote shell which is logged into
+as user "bob" but will use root to perform all calls:
+
+  # The following two lines are equivalent:
+  svr = Sunshine::RemoteShell.new "bob@myserver.com", :sudo => true
+  svr = Sunshine::RemoteShell.new "myserver.com", :user => "bob" :sudo => true
+
+Sudo can also be set after instantiation. Let's change the permissions back to
+its default:
+
+  svr.sudo = nil
+
+You can of course also run single commands with a one-off sudo setting:
+
+  svr.call "whoami", :sudo => true
+  #=> "root"
+
+Shell sudo values are important! Depending on what the value of shell.sudo is,
+behavior will change dramatically:
+
+- sudo = true   -> sudo -H command
+- sudo = 'root' -> sudo -H -u root command
+- sudo = 'usr'  -> sudo -H -u usr command
+- sudo = false  -> enforce never using sudo
+- sudo = nil    -> passthrough (don't care)
+
+Here are a few examples of these values being used:
+
+  svr = Sunshine::RemoteShell.new "bob@myserver.com", :sudo => true
+
+  svr.call "whoami"                   #=> root
+  svr.call "whoami", :sudo => "usr"   #=> usr
+  svr.call "whoami", :sudo => nil     #=> root
+  svr.call "whoami", :sudo => false   #=> bob
+
+
+These values are crucial as other Sunshine classes have and pass around other
+sudo requirements/values to shell objects.
+
+
+=== Who Affects Sudo
+
+There are 3 main places to beware of how sudo gets used.
+
+==== Apps
+
+The first, most obvious place is the App class:
+
+  app.sudo = "bob"
+  app.server_apps.first.shell.sudo #=> "bob"
+
+  app.sudo = true
+  app.server_apps.first.shell.sudo #=> true
+
+Since the App class effectively owns the shells it uses, setting sudo on the
+App will permanently change the sudo value of its shells.
+
+Note: You may notice that you can set a sudo config value on the Sunshine
+module. This is used for the default value of App#sudo and is passed along
+to an app's shells on instantiation.
+
+
+==== Dependencies
+
+Since Sunshine also deals with installing dependencies, the Dependency class
+and its children all have a class level sudo setting which is set to true
+by default. This means that any dependency will by default run its commands
+using sudo:
+
+  dep = Sunshine::Apt.new "libdvdread"
+  dep.install! :call => shell
+
+  #=> sudo -H apt-get install libdvdread
+
+This can be changed on the class level:
+
+  shell.sudo = "usr"
+
+  Sunshine::Apt.sudo = nil  # let the shell handle sudo
+  dep.install! :call => shell
+  
+  #=> sudo -H -u usr apt-get install libdvdread
+
+It can also be set on an individual basis:
+
+  dep.install! :call => shell, :sudo => nil
+
+
+==== Servers
+
+Because of how unix works with servers and ports, it's not uncommon to have to
+run start/stop/restart server commands with upgraded permissions. This is true
+for Apache and Nginx on ports below 1024. Due to this, servers automatically try
+to adjust their permissions to run their commands correctly. Since servers
+should run their commands consistantly, the only way to affect their sudo value
+is on a server instance basis:
+
+  server = Nginx.new app, :sudo => nil  # let the shell handle sudo
+
+However, the above will most likely cause Nginx's start command to fail if
+shell permissions don't allow running root processes.
+
+Note: Servers will ONLY touch permissions if their port is smaller than 1024.
+
+
+== Sunshine Configuration
+
+Aside from passing the sunshine command options, Sunshine can be configured
+both in the deploy script by calling Sunshine.setup and globally in the
+~/.sunshine file. The following is a list of supported config keys:
+
+'auto'                -> Automate calls; fail instead of prompting the user;
+defaults to false.
+
+'auto_dependencies'   -> Check and install missing deploy dependencies;
+defaults to true.
+
+'deploy_env'          -> The default deploy environment to use;
+defaults to :development.
+
+'level'               -> Logger's debug level; defaults to 'info'.
+
+'max_deploy_versions' -> The maximum number of deploys to keep on a server;
+defaults to 5.
+
+'require'             -> Require external ruby libs or gems; defaults to nil.
+
+'trace'               -> Show detailed output messages; defaults to false.
+
+'web_directory'       -> Path to where apps should be deployed to;
+defaults to '/var/www'.
+
 
 == Deployed Application Control
 
@@ -251,11 +524,12 @@ For more help on sunshine commands, use 'sunshine COMMAND --help'.
 For more information about control scripts, see the
 Sunshine::App#build_control_scripts method.
 
-== LICENSE:
+
+== Licence
 
 (The MIT License)
 
-Copyright (c) 2010 FIX
+Copyright (c) 2010
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
