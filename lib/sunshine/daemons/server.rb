@@ -129,6 +129,8 @@ module Sunshine
 
       binder.set :server_name, (@server_name || shell.host)
 
+      binder.set :proxy_name, "#{@app.name}_proxy"
+
       binder.set :target_server do
         target.server_name || server_name
       end

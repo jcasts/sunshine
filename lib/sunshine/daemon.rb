@@ -100,7 +100,8 @@ module Sunshine
 
       @config_path     = options[:config_path] ||
         "#{@app.current_path}/daemons/#{@name}"
-      @config_file     = options[:config_file] || "#{@name}.conf"
+
+      @config_file = options[:config_file] || "#{self.class.short_name}.conf"
 
       log_path  = options[:log_path] || @app.log_path
       @log_files = {

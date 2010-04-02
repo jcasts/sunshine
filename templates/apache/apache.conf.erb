@@ -12,7 +12,7 @@ PassengerRoot <%= passenger_root %>
 PassengerMaxPoolSize <%= processes %>
 <% end -%>
 
-<% unless Sunshine::App === target -%>
+<% unless App === target -%>
 LoadModule proxy_module         modules/mod_proxy.so
 LoadModule proxy_connect_module modules/mod_proxy_connect.so
 LoadModule proxy_http_module    modules/mod_proxy_http.so
@@ -44,7 +44,7 @@ NameVirtualHost *:<%= port %>
     Options -MultiViews
   </Directory>
 
-  <% unless Sunshine::App === target -%>
+  <% unless App === target -%>
 
   <Proxy balancer://<%= app.name %>>
     <% [*target].each do |server| %>

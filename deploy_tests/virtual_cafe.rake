@@ -16,7 +16,7 @@ namespace :sunshine do
         :type => :svn,
         :url  => "svn://subversion/NextGen/internal/virtual_cafe/branches/rails_2.3.4"
       },
-      :remote_shells => %w{jcastagna@jcast.np.wc1.yellowpages.com}
+      :remote_shells => "jcast.np.wc1.yellowpages.com"
     }
 
     @app = Sunshine::App.new app_hash
@@ -33,7 +33,13 @@ namespace :sunshine do
 
       @app.deploy do |app|
         app.run_geminstaller
-        Sunshine::MongrelRails.new(app, :port => 3000).setup
+        app.gem_install 'rspec'
+        app.rake 'db:migrate'
+
+        mongrels = Sunshine::MongrelRails.new_cluster 3, app, :port => 3000
+        mongrels.setup
+
+        Sunshine::Nginx.new(app, :point_to => mongrels).setup
       end
 
       @app.start :force => true
