@@ -1,0 +1,9 @@
+---
+:environment: <%= app.deploy_env %>
+:host: 0.0.0.0
+:num_processors: <%= connections %>
+:port: <%= port %>
+:daemon: true
+:log_file: <%= expand_path log_file(:stdout) %>
+:pid_file: <%= expand_path pid %>
+:timeout: <%= timeout %>

@@ -1,0 +1,61 @@
+LoadModule log_config_module modules/mod_log_config.so
+LoadModule authz_host_module modules/mod_authz_host.so
+
+ErrorLog    <%= expand_path log_file(:stderr) %>
+TransferLog <%= expand_path log_file(:stdout) %>
+
+<% if use_passenger? -%>
+LoadModule passenger_module <%= passenger_root %>/ext/apache2/mod_passenger.so
+
+PassengerRuby <%= shell.call "which ruby" %>
+PassengerRoot <%= passenger_root %>
+PassengerMaxPoolSize <%= processes %>
+<% end -%>
+
+<% unless App === target -%>
+LoadModule proxy_module          modules/mod_proxy.so
+LoadModule proxy_connect_module  modules/mod_proxy_connect.so
+LoadModule proxy_http_module     modules/mod_proxy_http.so
+LoadModule proxy_balancer_module modules/mod_proxy_balancer.so
+<% end -%>
+
+
+PidFile <%= expand_path pid %>
+MaxClients <%= connections %>
+
+<% if sudo == true || sudo == 'root' -%>
+User nobody
+Group nobody
+<% end -%>
+
+Listen <%= port %>
+
+
+NameVirtualHost *:<%= port %>
+
+<VirtualHost *:<%= port %>>
+  ServerName  <%= server_name %>
+  ServerAlias www.<%= server_name %>
+
+  DocumentRoot <%= expand_path app.current_path %>/public
+
+  <Directory <%= app.current_path %>/public>
+    Allow from all
+    Options -MultiViews
+  </Directory>
+
+  <% unless App === target -%>
+
+  <Proxy balancer://<%= proxy_name %>>
+    <% [*target].each do |server| %>
+    BalancerMember http://0.0.0.0:<%= server.port %>
+    <% end -%>
+  </Proxy>
+
+  # Using / after the proxy target is essential to the public dir.
+  ProxyPass / balancer://<%= proxy_name %>/ timeout=<%= timeout %>
+  ProxyPassReverse / balancer://<%= proxy_name %>/
+  ProxyPreserveHost On
+  
+  <% end -%>
+</VirtualHost>
