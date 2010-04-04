@@ -1,0 +1,6 @@
+timeout <%= timeout %>
+worker_processes <%= processes %>
+listen "0.0.0.0:<%= port %>"
+pid File.expand_path("<%= pid %>")
+stderr_path File.expand_path("<%= log_file :stderr %>")
+stdout_path File.expand_path("<%= log_file :stdout %>")

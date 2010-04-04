@@ -1,0 +1,11 @@
+:default:
+  :name: other_app
+  :repo:
+    :type: svn
+    :url:  svn://subversion/path/to/other_app/tags/release001
+
+  :root_path: /usr/local/my_user/other_app
+
+  :remote_shells:
+    - - "user@some_server.com"
+      - :roles: web db app

@@ -1,0 +1,293 @@
+=== 1.1.0 / 2010-04-02
+
+* Improvements:
+
+  * Support for server clustering with the ServerCluster class.
+
+  * Added Daemon#status method.
+
+  * Added the -R option for loading external libraries and gems.
+
+  * Added support for Thin and MongrelRails.
+
+  * Added Server support for max connections configuration.
+
+* Bugfixes:
+
+  * Daemons no longer create control scripts if they aren't used.
+
+  * Fixed Rsync repo to auto append "/" to urls for correct rsyncing.
+
+=== 1.0.3 / 2010-03-26
+
+* Improvements:
+
+  * Added App#call method.
+
+  * Added App#with_session and Shell#with_session to reduce login prompts.
+
+* Bugfixes:
+
+  * Geminstaller now always installs with sudo.
+
+  * Fixed permissions issues with running servers on ports < 1024.
+
+  * Fixed healthcheck middleware.
+
+=== 1.0.2 / 2010-03-25
+
+* Bugfixes:
+
+  * Fixed apache passenger dependency to run as sudo.
+
+  * Fixed a bug in Repo::detect
+
+=== 1.0.1 / 2010-03-25
+
+* Bugfixes:
+
+  * Added json dependency
+
+=== 1.0.0 / 2010-03-25
+
+* Improvements:
+
+  * Added auto_dependencies config to turn on/off auto installing things.
+
+  * Added healthcheck middleware support.
+
+  * Added support for Apache2 and its passenger implementation.
+
+  * Removed all Atti-specific code for public release.
+
+* Bugfixes:
+
+  * Fixed Nginx passenger implementation.
+
+
+=== 0.0.6 / 2010-03-19
+
+* Major:
+
+  * Removed DeployServerDispatcher. Dispatching now happens at the App level.
+
+  * Moved Settler into Sunshine and renamed it to DependencyLib.
+
+* Improvements:
+
+  * Added INT signal handling to exit deploys and close connections gracefully.
+
+  * Added dependency installation methods apt_install, gem_install,
+    tpkg_install and yum_install to App and ServerApp.
+
+  * Extended functionality of ServerApp#upload_tasks.
+
+  * ServerApp now support being instatiated with an App instance (for 
+    coordinated deploys) or just with an app name (for post-deploy usage).
+
+  * Added a Sunshine rakefile template for task-based deploys.
+    Available through: sunshine --rakefile [COPY_TO]
+
+  * App#name gets auto-assigned by repo info if not provided.
+
+  * Sunshine::web_directory used to determine App#deploy_path when missing.
+
+  * Repo#detect now returns a Repo object instead of an array.
+
+  * Added start/stop/restart/status methods to DeployServerApp.
+
+  * ServerApp instances with unspecified roles get all roles by default.
+
+  * App config files now use erb parsing.
+    Any key/value passed the App constructor as a hash should be passed
+    to the erb binding along with the deploy_env.
+
+  * Added support to bundler for defining multiple dependencies with the same
+    name, and different package managers.
+
+* Bugfixes:
+
+  * Added setup checking to Daemon to only run setup when needed.
+
+  * Moved healthcheck from App to ServerApp and improved the api.
+
+  * Renamed DeployServerApp to ServerApp.
+
+  * Renamed App#deploy_path and App#deploys_dir to
+    App#root_path and App#deploys_path.
+
+  * Renamed the 'deploy' command to 'run' to more accurately express it's use.
+
+  * RsyncRepo#do_checkout fixed to match standard Repo#do_checkout methods.
+
+  * Sunshine::DATA and Sunshine::PATH are now set when running standalone
+    ruby deploy files.
+
+
+=== 0.0.5 / 2010-02-26
+
+* Sunshine::App:
+
+  * Use of DeployServerDispatcher threading
+
+  * Fixed control script creation to be deploy_server specific
+    (takes roles into account)
+
+  * Added AttiApp class for ATTi app deployment.
+
+  * Constuctor supports :deploy_name option for nameable deploys.
+    Defaults to the timestamp.
+
+  * Auto-detects if the script's directory is a checked out repo and uses it
+    if no repo information was given.
+
+  * Support for running sass.
+
+* Sunshine::DeployServerDispatcher:
+
+  * Added threading support
+
+* Sunshine::Repo:
+
+  * Added support for detecting a repo type based on a path:
+      Repo.detect [path [, console_or_deploy_server]]
+        #=> [:git, "git://url/of/git/repo", {:tree => "master", ...}]
+
+  * Moved info instance methods to the class
+
+  * Support for git-svn:
+      SvnRepo.git_svn? path
+
+  * Changed the checkout_to method signature
+
+* Sunshine::Server:
+
+  * Added support for ar_sendmail server.
+
+
+=== 0.0.4 / 2010-02-12
+
+* Added sudo functionality:
+
+  * Support for :sudo option on Sunshine::App, Sunshine::Server, and
+    Sunshine::DeployServer constructors, and attr_accessor :sudo
+
+  * Settler Dependency classes support a default sudo value:
+      Sunshine::Dependencies::Gem.sudo = true   # use sudo
+      Sunshine::Dependencies::Gem.sudo = "usr"  # use sudo -u usr
+      Sunshine::Dependencies::Gem.sudo = false  # ensure sudo is off
+      Sunshine::Dependencies::Gem.sudo = nil    # use :call obj precedence
+
+* App supports passing a (yml) file object to the constructor.
+  Useful for passing file DATA if desired:
+    app = Sunshine::App.new Sunshine::DATA
+    app.deploy!{|app| Sunshine::Rainbows.new(app).restart }
+    __END__
+    #yaml for app goes here...
+
+* App class changes:
+
+  * Changed the format of the App#checkout_path directory
+
+  * Logrotate setup now has to be called explicitely
+
+* Commands functionality expanded:
+
+  * Support for --sudo and --sudo=user on all Sunshine commands
+
+  * Added --format option for control commands. Supports txt, yml, json.
+
+* Control scripts generated on the remote server now keep deploy-time
+  shell_env variables:
+
+  * Run commands with the --no-env option to run without
+    deploy shell_env variables.
+
+  * Run any script with the app's env variables using:
+      /path/to/app/env some_command
+      /path/to/app/env EXTRA_VAR=some_value some_command
+    Supports all options the env command supports.
+
+* Dependency handling now supports apt.
+
+* DeployServers now support passing custom flags for ssh and rsync:
+    deploy_server = DeployServer.new "svr.com", :rsync_flags => [...]
+
+    deploy_server.call "some_command",
+      :sudo => "user", :flags => '-C'
+
+    deploy_server.upload "from", "to",
+      :sudo => "user", :flags => ['--chmod=ugo=rwX', '-b']
+
+    deploy_server.download "from", "to",
+      :flags => '--ignore-existing'
+
+* Repo implementation has significantly changed:
+
+  * Added support for git repo.
+
+  * Info about a repo is now retrieved with Repo#get_repo_info:
+      repo.get_repo_info deploy_server, checkout_path
+
+  * Repo constructor supports options hash with :flags option.
+
+
+=== 0.0.3 / 2010-01-29
+
+* Many small bugfixes
+
+* Tests, tests, and more tests
+
+* Changed DeployServer api
+
+  * DeployServer#run is not longer supported, use DeployServer#call
+
+  * Constructor supports a spaced delimited list for roles:
+      DeployServer.new "myhost.com", :roles => "web db other"
+
+  * Changed how deploy server yaml is parsed. Should parse to be valid on:
+      DeployServer.new *parsed_yaml
+    Example Given:
+      :deploy_servers :
+        - server1.com
+        - - server2.com
+        - - server3.com
+          - :roles : web db other
+            :ssh_flags : '-o ControlMaster=auto'
+
+
+=== 0.0.2 / 2010-01-15
+
+* Added Control Commands
+
+  * add, deploy, list, restart, rm, start, stop
+
+* Application support
+
+  * Changed VERSION file to info and its format to yaml
+
+  * Deployed apps now have a start, stop and restart script
+
+  * Added Crontab and log rotation support
+
+* Functional changes
+
+  * Ditched net/ssh and net/scp for ssh and rsync through Open4
+
+  * Fixed and updated dependencies to use Yum
+
+  * Support for sunshine user configuration in ~/.sunshine
+
+* Rake tasks
+
+  * Support to run the app's rake tasks
+
+  * Built in default ATTi rake tasks
+
+
+=== 0.0.1 / 2009-11-18
+ 
+* 1 major enhancement
+ 
+  * First release!
+

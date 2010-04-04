@@ -1,0 +1,113 @@
+<% darwin = shell.os_name =~ /^darwin$/i %>
+
+<% if sudo == true || sudo == 'root' %>
+user nobody nobody;
+<% end %>
+worker_processes  <%= processes %>;
+pid               <%= expand_path pid %>;
+error_log         <%= expand_path log_file(:stderr) %> info;
+
+events {
+  worker_connections <%= connections %>;
+  <% unless darwin %>
+  use epoll;
+  <% end %>
+}
+
+http {
+
+  <% if use_passenger? %>
+  passenger_default_user nobody;
+  passenger_root <%= passenger_root %>;
+  passenger_ruby <%= shell.call "which ruby" %>;
+  <% end %>
+
+  client_body_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
+  proxy_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
+
+  include <%= File.dirname shell.call("which nginx") %>/../conf/mime.types;
+  default_type  application/octet-stream;
+
+  log_format sunshine '$remote_addr - $remote_user [$time_local] '
+                      '"$request" $status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_cookie" $request_time '
+                      '$upstream_http_x_urid';
+  access_log <%= expand_path log_file(:stdout) %> sunshine;
+
+  
+  # This should be some other include file
+  include  <%= expand_path config_path %>/nginx_optimize.conf;
+  
+  
+  ##
+  # gZip config
+  gzip              on;
+  gzip_disable      "MSIE [1-6]\.";
+  gzip_min_length   1100;
+  gzip_buffers      4 8k;
+  gzip_http_version 1.0;
+  gzip_comp_level   5;
+  gzip_proxied      any;
+  gzip_types        text/plain text/html text/css application/x-javascript application/xml application/xml+rss text/javascript;
+
+  <% unless App === target -%>
+  upstream <%= proxy_name %> {
+    <% [*target].each do |server| -%>
+    server 0:<%= server.port %> fail_timeout=<%= timeout %>;
+    <% end -%>
+  }
+  <% end -%>
+
+  ##
+  # 301 redirect www to non-www host.
+  server {
+    listen <%= port %>;
+    server_name www.<%= server_name %>;
+    rewrite ^/(.*) http://<%= server_name %>/$1 permanent;
+  }
+
+  ##
+  # Main server definition.
+  server {
+    listen <%= port %> default;
+    server_name <%= server_name %>;
+    port_in_redirect off; # needed for the F5, unfortunately
+    server_name_in_redirect off;
+
+
+    root <%= expand_path app.current_path %>/public;
+
+  <% if use_passenger? %>
+    passenger_enabled on;
+
+  <% else %>
+
+    ##
+    # Main proxy
+    location / {
+      <% if darwin -%>
+      ssi on;
+      <% end -%>
+      if (-f $request_filename) {
+        break;
+      }
+
+      include  <%= expand_path config_path %>/nginx_proxy.conf;
+      expires -1;
+
+      <% unless App === target %>
+      if (!-f $request_filename) {
+        proxy_pass http://<%= proxy_name %>;
+        break;
+      }
+      <% end %>
+
+      error_page   500 502 503 504  /500.html;
+      location = /500.html {
+        root <%= expand_path app.current_path %>/public;
+      }
+    }
+  <% end %>
+  }
+
+}

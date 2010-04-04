@@ -1,0 +1,12 @@
+--- 
+address: 0.0.0.0
+timeout: <%= timeout %>
+port: <%= port %>
+log: <%= expand_path log_file(:stdout) %>
+max_conns: <%= connections %>
+require: []
+
+environment: <%= app.deploy_env %>
+max_persistent_conns: <%= connections / 2 %>
+servers: <%= processes %>
+daemonize: true
