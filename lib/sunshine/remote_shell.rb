@@ -15,7 +15,8 @@ module Sunshine
 
     ##
     # The loop to keep the ssh connection open.
-    LOGIN_LOOP = "echo connected; echo ready; for (( ; ; )); do sleep 10; done"
+    LOGIN_LOOP = "echo ok; echo ready; "+
+      "for (( ; ; )); do kill -0 $PPID && sleep 10 || exit; done;"
 
     LOGIN_TIMEOUT = 30
 
@@ -38,7 +39,7 @@ module Sunshine
     end
 
 
-    attr_reader :host, :user
+    attr_reader :host, :user, :pid
     attr_accessor :ssh_flags, :rsync_flags
 
 
@@ -82,7 +83,7 @@ module Sunshine
 
     def call command_str, options={}, &block
       Sunshine.logger.info @host, "Running: #{command_str}" do
-        execute ssh_cmd(command_str, options), &block
+        execute build_remote_cmd(command_str, options), &block
       end
     end
 
@@ -91,11 +92,11 @@ module Sunshine
     # Connect to host via SSH and return process pid
 
     def connect
-      return @pid if connected?
+      return true if connected?
 
-      cmd = ssh_cmd LOGIN_LOOP, :sudo => false
+      cmd = ssh_cmd quote_cmd(LOGIN_LOOP), :sudo => false
 
-      @pid, @inn, @out, @err = popen4(cmd.join(" "))
+      @pid, @inn, @out, @err = popen4 cmd.join(" ")
       @inn.sync = true
 
       data  = ""
@@ -132,13 +133,11 @@ module Sunshine
     # Disconnect from host
 
     def disconnect
-      return unless connected?
-
       @inn.close rescue nil
       @out.close rescue nil
       @err.close rescue nil
 
-      kill_process @pid, "HUP"
+      kill_process @pid, "HUP" rescue nil
 
       @pid = nil
     end
@@ -192,6 +191,17 @@ module Sunshine
 
 
     ##
+    # Builds an ssh command with permissions, env, etc.
+
+    def build_remote_cmd cmd, options={}
+      cmd = sh_cmd   cmd
+      cmd = env_cmd  cmd
+      cmd = sudo_cmd cmd, options
+      cmd = ssh_cmd  cmd, options
+    end
+
+
+    ##
     # Uploads a file via rsync
 
     def upload from_path, to_path, options={}, &block
@@ -237,12 +247,8 @@ module Sunshine
     ##
     # Wraps the command in an ssh call.
 
-    def ssh_cmd string, options=nil
+    def ssh_cmd cmd, options=nil
       options ||= {}
-
-      cmd = sh_cmd string
-      cmd = env_cmd cmd
-      cmd = sudo_cmd cmd, options
 
       flags = [*options[:flags]].concat @ssh_flags
 

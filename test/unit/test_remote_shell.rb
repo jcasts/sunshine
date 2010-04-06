@@ -17,8 +17,11 @@ class TestRemoteShell < Test::Unit::TestCase
   end
 
   def test_connect
-    assert_ssh_call \
-      "echo connected; echo ready; for (( ; ; )); do sleep 10; done"
+    login_cmd = Sunshine::RemoteShell::LOGIN_LOOP
+    login_cmd = @remote_shell.send :quote_cmd, login_cmd
+    login_cmd = @remote_shell.send :ssh_cmd, login_cmd, :sudo => false
+
+    assert @remote_shell.method_called?(:popen4, :args => [login_cmd.join(" ")])
     assert @remote_shell.connected?
   end
 
@@ -42,7 +45,7 @@ class TestRemoteShell < Test::Unit::TestCase
     @remote_shell.call cmd
     raise "Didn't raise CmdError on stderr"
   rescue Sunshine::CmdError => e
-    ssh_cmd = @remote_shell.send(:ssh_cmd, cmd).join(" ")
+    ssh_cmd = @remote_shell.build_remote_cmd(cmd).join(" ")
     assert_equal "Execution failed with status 1: #{ssh_cmd}", e.message
   end
 

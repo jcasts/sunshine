@@ -6,10 +6,12 @@ class TestApp < Test::Unit::TestCase
     mock_remote_shell_popen4
     @svn_url = "svn://subversion/path/to/app_name/trunk"
 
-    @config = {:name => "app_name",
-               :repo => {:type => "svn", :url => @svn_url},
-               :remote_shells => ["user@some_server.com"],
-               :root_path => "/usr/local/my_user/app_name"}
+    @config = {
+      :name => "app_name",
+      :remote_checkout => true,
+      :repo => {:type => "svn", :url => @svn_url},
+      :remote_shells => ["user@some_server.com"],
+      :root_path => "/usr/local/my_user/app_name"}
 
     @app = Sunshine::App.new @config
     @app.each do |server_app|
@@ -277,7 +279,7 @@ class TestApp < Test::Unit::TestCase
 
     state = true
     @app.server_apps.each do |sa|
-      assert sa.method_called? :deployed?
+      assert sa.method_called?(:deployed?)
 
       set_mock_response_for sa.shell, 0,
         "cat #{@app.current_path}/info" => [:out,

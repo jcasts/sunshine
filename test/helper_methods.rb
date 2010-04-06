@@ -107,7 +107,7 @@ fi
 
 
   def assert_ssh_call expected, ds=@remote_shell, options={}
-    expected = ds.send(:ssh_cmd, expected, options).join(" ")
+    expected = ds.build_remote_cmd(expected, options).join(" ")
 
     error_msg = "No such command in remote_shell log [#{ds.host}]\n#{expected}"
     error_msg << "\n\n#{ds.cmd_log.select{|c| c =~ /^ssh/}.join("\n\n")}"

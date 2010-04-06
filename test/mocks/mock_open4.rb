@@ -1,9 +1,7 @@
 module MockOpen4
 
-  LOGIN_CMD = "echo ready;"
-
   CMD_RETURN = {
-    LOGIN_CMD => [:out, "ready\n"]
+    Sunshine::RemoteShell::LOGIN_LOOP => [:out, "ready\n"]
   }
 
   attr_reader :cmd_log
@@ -68,7 +66,9 @@ module MockOpen4
         next
       end
 
-      key = ssh_cmd(key, options).join(" ") if Sunshine::RemoteShell === self
+      if Sunshine::RemoteShell === self
+        key = build_remote_cmd(key, options).join(" ")
+      end
 
       new_stream_vals[key] = (val.dup << code)
     end

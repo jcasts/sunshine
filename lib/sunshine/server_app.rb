@@ -145,9 +145,15 @@ module Sunshine
     ##
     # Checks out the app's codebase to the checkout path.
 
-    def checkout_repo repo
+    def checkout_repo repo, scm_info={}
       install_deps repo.scm
-      @info[:scm] = repo.checkout_to self.checkout_path, @shell
+
+      Sunshine.logger.info repo.scm,
+        "Checking out to #{@shell.host} #{self.checkout_path}" do
+
+        @info[:scm] = repo.checkout_to self.checkout_path, @shell
+        @info[:scm].merge! scm_info
+      end
     end
 
 
@@ -477,6 +483,16 @@ fi
 
     def symlink_current_dir
       @shell.symlink self.checkout_path, self.current_path
+    end
+
+
+    ##
+    # Assumes the passed code_dir is the root directory of the checked out
+    # codebase and uploads it to the checkout_path.
+
+    def upload_codebase code_dir, scm_info={}
+      RsyncRepo.new(code_dir).checkout_to self.checkout_path, @shell
+      @info[:scm] = scm_info
     end
 
 

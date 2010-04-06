@@ -14,13 +14,32 @@ module Sunshine
   class Repo
 
     ##
+    # Adds subclasses to a repo_types hash for easy
+
+    def self.inherited subclass
+      @@repo_types ||= {}
+
+      # Turn Sunshine::ScmNameRepo into :scm_name
+      class_key = subclass.to_s.split("::").last
+      class_key = $1 if class_key =~ /(\w+)Repo$/
+      class_key.gsub! /([a-z0-9])([A-Z])/, '\1_\2'
+      class_key = class_key.downcase
+
+      @@repo_types[class_key] = subclass
+    end
+
+
+    ##
     # Creates a new repo subclass object:
     #   Repo.new_of_type :svn, "https://path/to/repo/tags/releasetag"
     #   Repo.new_of_type :git, "user@gitbox.com:repo/path"
 
     def self.new_of_type repo_type, url, options={}
-      repo = "#{repo_type.to_s.capitalize}Repo"
-      Sunshine.const_get(repo).new(url, options)
+      repo_class = @@repo_types[repo_type.to_s]
+
+      raise RepoError, "Invalid type #{repo_type.inspect}" unless repo_class
+
+      repo_class.new(url, options)
     end
 
 
@@ -36,15 +55,16 @@ module Sunshine
     #     #=> nil
 
     def self.detect path=".", shell=nil
+      @@repo_types.values.each do |repo|
+        next if Sunshine::RsyncRepo === repo
 
-      if SvnRepo.valid? path
-        info = SvnRepo.get_info path, shell
-        SvnRepo.new info[:url], info
-
-      elsif GitRepo.valid? path
-        info = GitRepo.get_info path, shell
-        GitRepo.new info[:url], info
+        if repo.valid? path
+          info = repo.get_info path, shell
+          return repo.new(info[:url], info)
+        end
       end
+
+      nil
     end
 
 
@@ -69,21 +89,17 @@ module Sunshine
 
     ##
     # Checkout code to a shell and return an info log hash:
-    #   repo.chekout_to server, "some/path"
+    #   repo.chekout_to "some/path", remote_shell
     #   #=> {:revision => 123, :committer => 'someone', :date => time_obj ...}
 
     def checkout_to path, shell=nil
       shell ||= Sunshine.shell
 
-      Sunshine.logger.info @scm,
-        "Checking out to #{shell.host} #{path}" do
+      shell.call "test -d #{path} && rm -rf #{path} || echo false"
+      shell.call "mkdir -p #{path}"
 
-        shell.call "test -d #{path} && rm -rf #{path} || echo false"
-        shell.call "mkdir -p #{path}"
-
-        do_checkout   path, shell
-        get_repo_info path, shell
-      end
+      do_checkout   path, shell
+      get_repo_info path, shell
     end
 
 
@@ -97,7 +113,7 @@ module Sunshine
 
 
     ##
-    # Get the name of the specified repo - implemented by subclass
+    # Get the project name of the specified repo - implemented by subclass
 
     def name
       raise RepoError,

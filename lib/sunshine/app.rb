@@ -151,6 +151,7 @@ module Sunshine
     attr_reader :name, :repo, :server_apps, :sudo
     attr_reader :root_path, :checkout_path, :current_path, :deploys_path
     attr_reader :shared_path, :log_path, :deploy_name, :deploy_env
+    attr_accessor :remote_checkout
 
     ##
     # App instantiation can be done in several ways:
@@ -182,6 +183,8 @@ module Sunshine
       set_deploy_paths options[:root_path]
 
       @server_apps = server_apps_from_config options[:remote_shells]
+
+      @remote_checkout = options[:remote_checkout] || Sunshine.remote_checkouts?
 
       self.sudo = options[:sudo] || Sunshine.sudo
 
@@ -401,11 +404,27 @@ module Sunshine
 
     ##
     # Checks out the app's codebase to one or all deploy servers.
+    # Supports all App#find options, plus:
+    # :copy:: Bool - Checkout locally and rsync; defaults to false.
 
     def checkout_codebase options=nil
-      with_server_apps options,
-        :msg  => "Checking out codebase",
-        :send => [:checkout_repo, @repo]
+      copy_option = options && options.has_key?(:copy) && options[:copy]
+
+      if @remote_checkout && !copy_option
+        with_server_apps options,
+          :msg  => "Checking out codebase (remotely)",
+          :send => [:checkout_repo, @repo]
+
+      else
+        Sunshine.logger.info :app, "Checking out codebase (locally)" do
+
+          tmp_path = File.join Sunshine::TMP_DIR, "#{@name}_checkout"
+          scm_info = @repo.checkout_to tmp_path
+
+          with_server_apps options,
+            :send => [:upload_codebase, tmp_path, scm_info]
+        end
+      end
 
     rescue => e
       raise CriticalDeployError, e
@@ -691,7 +710,9 @@ module Sunshine
     # See #after_user_script.
 
     def run_post_user_lambdas
-      @post_user_lambdas.each{|l| l.call self}
+      Sunshine.logger.info :app, "Running post deploy lambdas" do
+        @post_user_lambdas.each{|l| l.call self}
+      end
     end
 
 

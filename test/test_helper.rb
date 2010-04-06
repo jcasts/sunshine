@@ -13,7 +13,7 @@ unless defined? TEST_APP_CONFIG_FILE
 end
 
 
-Sunshine.setup({}, true)
+Sunshine.setup({'remote_checkouts' => true}, true)
 
 unless MockObject === Sunshine.shell
   Sunshine.shell.extend MockObject

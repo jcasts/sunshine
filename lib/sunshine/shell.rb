@@ -172,12 +172,19 @@ module Sunshine
 
 
     ##
+    # Wrap command in quotes and escape as needed.
+
+    def quote_cmd cmd
+      cmd = [*cmd].join(" ")
+      "'#{cmd.gsub(/'/){|s| "'\\''"}}'"
+    end
+
+
+    ##
     # Build an sh -c command
 
-    def sh_cmd string
-      string = string.gsub(/'/){|s| "'\\''"}
-
-      ["sh", "-c", "'#{string}'"]
+    def sh_cmd cmd
+      ["sh", "-c", quote_cmd(cmd)]
     end
 
 
@@ -339,6 +346,7 @@ module Sunshine
       raise CmdError,
         "Execution failed with status #{status.exitstatus}: #{[*cmd].join ' '}"
     end
+
 
     def password_required? stream_name, data
       stream_name == :err && data =~ SUDO_PROMPT

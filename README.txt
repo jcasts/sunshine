@@ -492,6 +492,9 @@ defaults to :development.
 'max_deploy_versions' -> The maximum number of deploys to keep on a server;
 defaults to 5.
 
+'remote_checkouts'    -> Use remote servers to checkout the codebase;
+defaults to false.
+
 'require'             -> Require external ruby libs or gems; defaults to nil.
 
 'trace'               -> Show detailed output messages; defaults to false.

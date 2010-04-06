@@ -19,7 +19,7 @@ module Sunshine
 
   ##
   # Sunshine version.
-  VERSION = '1.1.0'
+  VERSION = '1.1.1'
 
   ##
   # Path to the list of installed sunshine apps.
@@ -41,7 +41,8 @@ module Sunshine
     'auto'                => false,
     'max_deploy_versions' => 5,
     'web_directory'       => '/var/www',
-    'auto_dependencies'   => true
+    'auto_dependencies'   => true,
+    'remote_checkouts'    => false
   }
 
   ##
@@ -88,11 +89,20 @@ module Sunshine
     @config['auto_dependencies']
   end
 
-  ##
-  # Returns the main Sunshine dependencies library.
 
-  def self.dependencies
+  ##
+  # Returns the main Sunshine dependencies library. If passed a block,
+  # evaluates the block within the dependency lib instance:
+  #
+  #   Sunshine.dependencies do
+  #     yum 'new_dep'
+  #     gem 'commander'
+  #   end
+
+  def self.dependencies(&block)
     @dependency_lib ||= DependencyLib.new
+    @dependency_lib.instance_eval(&block) if block_given?
+    @dependency_lib
   end
 
 
@@ -137,6 +147,15 @@ module Sunshine
 
   def self.max_deploy_versions
     @config['max_deploy_versions']
+  end
+
+
+  ##
+  # Check if the codebase should be checked out remotely, or checked out
+  # locally and rsynced up. Overridden in the ~/.sunshine config file.
+
+  def self.remote_checkouts?
+    @config['remote_checkouts']
   end
 
 

@@ -1,8 +1,7 @@
 ##
 # Defines Sunshine deploy server dependencies.
 
-#class Sunshine::Dependencies < Settler
-Sunshine.dependencies.instance_eval do
+Sunshine.dependencies do
 
   apt 'svn', :pkg => 'subversion'
   yum 'svn', :pkg => 'subversion'

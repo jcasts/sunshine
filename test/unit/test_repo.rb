@@ -13,8 +13,16 @@ class TestRepo < Test::Unit::TestCase
     assert_equal Sunshine::SvnRepo, repo.class
     assert_equal @svn_url, repo.url
 
-    repo = Sunshine::Repo.new_of_type "", @svn_url
-    assert_equal Sunshine::Repo, repo.class
+    repo = Sunshine::Repo.new_of_type 'git', @svn_url
+    assert_equal Sunshine::GitRepo, repo.class
+    assert_equal @svn_url, repo.url
+
+    begin
+      repo = Sunshine::Repo.new_of_type "", @svn_url
+      raise "Didn't raise RepoError for invalid repo type"
+    rescue Sunshine::RepoError => e
+      assert_equal "Invalid type \"\"", e.message
+    end
   end
 
 
