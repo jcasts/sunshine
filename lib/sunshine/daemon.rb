@@ -285,7 +285,7 @@ module Sunshine
     # Get the command to check if the daemon is running.
 
     def status_cmd
-      @status_cmd || "test -f #{@pid}"
+      @status_cmd || "test -f #{@pid} && kill -0 $(cat #{@pid})"
     end
 
 
