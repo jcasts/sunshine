@@ -153,7 +153,8 @@ module Sunshine
     # Prompt the user for a password
 
     def prompt_for_password
-      @password = ask("#{@user}@#{@host} Password:") do |q|
+      host_info = [@user, @host].compact.join("@")
+      @password = ask("#{host_info} Password:") do |q|
         q.echo = false
       end
     end
