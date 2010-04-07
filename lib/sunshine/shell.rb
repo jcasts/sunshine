@@ -165,7 +165,7 @@ module Sunshine
     def env_cmd cmd, env_hash=@env
       if env_hash && !env_hash.empty?
         env_vars = env_hash.map{|e| e.join("=")}
-        cmd = ["env", env_vars, cmd]
+        cmd = ["env", env_vars, cmd].flatten
       end
       cmd
     end

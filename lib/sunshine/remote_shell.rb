@@ -212,8 +212,6 @@ module Sunshine
     end
 
 
-    private
-
     ##
     # Figure out which rsync flags to use.
 
