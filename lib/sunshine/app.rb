@@ -249,6 +249,9 @@ module Sunshine
     #
     # Note: The deploy method will stop the former deploy just before
     # symlink and the passed block is run.
+    #
+    # Note: Once deployment is complete, the deploy method will attempt to
+    # run App#start.
 
     def deploy options=nil
       prev_connection = connected?
@@ -283,6 +286,8 @@ module Sunshine
 
           register_as_deployed
           remove_old_deploys
+
+          start :force => true
         end
       end
 

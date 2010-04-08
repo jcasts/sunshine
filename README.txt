@@ -86,8 +86,6 @@ to the @app.deploy block. Here's a sample of completed :app and :deploy tasks:
         rainbows.setup
         nginx.setup
       end
-
-      @app.start :force => true
     end
 
     ...
@@ -236,8 +234,6 @@ Using Sunshine, this is most commonly defined as a part of the deploy process:
     backend.setup
     nginx.setup
   end
-
-  app.start :force => true
 
 When a new Server is instantiated and its setup method is run, it is added to
 the app's control scripts. This means that when the deploy is complete, those

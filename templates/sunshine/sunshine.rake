@@ -38,7 +38,8 @@ namespace :sunshine do
     #       ...
     #     end
     #
-    #     @app.start :force => true
+    #     # Do more things with @app here...
+    #
     #   end
 
     @app.deploy do |app|
@@ -52,8 +53,6 @@ namespace :sunshine do
       #   unicorn.setup
 
     end
-
-    @app.start :force => true
   end
 
 

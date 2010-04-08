@@ -1,3 +1,17 @@
+=== 1.1.2 / 2010-04
+
+* Improvements:
+
+  * Added auto registration of Dependency subclasses for scalability.
+
+  * Added call to App#start in App#deploy.
+
+* Bugfixes:
+
+  * Shell#env_cmd now returns a flattened array.
+
+  * Added actual check of running process to Daemon#status_cmd
+
 === 1.1.1 / 2010-04-05
 
 * Improvements:
