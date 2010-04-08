@@ -246,6 +246,9 @@ module Sunshine
     ##
     # Deploy the application to deploy servers and
     # call user's post-deploy code. Supports any App#find options.
+    #
+    # Note: The deploy method will stop the former deploy just before
+    # symlink and the passed block is run.
 
     def deploy options=nil
       prev_connection = connected?
@@ -511,22 +514,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Gpg decrypt: #{gpg_file}",
         :send => [:gpg_decrypt, gpg_file, options]
-    end
-
-
-    %w{gem yum apt}.each do |dep_type|
-      self.class_eval <<-STR, __FILE__, __LINE__ + 1
-        ##
-        # Install one or more #{dep_type} packages.
-        # See Settler::#{dep_type.capitalize}#new for supported options.
-
-        def #{dep_type}_install(*names)
-          options = names.last if Hash === names.last
-          with_server_apps options,
-            :msg  => "Installing #{dep_type} packages",
-            :send => [:#{dep_type}_install, *names]
-        end
-      STR
     end
 
 

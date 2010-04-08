@@ -48,7 +48,8 @@ module Sunshine
 
 
     ##
-    # Creates dependency methods such as gem_install, yum_install, etc.
+    # Creates dependency instance methods such as gem_install, yum_install, etc
+    # on both App and ServerApp classes.
 
     def self.register_dependency_type dep_class
       class_eval <<-STR, __FILE__, __LINE__ + 1
@@ -59,6 +60,15 @@ module Sunshine
             dep = #{dep_class}.new(name, options)
             dep.install! :call => @shell
           end
+        end
+      STR
+
+      App.class_eval <<-STR, __FILE__, __LINE__ + 1
+        def #{dep_class.short_name}_install(*names)
+          options = names.last if Hash === names.last
+          with_server_apps options,
+            :msg  => "Installing #{dep_class.short_name} packages",
+            :send => [:#{dep_class.short_name}_install, *names]
         end
       STR
     end
