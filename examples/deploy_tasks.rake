@@ -38,8 +38,6 @@ namespace :sunshine do
       rainbows.setup
       nginx.setup
     end
-
-    @app.start :force => true
   end
 
 

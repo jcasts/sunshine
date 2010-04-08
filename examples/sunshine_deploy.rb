@@ -7,19 +7,16 @@ Sunshine::App.deploy do |app|
 
   app.gem_install 'isolate', :version => '1.3.0'
 
-  app.install_deps 'libxml2-devel', 'libxslt-devel', 'libaio', 'sqlite-devel',
+  app.yum_install 'libxml2-devel', 'libxslt-devel', 'libaio', 'sqlite-devel',
                   'sqlite', 'ruby-devel', 'activerecord-oracle_enhanced-adapter'
 
-
   app.run_bundler
-
 
   app.with_filter :role => :db do
 
     app.rake 'config/database.yml'
     app.rake 'db:migrate'
   end
-
 
   app.with_filter :role => :cdn do
 
@@ -32,17 +29,14 @@ Sunshine::App.deploy do |app|
   end
 
 
-  delayed_job = Sunshine::DelayedJob.new app
-  delayed_job.restart
-
-  mail = Sunshine::ARSendmail.new app
-  mail.restart
+  Sunshine::DelayedJob.new(app).setup
+  Sunshine::ARSendmail.new(app).setup
 
   unicorn = Sunshine::Unicorn.new app, :port => 10001, :processes => 8
-  unicorn.restart
+  nginx   = Sunshine::Nginx.new app, :point_to => unicorn
 
-  nginx = Sunshine::Nginx.new app, :point_to => unicorn, :port => 10000
-  nginx.restart
+  unicorn.setup
+  nginx.setup
 end
 
 

@@ -15,8 +15,8 @@ Sunshine::App.deploy :name => 'my_app' do |app|
 
   app.run_geminstaller
 
-  rainbows.restart
-  nginx.restart
+  rainbows.setup
+  nginx.setup
 end
 
 
