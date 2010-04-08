@@ -317,8 +317,13 @@ module Sunshine
     end
 
 
-    def self.short_class_name str
-      str.to_s.split(":").last
+    ##
+    # Returns an underscored short version of the class name:
+    #   Sunshine::Yum.short_name
+    #   #=> "yum"
+
+    def self.short_name
+      @short_name ||= underscore self.name.to_s.split(":").last
     end
 
 
@@ -328,19 +333,13 @@ module Sunshine
     end
 
 
-    def self.inherited(subclass)
-      class_name  = short_class_name subclass.to_s
-      method_name = underscore class_name
+    ##
+    # Auto register the new Dependency class with DependencyLib and ServerApp
+    # when inherited.
 
-      DependencyLib.class_eval <<-STR, __FILE__, __LINE__ + 1
-      def #{method_name}(name, options={}, &block)
-        dep = #{class_name}.new(name, options.merge(:tree => self), &block)
-        self.add dep
-        dep
-      end
-      STR
-
-      DependencyLib.dependency_types << subclass
+    def self.inherited subclass
+      DependencyLib.register_type subclass
+      ServerApp.register_dependency_type subclass
     end
 
     inherited self

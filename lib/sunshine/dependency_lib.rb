@@ -47,6 +47,34 @@ module Sunshine
     end
 
 
+    ##
+    # Registers a new dependency class, creates its constructor method
+    # (DependencyLib#[dep_class.short_name]).
+
+    def self.register_type dep_class
+      class_eval <<-STR, __FILE__, __LINE__ + 1
+
+        def #{dep_class.short_name}(name, options={}, &block)
+          dep = #{dep_class}.new(name, options.merge(:tree => self), &block)
+          self.add dep
+          dep
+        end
+      STR
+
+      dependency_types << dep_class
+    end
+
+
+    ##
+    # Define if sudo should be used
+
+    def self.sudo= value
+      dependency_types.each do |dep_class|
+        dep_class.sudo = value
+      end
+    end
+
+
     attr_reader :dependencies
 
     def initialize
@@ -184,16 +212,6 @@ module Sunshine
         options.delete(:type)
 
         dep.send method, options
-      end
-    end
-
-
-    ##
-    # Define if sudo should be used
-
-    def self.sudo= value
-      dependency_types.each do |dep_class|
-        dep_class.sudo = value
       end
     end
   end

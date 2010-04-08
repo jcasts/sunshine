@@ -47,6 +47,23 @@ module Sunshine
     end
 
 
+    ##
+    # Creates dependency methods such as gem_install, yum_install, etc.
+
+    def self.register_dependency_type dep_class
+      class_eval <<-STR, __FILE__, __LINE__ + 1
+        def #{dep_class.short_name}_install(*names)
+          options = Hash === names.last ? names.delete_at(-1) : Hash.new
+
+          names.each do |name|
+            dep = #{dep_class}.new(name, options)
+            dep.install! :call => @shell
+          end
+        end
+      STR
+    end
+
+
     app_attr :name, :deploy_name
     app_attr :root_path, :checkout_path, :current_path
     app_attr :deploys_path, :log_path, :shared_path
@@ -193,7 +210,7 @@ module Sunshine
 
 
     ##
-    # Returns information about the deploy at hand.
+    # Builds a hash with information about the deploy at hand.
 
     def get_deploy_info
       { :deployed_at => Time.now.to_s,
@@ -240,24 +257,6 @@ module Sunshine
       end
 
       true
-    end
-
-
-    %w{gem yum apt}.each do |dep_type|
-      self.class_eval <<-STR, __FILE__, __LINE__ + 1
-        ##
-        # Install one or more #{dep_type} packages.
-        # See #{dep_type.capitalize}#new for supported options.
-
-        def #{dep_type}_install(*names)
-          options = Hash === names.last ? names.delete_at(-1) : Hash.new
-
-          names.each do |name|
-            dep = #{dep_type.capitalize}.new(name, options)
-            dep.install! :call => @shell
-          end
-        end
-      STR
     end
 
 

@@ -356,9 +356,14 @@ module Sunshine
   require 'sunshine/exceptions'
 
   require 'sunshine/shell'
+  require 'sunshine/remote_shell'
+
   require 'sunshine/output'
 
   require 'sunshine/binder'
+
+  require 'sunshine/server_app'
+  require 'sunshine/app'
 
   require 'sunshine/dependency_lib'
   require 'sunshine/package_managers/dependency'
@@ -386,11 +391,6 @@ module Sunshine
   require 'sunshine/crontab'
 
   require 'sunshine/healthcheck'
-
-  require 'sunshine/remote_shell'
-
-  require 'sunshine/server_app'
-  require 'sunshine/app'
 
   require 'commands/default'
   require 'commands/list'
