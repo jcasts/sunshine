@@ -215,6 +215,27 @@ In this example, :prod inherits top level values from :qa (only :repo in this
 instance). The :inherits key also supports an array as its value.
 All environments also inherit from the :default environment. The :default is
 also used if the app's deploy_env is not found in the config.
+
+Finally, yaml configs get parsed by erb, exposing any options passed to the
+App's constuctor, along with the deploy environment, letting your write configs
+such as:
+
+  # deploy.rb
+
+  app = App.new "deploy.yml", :name => "my_app", :deploy_name => "release_001"
+
+
+  # deploy.yml
+  ---
+  :default :
+    :repo :
+      :type : svn
+      :url :  svn://subversion/<%= name %>/tags/<%= deploy_name %>
+
+    :remote_shells :
+      - <%= deploy_env %>1.<%= name %>.domain.com
+      - <%= deploy_env %>2.<%= name %>.domain.com
+
 See Sunshine::App for more information.
 
 

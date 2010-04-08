@@ -8,7 +8,7 @@ namespace :sunshine do
   #     ...
   #   end
 
-  desc "Instantiate Sunshine"
+  desc "Instantiate app"
   task :app do
     deploy_env = ENV['env'] || ENV['RACK_ENV'] || ENV['RAILS_ENV']
 
@@ -29,18 +29,6 @@ namespace :sunshine do
   task :deploy => :app do
     Sunshine.setup 'trace' => true
 
-    # If you're not able to add your public key to remote servers,
-    # you can setup your tasks to use the App#with_session method
-    # to avoid having to login multiple times:
-    #
-    #   @app.with_session do
-    #     @app.deploy do |app|
-    #       ...
-    #     end
-    #
-    #     # Do more things with @app here...
-    #
-    #   end
 
     @app.deploy do |app|
 
@@ -53,6 +41,36 @@ namespace :sunshine do
       #   unicorn.setup
 
     end
+  end
+
+
+  desc "Sets up deploy servers"
+  task :setup => :app do
+    Sunshine.setup 'trace' => true
+
+    # Setup servers here
+    #
+    #   @app.with_filter :role => :app do |app|
+    #     app.yum_install 'libxml2', 'libxml2-devel'
+    #     app.gem_install 'mechanize'
+    #   end
+    #
+    #   @app.with_filter :role => :db do |app|
+    #     app.yum_install 'sqlite'
+    #     app.gem_install 'sqlite3'
+    #   end
+    #
+    # If you're not able to add your public key to remote servers,
+    # you can setup your tasks to use the App#with_session method
+    # to avoid having to login multiple times:
+    #
+    #   @app.with_session do
+    #     @app.with_filter :role => :app do |app|
+    #       app.yum_install 'libxml2', 'libxml2-devel'
+    #       app.gem_install 'mechanize'
+    #     end
+    #     ...
+    #   end
   end
 
 
