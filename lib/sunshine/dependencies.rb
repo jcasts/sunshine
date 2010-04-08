@@ -20,8 +20,6 @@ Sunshine.dependencies do
   apt 'nginx'
   yum 'nginx'
 
-  apt 'logrotate'
-  yum 'logrotate'
 
   apt 'ruby', :pkg => 'ruby-full'
   yum 'ruby'
@@ -29,33 +27,9 @@ Sunshine.dependencies do
   apt 'ruby-devel', :pkg => 'ruby-dev'
   yum 'ruby-devel'
 
-  apt 'irb'
-  yum 'irb', :pkg => 'ruby-irb'
 
-  apt 'rubygems' do
-    requires 'ruby', 'ruby-devel'
-  end
-  yum 'rubygems' do
-    requires 'ruby', 'ruby-devel'
-  end
-
-  apt 'logrotate'
-  yum 'logrotate'
-
-  apt 'curl-devel', :pkg => 'libcurl-dev'
-  yum 'curl-devel'
-
-  apt 'libxml2-devel', :pkg => 'libxml2-dev'
-  yum 'libxml2-devel'
-
-  apt 'libxslt-devel', :pkg => 'libxslt-dev'
-  yum 'libxslt-devel'
-
-  apt 'sqlite', :pkg => 'sqlite3'
-  yum 'sqlite'
-
-  apt 'sqlite-devel', :pkg => 'libsqlite3-dev'
-  yum 'sqlite-devel'
+  apt 'rubygems', :requires => ['ruby', 'ruby-devel']
+  yum 'rubygems', :requires => ['ruby', 'ruby-devel']
 
 
   ##
@@ -116,8 +90,6 @@ Sunshine.dependencies do
   # Define gems used by Sunshine remotely
 
   gem 'bundler', :version => ">=0.9"
-
-  gem 'isolate', :version => ">=1.3.0"
 
   gem 'rake', :version => ">=0.8"
 
