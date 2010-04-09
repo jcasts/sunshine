@@ -195,6 +195,8 @@ module Sunshine
       shell_env options[:shell_env]
 
       @post_user_lambdas = []
+
+      @has_session = false
     end
 
 
@@ -213,9 +215,10 @@ module Sunshine
     # Connect server apps. Supports any App#find options.
 
     def connect options=nil
-      with_server_apps options,
-        :msg => "Connecting..." do |server_app|
-        server_app.shell.connect
+      Sunshine.logger.info :app, "Connecting..." do
+        threaded_each options do |server_app|
+          server_app.shell.connect
+        end
       end
     end
 
@@ -224,7 +227,7 @@ module Sunshine
     # Check if server apps are connected. Supports any App#find options.
 
     def connected? options=nil
-      with_server_apps options, :no_threads => true do |server_app|
+      each options do |server_app|
         return false unless server_app.shell.connected?
       end
 
@@ -236,9 +239,10 @@ module Sunshine
     # Disconnect server apps. Supports any App#find options.
 
     def disconnect options=nil
-      with_server_apps options,
-        :msg => "Disconnecting..." do |server_app|
-        server_app.shell.disconnect
+      Sunshine.logger.info :app, "Disconnecting..." do
+        threaded_each options do |server_app|
+          server_app.shell.disconnect
+        end
       end
     end
 
@@ -703,7 +707,7 @@ module Sunshine
 
     def run_post_user_lambdas
       Sunshine.logger.info :app, "Running post deploy lambdas" do
-        @post_user_lambdas.each{|l| l.call self}
+        with_session{ @post_user_lambdas.each{|l| l.call self} }
       end
     end
 
@@ -872,7 +876,8 @@ module Sunshine
 
     ##
     # Calls a method for server_apps found with the passed options,
-    # and with an optional log message. Supports all App#find
+    # and with an optional log message. Will attempt to run the methods in
+    # a session to avoid multiple ssh login prompts. Supports all App#find
     # options, plus:
     # :no_threads:: bool - disable threaded execution
     # :msg:: "some message" - log message
@@ -904,11 +909,13 @@ module Sunshine
       end
 
 
-      if message
-        Sunshine.logger.info(:app, message, &block)
+      with_session options do
+        if message
+          Sunshine.logger.info(:app, message, &block)
 
-      else
-        block.call
+        else
+          block.call
+        end
       end
     end
 
@@ -919,7 +926,8 @@ module Sunshine
     # already exists. Supports all App#find options.
 
     def with_session options=nil
-      prev_connection = connected? options
+
+      prev_connection = connected?(options)
       connect options unless prev_connection
 
       yield

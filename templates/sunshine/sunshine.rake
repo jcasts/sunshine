@@ -29,7 +29,6 @@ namespace :sunshine do
   task :deploy => :app do
     Sunshine.setup 'trace' => true
 
-
     @app.deploy do |app|
 
       # Do deploy-specific stuff here, e.g.
