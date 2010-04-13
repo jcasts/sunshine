@@ -1,5 +1,3 @@
-require 'sunshine'
-
 namespace :sunshine do
 
   ##
@@ -10,6 +8,8 @@ namespace :sunshine do
 
   desc "Instantiate app"
   task :app do
+    require 'sunshine'
+
     deploy_env = ENV['env'] || ENV['RACK_ENV'] || ENV['RAILS_ENV']
 
     Sunshine.setup 'deploy_env' => ( deploy_env || "development" )
