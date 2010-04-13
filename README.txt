@@ -17,16 +17,32 @@ This gem was made possible by the sponsoring of AT&T Interactive
 
 Installing sunshine:
 
-  gem install sunshine
+  $ gem install sunshine
+
+Call sunshine to create the config file:
+
+  $ sunshine
+
+  Missing config file was created for you: /Users/jsmith/.sunshine
+
+  --- 
+  web_directory: /var/www
+  max_deploy_versions: 5
+  auto_dependencies: true
+  level: info
+  auto: false
+  remote_checkouts: false
+  deploy_env: :development
+
 
 You can either use sunshine by requiring the gem in your script, such as
 in a rakefile (which is more common):
 
-  rake sunshine:deploy
+  $ rake sunshine:deploy
 
 Or you can also call built-in sunshine commands:
 
-  sunshine run my_deploy.rb -e qa
+  $ sunshine run my_deploy.rb -e qa
 
 
 == Rake Deploy Tasks in 5 Minutes
@@ -43,7 +59,7 @@ specific deploy. Rake tasks are great for that, and Sunshine comes with a
 template rake file that you can modify to fit your needs.
 
 You can copy the template rake file to lib/tasks/ by running:
-  sunshine --rakefile lib/tasks/.
+  $ sunshine --rakefile lib/tasks/.
 
 If you open the file, you'll see a variety of tasks that handle deployment, to
 application start/stop/restart-ing, to health checks. Most likely, the two tasks
