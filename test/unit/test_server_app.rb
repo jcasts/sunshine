@@ -169,6 +169,23 @@ class TestServerApp < Test::Unit::TestCase
   end
 
 
+  def test_has_all_roles
+    assert @sa.has_roles?([:web, :app, :blarg])
+    assert @sa.has_roles?([:web, :app, :blarg], true)
+  end
+
+
+  def test_has_roles
+    @sa.roles = [:web, :app]
+
+    assert @sa.has_roles?(:web)
+    assert @sa.has_roles?([:web, :app])
+
+    assert !@sa.has_roles?([:blarg, :web, :app])
+    assert @sa.has_roles?([:blarg, :web, :app], true)
+  end
+
+
   def test_install_deps
     nginx_dep = Sunshine.dependencies.get 'nginx', :prefer => @sa.pkg_manager
 

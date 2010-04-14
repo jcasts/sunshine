@@ -2,11 +2,15 @@
 
 * Improvements:
 
+  * Added array support to App#find.
+
   * Added auto registration of Dependency subclasses for scalability.
 
   * Added call to App#start in App#deploy.
 
 * Bugfixes:
+
+  * Changed App#with_filter to actually change the App#server_apps attribute.
 
   * Shell#env_cmd now returns a flattened array.
 

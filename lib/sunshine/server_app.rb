@@ -258,15 +258,22 @@ module Sunshine
 
     ##
     # Check if this server app includes the specified roles:
+    #   server_app.has_roles? :web
+    #   server_app.has_roles? [:web, :app]
+    #
+    # The boolean operator may be changed to OR by passing true as the
+    # second argument:
+    #   server_app.roles = [:web, :app]
+    #   server_app.has_roles? [:web, :db]         #=> false
+    #   server_app.has_roles? [:web, :db], true   #=> true
 
-    def has_roles? *roles
-      return true if @roles.include? :all
+    def has_roles? roles, match_any=false
+      roles = [*roles]
 
-      roles.each do |role|
-        return false unless @roles.include? role
-      end
+      return true                     if @roles.include? :all
+      return !(roles & @roles).empty? if match_any
 
-      true
+      (roles & @roles).length == roles.length
     end
 
 

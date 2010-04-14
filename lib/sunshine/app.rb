@@ -178,8 +178,6 @@ module Sunshine
 
       @deploy_name = options[:deploy_name] || Time.now.to_i.to_s
 
-      @server_app_filter = nil
-
       set_deploy_paths options[:root_path]
 
       @server_apps = server_apps_from_config options[:remote_shells]
@@ -485,23 +483,21 @@ module Sunshine
     #   find :user => 'db'
     #   find :host => 'someserver.com'
     #   find :role => :web
+    #
+    # The find method also supports passing arrays and will match
+    # any server app that matches any one condition:
+    #   find :user => ['root', 'john']
+    #
+    # Returns all server apps who's user is either 'root' or 'john'.
 
     def find query=nil
-      if @server_app_filter
-        if Hash === query && Hash === @server_app_filter
-          query.merge! @server_app_filter
-        else
-          query = @server_app_filter
-        end
-      end
-
       return @server_apps if query.nil? || query == :all
 
       @server_apps.select do |sa|
-        next unless sa.shell.user == query[:user] if query[:user]
-        next unless sa.shell.host == query[:host] if query[:host]
+        next unless [*query[:user]].include? sa.shell.user if query[:user]
+        next unless [*query[:host]].include? sa.shell.host if query[:host]
 
-        next unless sa.has_roles?(query[:role])   if query[:role]
+        next unless sa.has_roles?(query[:role], true)      if query[:role]
 
         true
       end
@@ -866,11 +862,12 @@ module Sunshine
     #   end
 
     def with_filter filter_hash
-      old_filter, @server_app_filter = @server_app_filter, filter_hash
+      old_server_apps, @server_apps = @server_apps, find(filter_hash)
 
       yield self
 
-      @server_app_filter = old_filter
+    ensure
+      @server_apps = old_server_apps
     end
 
 
@@ -932,6 +929,7 @@ module Sunshine
 
       yield
 
+    ensure
       disconnect options unless prev_connection
     end
 

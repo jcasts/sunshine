@@ -527,6 +527,21 @@ class TestApp < Test::Unit::TestCase
   end
 
 
+  def test_with_filter
+    app = Sunshine::App.new :repo => {:type => "svn", :url => @svn_url},
+            :remote_shells => ["user@server1.com", "user@server2.com"]
+
+    assert_equal 2, app.server_apps.length
+
+    app.with_filter :host => 'server1.com' do |app|
+      assert_equal 1, app.server_apps.length
+      assert_equal 'server1.com', app.server_apps.first.shell.host
+    end
+
+    assert_equal 2, app.server_apps.length
+  end
+
+
   def test_sudo_assignment
     @app.sudo = "someuser"
 
