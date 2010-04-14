@@ -811,22 +811,28 @@ module Sunshine
     def threaded_each(options=nil, &block)
       mutex   = Mutex.new
       threads = []
+      error   = nil
 
       return_val = each(options) do |server_app|
 
         thread = Thread.new do
           server_app.shell.with_mutex mutex do
-            yield server_app
+
+            begin
+              yield server_app
+
+            rescue => e
+              error = e
+            end
           end
         end
-
-        # We don't want deploy servers to keep doing things if one fails
-        thread.abort_on_exception = true
 
         threads << thread
       end
 
       threads.each{|t| t.join }
+
+      raise error if error
 
       return_val
     end

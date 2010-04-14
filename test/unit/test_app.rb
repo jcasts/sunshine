@@ -10,7 +10,8 @@ class TestApp < Test::Unit::TestCase
       :name => "app_name",
       :remote_checkout => true,
       :repo => {:type => "svn", :url => @svn_url},
-      :remote_shells => ["user@some_server.com"],
+      :remote_shells => ["user@some_server.com",
+        ["server2.com", {:roles => "web db"}]],
       :root_path => "/usr/local/my_user/app_name"}
 
     @app = Sunshine::App.new @config
@@ -343,7 +344,6 @@ class TestApp < Test::Unit::TestCase
 
     @app.install_deps 'rake', bundler_dep
 
-
     each_remote_shell do |ds|
       [rake_dep, bundler_dep].each do |dep|
 
@@ -486,6 +486,28 @@ class TestApp < Test::Unit::TestCase
   end
 
 
+  def test_threaded_each_errors
+    err_host = "some_server.com"
+    finished = 0
+
+    @app.threaded_each do |server_app|
+      if server_app.shell.host == err_host
+        raise Sunshine::CriticalDeployError, server_app.shell.host
+      else
+        finished = finished.next
+      end
+    end
+
+    raise "Didn't raise threaded error when it should have"
+
+  rescue Sunshine::CriticalDeployError => e
+    host = @app.server_apps.first.shell.host
+
+    assert_equal host, e.message
+    assert_equal (@app.server_apps.length - 1), finished
+  end
+
+
   def test_upload_tasks
     path = "/path/to/tasks"
 
@@ -493,15 +515,17 @@ class TestApp < Test::Unit::TestCase
       :host => 'some_server.com',
       :remote_path => path
 
-    each_remote_shell do |ds|
-      assert_ssh_call "mkdir -p /path/to/tasks"
+    shell = @app.find(:host => 'some_server.com').first.shell
 
-      %w{common tpkg}.each do |task|
-        from = "#{Sunshine::ROOT}/templates/tasks/#{task}.rake"
-        to   = "#{ds.host}:#{path}/#{task}.rake"
+    use_remote_shell shell
 
-        assert_rsync from, to
-      end
+    assert_ssh_call "mkdir -p /path/to/tasks"
+
+    %w{common tpkg}.each do |task|
+      from = "#{Sunshine::ROOT}/templates/tasks/#{task}.rake"
+      to   = "#{shell.host}:#{path}/#{task}.rake"
+
+      assert_rsync from, to
     end
   end
 
@@ -560,10 +584,8 @@ class TestApp < Test::Unit::TestCase
     assert_equal attr_hash[:root_path], app.root_path
 
     attr_hash[:remote_shells].each_with_index do |server_def, i|
-      server_def = server_def.first if Array === server_def
-      user, host = server_def.split("@")
-      assert_equal host, app.server_apps[i].shell.host
-      assert_equal user, app.server_apps[i].shell.user
+      shell = Sunshine::RemoteShell.new(*server_def)
+      assert_equal shell, app.server_apps[i].shell
     end
   end
 
