@@ -7,11 +7,11 @@ module Sunshine
 
     include Open4
 
-    class TimeoutError < FatalDeployError; end
+    class TimeoutError < CriticalDeployError; end
 
     ##
     # Time to wait with no activity until giving up on a command.
-    TIMEOUT = 120
+    TIMEOUT = 300
 
     LOCAL_USER = `whoami`.chomp
     LOCAL_HOST = `hostname`.chomp
