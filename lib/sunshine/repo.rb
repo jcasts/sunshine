@@ -22,7 +22,7 @@ module Sunshine
       # Turn Sunshine::ScmNameRepo into :scm_name
       class_key = subclass.to_s.split("::").last
       class_key = $1 if class_key =~ /(\w+)Repo$/
-      class_key.gsub! /([a-z0-9])([A-Z])/, '\1_\2'
+      class_key.gsub!(/([a-z0-9])([A-Z])/, '\1_\2')
       class_key = class_key.downcase
 
       @@repo_types[class_key] = subclass
