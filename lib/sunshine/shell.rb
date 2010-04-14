@@ -9,10 +9,6 @@ module Sunshine
 
     class TimeoutError < CriticalDeployError; end
 
-    ##
-    # Time to wait with no activity until giving up on a command.
-    TIMEOUT = 300
-
     LOCAL_USER = `whoami`.chomp
     LOCAL_HOST = `hostname`.chomp
 
@@ -20,7 +16,7 @@ module Sunshine
     SUDO_PROMPT = /^Password:/
 
     attr_reader :user, :host, :password, :input, :output, :mutex
-    attr_accessor :env, :sudo
+    attr_accessor :env, :sudo, :timeout
 
     def initialize output = $stdout, options={}
       @output = output
@@ -34,6 +30,8 @@ module Sunshine
       @sudo     = options[:sudo]
       @env      = options[:env] || {}
       @password = options[:password]
+
+      @timeout = options[:timeout] || Sunshine.timeout
 
       @cmd_activity = nil
 
@@ -237,7 +235,8 @@ module Sunshine
     ##
     # Checks if timeout occurred.
 
-    def timed_out? start_time=@cmd_activity, max_time=TIMEOUT
+    def timed_out? start_time=@cmd_activity, max_time=@timeout
+      return unless max_time
       Time.now.to_i - start_time.to_i > max_time
     end
 

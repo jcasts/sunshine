@@ -36,13 +36,14 @@ module Sunshine
   ##
   # Default configuration.
   DEFAULT_CONFIG = {
-    'level'               => 'info',
-    'deploy_env'          => :development,
     'auto'                => false,
-    'max_deploy_versions' => 5,
-    'web_directory'       => '/var/www',
     'auto_dependencies'   => true,
-    'remote_checkouts'    => false
+    'deploy_env'          => :development,
+    'level'               => 'info',
+    'max_deploy_versions' => 5,
+    'remote_checkouts'    => false,
+    'timeout'             => 300,
+    'web_directory'       => '/var/www'
   }
 
   ##
@@ -107,24 +108,6 @@ module Sunshine
 
 
   ##
-  # Handles input/output to the shell. See Sunshine::Shell.
-
-  def self.shell
-    @shell ||= Sunshine::Shell.new
-  end
-
-
-  ##
-  # The default directory where apps should be deployed to:
-  # '/var/www' by default. Overridden in the ~/.sunshine config file
-  # or at setup time. See also App#deploy_path.
-
-  def self.web_directory
-    @config['web_directory']
-  end
-
-
-  ##
   # Should sunshine ever ask for user input? True by default; overridden with
   # the -a option.
 
@@ -143,7 +126,7 @@ module Sunshine
 
   ##
   # Maximum number of deploys (history) to keep on the remote server,
-  # 5 by default. Overridden in the ~/.sunshine config file.
+  # 5 by default. Overridden in the config.
 
   def self.max_deploy_versions
     @config['max_deploy_versions']
@@ -152,10 +135,28 @@ module Sunshine
 
   ##
   # Check if the codebase should be checked out remotely, or checked out
-  # locally and rsynced up. Overridden in the ~/.sunshine config file.
+  # locally and rsynced up. Overridden in the config.
 
   def self.remote_checkouts?
     @config['remote_checkouts']
+  end
+
+
+  ##
+  # Handles input/output to the shell. See Sunshine::Shell.
+
+  def self.shell
+    @shell ||= Sunshine::Shell.new
+  end
+
+
+  ##
+  # How long to wait on a command to finish when no output is received.
+  # Defaults to 300 (seconds). Overridden in the config.
+  # Set to false to disable timeout.
+
+  def self.timeout
+    @config['timeout']
   end
 
 
@@ -167,6 +168,16 @@ module Sunshine
 
   def self.trace?
     @config['trace']
+  end
+
+
+  ##
+  # The default directory where apps should be deployed to:
+  # '/var/www' by default. Overridden in the config.
+  # See also App#deploy_path.
+
+  def self.web_directory
+    @config['web_directory']
   end
 
 
@@ -205,7 +216,6 @@ module Sunshine
   def self.delete_trap trap_item
     @trap_stack.delete trap_item
   end
-
 
 
   ##
