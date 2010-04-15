@@ -231,7 +231,7 @@ class TestServer < Test::Unit::TestCase
 
     server.each_server_app do |sa|
       %w{start stop restart status}.each do |script|
-        script_file = "#{server.config_path}/#{script}"
+        script_file = "#{@app.root_path}/env #{server.config_path}/#{script}"
         cmd = sa.shell.sudo_cmd script_file, server.send(:pick_sudo, sa.shell)
 
         assert sa.scripts[script.to_sym].include?(cmd.join(" "))

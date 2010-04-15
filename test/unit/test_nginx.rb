@@ -10,27 +10,16 @@ class TestNginx < Test::Unit::TestCase
 
     @passenger = Sunshine::Nginx.new @app
     @nginx = Sunshine::Nginx.new @app, :port => 5000, :point_to => @passenger
-    @gemout = <<-STR
 
-*** LOCAL GEMS ***
+    @passenger_root = "/Library/Ruby/Gems/1.8/gems/passenger-2.2.11"
 
-passenger (2.2.4)
-    Author: Phusion - http://www.phusion.nl/
-    Rubyforge: http://rubyforge.org/projects/passenger
-    Homepage: http://www.modrails.com/
-    Installed at: /Library/Ruby/Gems/1.8
-
-    Apache module for Ruby on Rails support.
-    STR
-
-    @nginx_passenger_check =
-      "/opt/ruby-ypc/lib/ruby/gems/1.8/gems/passenger-2.2.11/ext/nginx"
+    @nginx_passenger_check = "#{@passenger_root}/ext/nginx"
   end
 
 
   def test_cmd
     ds = @nginx.app.server_apps.first.shell
-    ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
+    ds.set_mock_response 0, "passenger-config --root" => [:out, @passenger_root]
 
     @nginx.start
     @nginx.stop
@@ -42,7 +31,7 @@ passenger (2.2.4)
 
   def test_custom_sudo_cmd
     ds = @nginx.app.server_apps.first.shell
-    ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
+    ds.set_mock_response 0, "passenger-config --root" => [:out, @passenger_root]
 
     @nginx.sudo = "someuser"
 
@@ -70,14 +59,13 @@ passenger (2.2.4)
   def test_setup_passenger
     ds = @passenger.app.server_apps.first.shell
 
-    ds.set_mock_response 0,
-      "gem list passenger -d" => [:out, @gemout],
-      "nginx -V 2>&1" => [:out, @nginx_passenger_check]
+    ds.set_mock_response 0, "passenger-config --root" => [:out, @passenger_root]
+    ds.set_mock_response 0, "nginx -V 2>&1" => [:out, @nginx_passenger_check]
 
     @passenger.setup do |ds, binder|
       assert binder.sudo
       assert binder.use_passenger?
-      assert_equal "/Library/Ruby/Gems/1.8/gems/passenger-2.2.4",
+      assert_equal "/Library/Ruby/Gems/1.8/gems/passenger-2.2.11",
         binder.passenger_root
     end
   end
@@ -85,12 +73,12 @@ passenger (2.2.4)
 
   def test_setup
     ds = @nginx.app.server_apps.first.shell
-    ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
+    ds.set_mock_response 0, "passenger-config --root" => [:out, @passenger_root]
 
     @nginx.setup do |ds, binder|
       assert !binder.sudo
       assert !binder.use_passenger?
-      assert_equal "/Library/Ruby/Gems/1.8/gems/passenger-2.2.4",
+      assert_equal "/Library/Ruby/Gems/1.8/gems/passenger-2.2.11",
         binder.passenger_root
     end
   end
