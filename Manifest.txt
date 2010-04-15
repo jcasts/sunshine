@@ -3,9 +3,9 @@ Manifest.txt
 README.txt
 Rakefile
 bin/sunshine
-examples/deploy.rb
 examples/deploy_tasks.rake
 examples/standalone_deploy.rb
+examples/sunshine_deploy.rb
 lib/commands/add.rb
 lib/commands/default.rb
 lib/commands/list.rb
