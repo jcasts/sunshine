@@ -25,7 +25,7 @@ module Sunshine
 
 
     def start_cmd
-      "cd #{@app.current_path} && mongrel_rails start "+
+      "cd #{@app.source_path} && mongrel_rails start "+
         "-C #{self.config_file_path}"
     end
   end

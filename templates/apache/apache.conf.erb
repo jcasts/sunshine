@@ -37,9 +37,9 @@ NameVirtualHost *:<%= port %>
   ServerName  <%= server_name %>
   ServerAlias www.<%= server_name %>
 
-  DocumentRoot <%= expand_path app.current_path %>/public
+  DocumentRoot <%= expand_path app.source_path %>/public
 
-  <Directory <%= expand_path app.current_path %>/public>
+  <Directory <%= expand_path app.source_path %>/public>
     Options FollowSymLinks -MultiViews
     AllowOverride None
     Order allow,deny
