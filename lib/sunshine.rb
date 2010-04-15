@@ -19,7 +19,7 @@ module Sunshine
 
   ##
   # Sunshine version.
-  VERSION = '1.1.1'
+  VERSION = '1.1.2'
 
   ##
   # Path to the list of installed sunshine apps.
