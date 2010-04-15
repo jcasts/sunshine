@@ -79,13 +79,7 @@ module Sunshine
     # Gets the root of the installer passenger gem.
 
     def self.passenger_root shell
-      str     = shell.call "gem list passenger -d"
-      version = $1 if str =~ /passenger\s\((.*)\)$/
-      gempath = $1 if str =~ /Installed\sat:\s(.*)$/
-
-      return unless version && gempath
-
-      File.join(gempath, "gems/passenger-#{version}")
+      shell.call "passenger-config --root"
     end
 
 
