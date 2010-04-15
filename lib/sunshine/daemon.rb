@@ -425,7 +425,7 @@ module Sunshine
               :flags => '--chmod=ugo=rwx'
 
 
-            cmd = sa.shell.sudo_cmd script_file, sudo
+            cmd = sa.shell.sudo_cmd "#{@app.root_path}/env #{script_file}", sudo
 
             sa.scripts[script.to_sym] << [*cmd].join(" ")
           end

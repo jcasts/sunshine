@@ -1,4 +1,4 @@
-=== 1.1.2 / 2010-04
+=== 1.1.2 / 2010-04-15
 
 * Improvements:
 
@@ -10,11 +10,13 @@
 
 * Bugfixes:
 
+  * Fixed bug where env wouldn't be applied correctly in control scripts.
+
   * Changed App#with_filter to actually change the App#server_apps attribute.
 
   * Shell#env_cmd now returns a flattened array.
 
-  * Added actual check of running process to Daemon#status_cmd
+  * Added actual check of running process to Daemon#status_cmd.
 
 === 1.1.1 / 2010-04-05
 
