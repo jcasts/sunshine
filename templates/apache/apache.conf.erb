@@ -39,12 +39,17 @@ NameVirtualHost *:<%= port %>
 
   DocumentRoot <%= expand_path app.current_path %>/public
 
-  <Directory <%= app.current_path %>/public>
+  <Directory <%= expand_path app.current_path %>/public>
+    Options FollowSymLinks -MultiViews
+    AllowOverride None
+    Order allow,deny
     Allow from all
-    Options -MultiViews
   </Directory>
 
-  <% unless App === target -%>
+  <% if App === target -%>
+  RailsBaseURI /
+
+  <% else -%>
 
   <Proxy balancer://<%= proxy_name %>>
     <% [*target].each do |server| %>
