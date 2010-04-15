@@ -46,6 +46,8 @@ NameVirtualHost *:<%= port %>
     Allow from all
   </Directory>
 
+  <%= "RailsBaseURI #{rails_base_uri}" if rails_base_uri %>
+
   <% unless App === target -%>
 
   <Proxy balancer://<%= proxy_name %>>

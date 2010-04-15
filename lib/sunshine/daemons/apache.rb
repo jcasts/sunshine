@@ -9,6 +9,8 @@ module Sunshine
 
   class Apache < Server
 
+    attr_accessor :rails_base_uri
+
     def initialize app, options={}
       super
 
@@ -20,6 +22,8 @@ module Sunshine
       @supports_passenger = true
 
       @connections = options[:connections] || 256
+
+      @rails_base_uri = options[:rails_base_uri]
 
       @timeout = 1 if @timeout < 1
 
@@ -35,7 +39,7 @@ module Sunshine
 
     def setup
       super do |server_app, binder|
-        binder.set :max_clients, @max_clients
+        binder.set :rails_base_uri, @rails_base_uri
         yield(server_app, binder) if block_given?
       end
     end
