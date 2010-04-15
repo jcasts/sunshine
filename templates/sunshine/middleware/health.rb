@@ -11,7 +11,7 @@ module Sunshine
     ##
     # The healthcheck-enabled file.
 
-    HEALTHCHECK_FILE = 'health.enabled'
+    HEALTHCHECK_FILE = '../../health.enabled'
 
 
     ##
