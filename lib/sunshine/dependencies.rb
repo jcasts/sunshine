@@ -35,10 +35,16 @@ Sunshine.dependencies do
   ##
   # Define phusion passenger dependencies
 
+  apt 'openssl-devel', :pkg => 'libssl-dev'
+  yum 'openssl-devel'
+
+  apt 'zlib-devel', :pkg => 'zlib-dev'
+  yum 'zlib-devel'
+
   gem 'passenger', :version => ">=2.2.11"
 
   dependency 'passenger-nginx' do
-    requires 'passenger'
+    requires 'passenger', 'openssl-devel', 'zlib-devel'
 
     install do |shell, sudo|
 
