@@ -175,12 +175,8 @@ module Sunshine
     def checkout_repo repo, scm_info={}
       install_deps repo.scm
 
-      Sunshine.logger.info repo.scm,
-        "Checking out to #{@shell.host} #{self.checkout_path}" do
-
-        @info[:scm] = repo.checkout_to self.checkout_path, @shell
-        @info[:scm].merge! scm_info
-      end
+      @info[:scm] = repo.checkout_to self.checkout_path, @shell
+      @info[:scm].merge! scm_info
     end
 
 

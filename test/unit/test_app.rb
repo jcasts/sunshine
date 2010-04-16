@@ -89,7 +89,7 @@ class TestApp < Test::Unit::TestCase
       setup_cmd,
       mkdir_cmd,
       checkout_cmd,
-      "ln -sfT #{@app.checkout_path} #{@app.current_path}"
+      "ln -sfT #{@app.release_path} #{@app.current_path}"
     ]
 
 
@@ -183,7 +183,7 @@ class TestApp < Test::Unit::TestCase
     @app.each do |sa|
       use_remote_shell sa.shell
 
-      assert_ssh_call "rm -rf #{@app.checkout_path}"
+      assert_ssh_call "rm -rf #{@app.release_path}"
 
       assert_ssh_call "ls -rc1 #{@app.deploys_path}"
 
@@ -203,7 +203,7 @@ class TestApp < Test::Unit::TestCase
     each_remote_shell do |ds|
 
       %w{start stop restart custom env}.each do |script|
-        assert_rsync(/#{script}/, "#{ds.host}:#{@app.checkout_path}/#{script}")
+        assert_rsync(/#{script}/, "#{ds.host}:#{@app.release_path}/#{script}")
       end
     end
   end
@@ -213,7 +213,7 @@ class TestApp < Test::Unit::TestCase
     @app.build_deploy_info_file
 
     each_remote_shell do |ds|
-      assert_rsync(/info/, "#{ds.host}:#{@app.checkout_path}/info")
+      assert_rsync(/info/, "#{ds.host}:#{@app.release_path}/info")
     end
   end
 
@@ -481,7 +481,7 @@ class TestApp < Test::Unit::TestCase
     @app.symlink_current_dir
 
     each_remote_shell do |ds|
-      assert_ssh_call "ln -sfT #{@app.checkout_path} #{@app.current_path}"
+      assert_ssh_call "ln -sfT #{@app.release_path} #{@app.current_path}"
     end
   end
 
