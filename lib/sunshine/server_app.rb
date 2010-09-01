@@ -75,8 +75,8 @@ module Sunshine
 
 
     app_attr :name, :deploy_name
-    app_attr :root_path, :checkout_path, :current_path, :release_path
-    app_attr :source_path, :deploys_path, :log_path, :shared_path
+    app_attr :root_path, :checkout_path, :current_path
+    app_attr :deploys_path, :log_path, :shared_path
 
     attr_accessor :app, :roles, :scripts, :info, :shell, :crontab, :health
     attr_writer :pkg_manager
@@ -163,9 +163,9 @@ module Sunshine
 
       deploy_info = get_deploy_info.to_yaml
 
-      @shell.make_file "#{self.release_path}/info", deploy_info
+      @shell.make_file "#{self.checkout_path}/info", deploy_info
 
-      @shell.symlink "#{self.release_path}/info", "#{self.root_path}/info"
+      @shell.symlink "#{self.current_path}/info", "#{self.root_path}/info"
     end
 
 
@@ -175,8 +175,12 @@ module Sunshine
     def checkout_repo repo, scm_info={}
       install_deps repo.scm
 
-      @info[:scm] = repo.checkout_to self.checkout_path, @shell
-      @info[:scm].merge! scm_info
+      Sunshine.logger.info repo.scm,
+        "Checking out to #{@shell.host} #{self.checkout_path}" do
+
+        @info[:scm] = repo.checkout_to self.checkout_path, @shell
+        @info[:scm].merge! scm_info
+      end
     end
 
 
@@ -211,8 +215,7 @@ module Sunshine
     # Does not include symlinked directories.
 
     def directories
-      [root_path, deploys_path, shared_path,
-       log_path, release_path, checkout_path]
+      [root_path, deploys_path, shared_path, log_path, checkout_path]
     end
 
 
@@ -385,7 +388,7 @@ fi
     # the current deploy directory.
 
     def revert!
-      @shell.call "rm -rf #{self.release_path}"
+      @shell.call "rm -rf #{self.checkout_path}"
 
       last_deploy = @shell.call("ls -rc1 #{self.deploys_path}").split("\n").last
 
@@ -495,7 +498,7 @@ fi
     # Creates a symlink to the app's checkout path.
 
     def symlink_current_dir
-      @shell.symlink self.release_path, self.current_path
+      @shell.symlink self.checkout_path, self.current_path
     end
 
 
@@ -553,9 +556,10 @@ fi
     # on the deploy server, and symlink them to the current dir.
 
     def write_script name, contents
+      script_file = "#{self.checkout_path}/#{name}"
 
-      @shell.make_file "#{self.release_path}/#{name}", contents,
-          :flags => '--chmod=ugo=rwx'
+      @shell.make_file script_file, contents,
+        :flags => '--chmod=ugo=rwx' unless @shell.file? script_file
 
       @shell.symlink "#{self.current_path}/#{name}",
         "#{self.root_path}/#{name}"
@@ -576,12 +580,10 @@ fi
       @root_path     = options[:root_path] || default_root
 
       @current_path  = "#{@root_path}/current"
-      @source_path   = "#{@current_path}/source"
       @deploys_path  = "#{@root_path}/deploys"
       @shared_path   = "#{@root_path}/shared"
       @log_path      = "#{@shared_path}/log"
-      @release_path  = "#{@deploys_path}/#{@deploy_name}"
-      @checkout_path = "#{@release_path}/source"
+      @checkout_path = "#{@deploys_path}/#{@deploy_name}"
     end
   end
 end

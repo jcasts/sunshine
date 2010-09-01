@@ -29,7 +29,7 @@ module Sunshine
 
 
     def start_cmd
-      "cd #{@app.source_path} && "+
+      "cd #{@app.current_path} && "+
         "#{@bin} start -C #{self.config_file_path} -P #{@start_pid};"
     end
   end

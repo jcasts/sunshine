@@ -21,12 +21,12 @@ module Sunshine
 
 
     def start_cmd
-      "cd #{@app.source_path} && script/delayed_job -n #{@processes} start"
+      "cd #{@app.current_path} && script/delayed_job -n #{@processes} start"
     end
 
 
     def stop_cmd
-      "cd #{@app.source_path} && script/delayed_job stop"
+      "cd #{@app.current_path} && script/delayed_job stop"
     end
   end
 end

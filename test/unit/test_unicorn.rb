@@ -8,7 +8,7 @@ class TestUnicorn < Test::Unit::TestCase
   end
 
   def test_start_cmd
-    cmd = "cd #{@app.source_path} && #{@server.bin} -D -E"+
+    cmd = "cd #{@app.current_path} && #{@server.bin} -D -E"+
       " #{@app.deploy_env} -p #{@server.port} -c #{@server.config_file_path};"
 
     assert_equal cmd, @server.start_cmd

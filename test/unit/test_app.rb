@@ -26,7 +26,7 @@ class TestApp < Test::Unit::TestCase
   end
 
   def teardown
-    FileUtils.rm_f @tmpdir
+    FileUtils.rm_rf @tmpdir
   end
 
 
@@ -89,7 +89,7 @@ class TestApp < Test::Unit::TestCase
       setup_cmd,
       mkdir_cmd,
       checkout_cmd,
-      "ln -sfT #{@app.release_path} #{@app.current_path}"
+      "ln -sfT #{@app.checkout_path} #{@app.current_path}"
     ]
 
 
@@ -183,7 +183,7 @@ class TestApp < Test::Unit::TestCase
     @app.each do |sa|
       use_remote_shell sa.shell
 
-      assert_ssh_call "rm -rf #{@app.release_path}"
+      assert_ssh_call "rm -rf #{@app.checkout_path}"
 
       assert_ssh_call "ls -rc1 #{@app.deploys_path}"
 
@@ -194,16 +194,22 @@ class TestApp < Test::Unit::TestCase
 
 
   def test_build_control_scripts
-    @app.add_to_script :start, "start script"
-    @app.add_to_script :stop, "stop script"
+    scripts_list = %w{start stop restart custom env}
+
+    @app.server_apps.each do |sa|
+      sa.shell.mock :file?, :return => false
+    end
+
+    @app.add_to_script :start,  "start script"
+    @app.add_to_script :stop,   "stop script"
     @app.add_to_script :custom, "custom script"
 
     @app.build_control_scripts
 
     each_remote_shell do |ds|
 
-      %w{start stop restart custom env}.each do |script|
-        assert_rsync(/#{script}/, "#{ds.host}:#{@app.release_path}/#{script}")
+      scripts_list.each do |script|
+        assert_rsync(/#{script}/, "#{ds.host}:#{@app.checkout_path}/#{script}")
       end
     end
   end
@@ -213,7 +219,7 @@ class TestApp < Test::Unit::TestCase
     @app.build_deploy_info_file
 
     each_remote_shell do |ds|
-      assert_rsync(/info/, "#{ds.host}:#{@app.release_path}/info")
+      assert_rsync(/info/, "#{ds.host}:#{@app.checkout_path}/info")
     end
   end
 
@@ -481,7 +487,7 @@ class TestApp < Test::Unit::TestCase
     @app.symlink_current_dir
 
     each_remote_shell do |ds|
-      assert_ssh_call "ln -sfT #{@app.release_path} #{@app.current_path}"
+      assert_ssh_call "ln -sfT #{@app.checkout_path} #{@app.current_path}"
     end
   end
 

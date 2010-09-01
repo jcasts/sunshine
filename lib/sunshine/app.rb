@@ -150,10 +150,7 @@ module Sunshine
 
     attr_reader :name, :repo, :server_apps, :sudo
     attr_reader :root_path, :checkout_path, :current_path, :deploys_path
-    attr_reader :source_path, :release_path, :shared_path, :log_path
-    attr_reader :deploy_name, :deploy_env
-
-    # Check out codebase remotely instead of local+rsync - defaults to false.
+    attr_reader :shared_path, :log_path, :deploy_name, :deploy_env
     attr_accessor :remote_checkout
 
     ##
@@ -799,7 +796,7 @@ module Sunshine
 
     def symlink_current_dir options=nil
       with_server_apps options,
-        :msg  => "Symlinking #{@release_path} -> #{@current_path}",
+        :msg  => "Symlinking #{@checkout_path} -> #{@current_path}",
         :send => :symlink_current_dir
 
     rescue => e
@@ -952,12 +949,10 @@ module Sunshine
     def set_deploy_paths path
       @root_path     = path || File.join(Sunshine.web_directory, @name)
       @current_path  = "#{@root_path}/current"
-      @source_path   = "#{@current_path}/source"
       @deploys_path  = "#{@root_path}/deploys"
       @shared_path   = "#{@root_path}/shared"
       @log_path      = "#{@shared_path}/log"
-      @release_path  = "#{@deploys_path}/#{@deploy_name}"
-      @checkout_path = "#{@release_path}/source"
+      @checkout_path = "#{@deploys_path}/#{@deploy_name}"
     end
 
 

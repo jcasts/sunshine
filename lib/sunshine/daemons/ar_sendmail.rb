@@ -16,7 +16,7 @@ module Sunshine
 
 
     def start_cmd
-      "cd #{@app.source_path} && #{@bin} -p #{@pid} -d"
+      "cd #{@app.current_path} && #{@bin} -p #{@pid} -d"
     end
   end
 end

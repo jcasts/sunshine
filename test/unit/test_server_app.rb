@@ -89,13 +89,15 @@ class TestServerApp < Test::Unit::TestCase
 
 
   def test_build_deploy_info_file
-    args = ["#{@app.release_path}/info", @sa.get_deploy_info.to_yaml]
+    @sa.shell.mock :file?, :return => false
+
+    args = ["#{@app.checkout_path}/info", @sa.get_deploy_info.to_yaml]
 
     @sa.build_deploy_info_file
 
     assert @sa.shell.method_called?(:make_file, :args => args)
 
-    args = ["#{@app.release_path}/info", "#{@app.root_path}/info"]
+    args = ["#{@app.current_path}/info", "#{@app.root_path}/info"]
 
     assert @sa.shell.method_called?(:symlink, :args => args)
   end
@@ -292,7 +294,7 @@ class TestServerApp < Test::Unit::TestCase
 
     @sa.revert!
 
-    assert_server_call "rm -rf #{@app.release_path}"
+    assert_server_call "rm -rf #{@app.checkout_path}"
     assert_server_call "ls -rc1 #{@app.deploys_path}"
 
     last_deploy = "#{@app.deploys_path}/ploy5"
@@ -307,7 +309,7 @@ class TestServerApp < Test::Unit::TestCase
 
     @sa.revert!
 
-    assert_server_call "rm -rf #{@app.release_path}"
+    assert_server_call "rm -rf #{@app.checkout_path}"
     assert_server_call "ls -rc1 #{@app.deploys_path}"
   end
 
@@ -353,7 +355,7 @@ class TestServerApp < Test::Unit::TestCase
   def test_symlink_current_dir
     @sa.symlink_current_dir
 
-    assert_server_call "ln -sfT #{@app.release_path} #{@app.current_path}"
+    assert_server_call "ln -sfT #{@app.checkout_path} #{@app.current_path}"
   end
 
 
@@ -425,12 +427,31 @@ class TestServerApp < Test::Unit::TestCase
 
 
   def test_write_script
+    @sa.shell.mock :file?, :return => false
+
     @sa.write_script "script_name", "script contents"
 
-    args = ["#{@app.release_path}/script_name",
+    args = ["#{@app.checkout_path}/script_name",
             "script contents", {:flags => "--chmod=ugo=rwx"}]
 
     assert @sa.shell.method_called?(:make_file, :args => args)
+
+    args = ["#{@app.current_path}/script_name",
+            "#{@app.root_path}/script_name"]
+
+    assert @sa.shell.method_called?(:symlink, :args => args)
+  end
+
+
+  def test_write_script_existing
+    @sa.shell.mock :file?, :return => true
+
+    @sa.write_script "script_name", "script contents"
+
+    args = ["#{@app.checkout_path}/script_name",
+            "script contents", {:flags => "--chmod=ugo=rwx"}]
+
+    assert !@sa.shell.method_called?(:make_file, :args => args)
 
     args = ["#{@app.current_path}/script_name",
             "#{@app.root_path}/script_name"]
