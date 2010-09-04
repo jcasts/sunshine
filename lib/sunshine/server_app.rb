@@ -76,7 +76,7 @@ module Sunshine
 
     app_attr :name, :deploy_name
     app_attr :root_path, :checkout_path, :current_path
-    app_attr :deploys_path, :log_path, :shared_path
+    app_attr :deploys_path, :log_path, :shared_path, :scripts_path
 
     attr_accessor :app, :roles, :scripts, :info, :shell, :crontab, :health
     attr_writer :pkg_manager
@@ -161,11 +161,12 @@ module Sunshine
 
     def build_deploy_info_file
 
-      deploy_info = get_deploy_info.to_yaml
+      deploy_info   = get_deploy_info.to_yaml
+      info_filepath = "#{self.scripts_path}/info"
 
-      @shell.make_file "#{self.checkout_path}/info", deploy_info
+      @shell.make_file info_filepath, deploy_info
 
-      @shell.symlink "#{self.current_path}/info", "#{self.root_path}/info"
+      @shell.symlink info_filepath, "#{self.root_path}/info"
     end
 
 
@@ -215,7 +216,8 @@ module Sunshine
     # Does not include symlinked directories.
 
     def directories
-      [root_path, deploys_path, shared_path, log_path, checkout_path]
+      [root_path, deploys_path, shared_path,
+      log_path, checkout_path, scripts_path]
     end
 
 
@@ -556,13 +558,12 @@ fi
     # on the deploy server, and symlink them to the current dir.
 
     def write_script name, contents
-      script_file = "#{self.checkout_path}/#{name}"
+      script_file = "#{self.scripts_path}/#{name}"
 
       @shell.make_file script_file, contents,
         :flags => '--chmod=ugo=rwx' unless @shell.file? script_file
 
-      @shell.symlink "#{self.current_path}/#{name}",
-        "#{self.root_path}/#{name}"
+      @shell.symlink script_file, "#{self.root_path}/#{name}"
     end
 
 
@@ -584,6 +585,7 @@ fi
       @shared_path   = "#{@root_path}/shared"
       @log_path      = "#{@shared_path}/log"
       @checkout_path = "#{@deploys_path}/#{@deploy_name}"
+      @scripts_path  = "#{@checkout_path}/scripts"
     end
   end
 end

@@ -91,13 +91,13 @@ class TestServerApp < Test::Unit::TestCase
   def test_build_deploy_info_file
     @sa.shell.mock :file?, :return => false
 
-    args = ["#{@app.checkout_path}/info", @sa.get_deploy_info.to_yaml]
+    args = ["#{@app.scripts_path}/info", @sa.get_deploy_info.to_yaml]
 
     @sa.build_deploy_info_file
 
     assert @sa.shell.method_called?(:make_file, :args => args)
 
-    args = ["#{@app.current_path}/info", "#{@app.root_path}/info"]
+    args = ["#{@app.scripts_path}/info", "#{@app.root_path}/info"]
 
     assert @sa.shell.method_called?(:symlink, :args => args)
   end
@@ -431,12 +431,12 @@ class TestServerApp < Test::Unit::TestCase
 
     @sa.write_script "script_name", "script contents"
 
-    args = ["#{@app.checkout_path}/script_name",
+    args = ["#{@app.scripts_path}/script_name",
             "script contents", {:flags => "--chmod=ugo=rwx"}]
 
     assert @sa.shell.method_called?(:make_file, :args => args)
 
-    args = ["#{@app.current_path}/script_name",
+    args = ["#{@app.scripts_path}/script_name",
             "#{@app.root_path}/script_name"]
 
     assert @sa.shell.method_called?(:symlink, :args => args)
@@ -448,12 +448,12 @@ class TestServerApp < Test::Unit::TestCase
 
     @sa.write_script "script_name", "script contents"
 
-    args = ["#{@app.checkout_path}/script_name",
+    args = ["#{@app.scripts_path}/script_name",
             "script contents", {:flags => "--chmod=ugo=rwx"}]
 
     assert !@sa.shell.method_called?(:make_file, :args => args)
 
-    args = ["#{@app.current_path}/script_name",
+    args = ["#{@app.scripts_path}/script_name",
             "#{@app.root_path}/script_name"]
 
     assert @sa.shell.method_called?(:symlink, :args => args)

@@ -148,9 +148,9 @@ module Sunshine
     end
 
 
-    attr_reader :name, :repo, :server_apps, :sudo
+    attr_reader :name, :repo, :server_apps, :sudo, :deploy_name, :deploy_env
     attr_reader :root_path, :checkout_path, :current_path, :deploys_path
-    attr_reader :shared_path, :log_path, :deploy_name, :deploy_env
+    attr_reader :shared_path, :log_path, :scripts_path
     attr_accessor :remote_checkout
 
     ##
@@ -953,6 +953,7 @@ module Sunshine
       @shared_path   = "#{@root_path}/shared"
       @log_path      = "#{@shared_path}/log"
       @checkout_path = "#{@deploys_path}/#{@deploy_name}"
+      @scripts_path  = "#{@checkout_path}/scripts"
     end
 
 

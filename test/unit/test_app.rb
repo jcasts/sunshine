@@ -209,7 +209,7 @@ class TestApp < Test::Unit::TestCase
     each_remote_shell do |ds|
 
       scripts_list.each do |script|
-        assert_rsync(/#{script}/, "#{ds.host}:#{@app.checkout_path}/#{script}")
+        assert_rsync(/#{script}/, "#{ds.host}:#{@app.scripts_path}/#{script}")
       end
     end
   end
@@ -219,7 +219,7 @@ class TestApp < Test::Unit::TestCase
     @app.build_deploy_info_file
 
     each_remote_shell do |ds|
-      assert_rsync(/info/, "#{ds.host}:#{@app.checkout_path}/info")
+      assert_rsync(/info/, "#{ds.host}:#{@app.scripts_path}/info")
     end
   end
 
