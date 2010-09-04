@@ -554,8 +554,8 @@ fi
 
 
     ##
-    # Write an executable bash script to the app's checkout dir
-    # on the deploy server, and symlink them to the current dir.
+    # Write an executable bash script to the app's scripts dir
+    # on the deploy server, and symlink them to the root dir.
 
     def write_script name, contents
       script_file = "#{self.scripts_path}/#{name}"
