@@ -10,11 +10,6 @@ module Sunshine
     end
 
 
-    def self.valid?
-      false
-    end
-
-
     def initialize url, options={}
       super
       @flags << '-r' << '--exclude .svn/' << '--exclude .git/'

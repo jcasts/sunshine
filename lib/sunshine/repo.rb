@@ -77,6 +77,16 @@ module Sunshine
     end
 
 
+    ##
+    # Checks if current working directory is a valid repo.
+    # Defaults to false. Subclasses must override this method to enable
+    # auto detecting of a given scm implementation.
+
+    def self.valid?
+      false
+    end
+
+
     attr_reader :url, :scm
 
     def initialize url, options={}
