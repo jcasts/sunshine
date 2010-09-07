@@ -56,8 +56,6 @@ module Sunshine
 
     def self.detect path=".", shell=nil
       @@repo_types.values.each do |repo|
-        next if Sunshine::RsyncRepo === repo
-
         if repo.valid? path
           info = repo.get_info path, shell
           return repo.new(info[:url], info)
