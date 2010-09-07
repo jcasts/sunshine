@@ -19,14 +19,12 @@ module Sunshine
   #
   #   app.deploy do |app|
   #
-  #     app_server = Sunshine::Rainbows.new(app)
-  #     app_server.restart
+  #     app_server = Sunshine::Rainbows.new app, :port => 3000
+  #     web_server = Sunshine::Nginx.new app, :point_to => app_server
   #
-  #     Sunshine::Nginx.new(app, :point_to => app_server).setup
-  #
+  #     app_server.setup
+  #     web_server.setup
   #   end
-  #
-  #   app.start :force => true
   #
   # Multiple apps can be defined, and deployed from a single deploy script.
   # The constructor also supports passing a yaml file path:
