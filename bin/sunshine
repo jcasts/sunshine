@@ -1,10 +1,5 @@
 #!/usr/bin/env ruby -w
 
-begin
-  require 'sunshine'
-rescue
-  $: << 'lib'
-  require 'sunshine'
-end
+require 'sunshine'
 
 Sunshine.run
