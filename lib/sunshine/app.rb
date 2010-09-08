@@ -254,6 +254,7 @@ module Sunshine
     # run App#start.
 
     def deploy options=nil
+      success = false
       prev_connection = connected?
 
       deploy_trap = Sunshine.add_trap "Reverting deploy of #{@name}" do
@@ -289,6 +290,7 @@ module Sunshine
           start :force => true
 
           remove_old_deploys
+          success = deployed?
         end
       end
 
@@ -301,11 +303,13 @@ module Sunshine
         Sunshine.logger.error '>>', e.backtrace.join("\n")
         revert! options
         start options
-        disconnect options unless prev_connection
       end
 
     ensure
+      disconnect options unless prev_connection
       Sunshine.delete_trap deploy_trap
+
+      success
     end
 
 

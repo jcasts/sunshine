@@ -197,6 +197,10 @@ module Sunshine
       return @deploy_details if @deploy_details && !reload
       @deploy_details =
         YAML.load @shell.call("cat #{self.current_path}/info") rescue nil
+
+      @deploy_details = nil unless Hash === @deploy_details
+
+      @deploy_details
     end
 
 
