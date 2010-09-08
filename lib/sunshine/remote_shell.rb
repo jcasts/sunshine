@@ -170,7 +170,7 @@ module Sunshine
     # Checks if the given file exists
 
     def file? filepath
-      call("test -f #{filepath}") && true rescue false
+      syscall "test -f #{filepath}"
     end
 
 

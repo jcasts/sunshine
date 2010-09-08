@@ -6,6 +6,10 @@
 
   * Deploy env defaults to ENV 'DEPLOY_ENV', 'env', 'RACK_ENV', or 'RAILS_ENV'.
 
+* Bugfixes:
+
+  * ServerApp#run_geminstaller no longer defaults to using sudo.
+
 === 1.1.2 / 2010-04-15
 
 * Improvements:

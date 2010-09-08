@@ -67,7 +67,9 @@ module Sunshine
     # Execute a command on the local system and return the output.
 
     def call cmd, options={}, &block
-      execute sudo_cmd(cmd, options), &block
+      Sunshine.logger.info @host, "Running: #{command_str}" do
+        execute sudo_cmd(cmd, options), &block
+      end
     end
 
 
@@ -229,6 +231,14 @@ module Sunshine
       else
         yield
       end
+    end
+
+
+    ##
+    # Returns true if command was run successfully, otherwise returns false.
+
+    def syscall cmd, options=nil
+      call(cmd, options) && true rescue false
     end
 
 
