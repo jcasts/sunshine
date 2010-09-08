@@ -10,6 +10,8 @@
 
   * ServerApp#run_geminstaller no longer defaults to using sudo.
 
+  * Added better extensible package manager checking to ServerApp.
+
 === 1.1.2 / 2010-04-15
 
 * Improvements:

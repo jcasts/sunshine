@@ -151,6 +151,9 @@ module Sunshine
 
         write_script name, bash
       end
+
+      # Symlink pre-existing user scripts.
+      @shell.symlink "#{self.scripts_path}/*", "#{self.root_path}/."
     end
 
 

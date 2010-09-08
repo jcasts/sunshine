@@ -46,7 +46,6 @@ lib/sunshine/repos/svn_repo.rb
 lib/sunshine/server_app.rb
 lib/sunshine/shell.rb
 templates/apache/apache.conf.erb
-templates/logrotate/logrotate.conf.erb
 templates/mongrel_rails/mongrel_rails.conf.erb
 templates/nginx/nginx.conf.erb
 templates/nginx/nginx_optimize.conf
