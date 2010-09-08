@@ -412,20 +412,23 @@ fi
     ##
     # Runs bundler. Installs the bundler gem if missing.
 
-    def run_bundler
+    def run_bundler options={}
       install_deps 'bundler', :type => Gem
-      @shell.call "cd #{self.checkout_path} && gem bundle"
+      @shell.call "cd #{self.checkout_path} && gem bundle", options
     end
 
 
     ##
     # Runs geminstaller. :(
-    # Deprecated: use bundler
+    # Deprecated: how about trying bundler or isolate?
+    # If sudo is required to install to your GEM_HOME, make sure to
+    # pass it as an argument:
+    #   server_app.run_geminstaller :sudo => true
 
-    def run_geminstaller
+    def run_geminstaller options={}
       install_deps 'geminstaller', :type => Gem
       # Without sudo gems get installed to ~user/.gems
-      @shell.call "cd #{self.checkout_path} && geminstaller -e", :sudo => true
+      @shell.call "cd #{self.checkout_path} && geminstaller -e", options
     end
 
 

@@ -675,7 +675,7 @@ module Sunshine
     def run_bundler options=nil
       with_server_apps options,
         :msg  => "Running Bundler",
-        :send => :run_bundler
+        :send => [:run_bundler, options]
 
     rescue => e
       raise CriticalDeployError, e
@@ -688,7 +688,7 @@ module Sunshine
     def run_geminstaller options=nil
       with_server_apps options,
         :msg  => "Running GemInstaller",
-        :send => :run_geminstaller
+        :send => [:run_geminstaller, options]
 
     rescue => e
       raise CriticalDeployError, e
