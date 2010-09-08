@@ -39,7 +39,11 @@ module Sunshine
     'auto'                => false,
     'auto_dependencies'   => true,
     'deploy_env'          =>
-      (ENV['env'] || ENV['RACK_ENV'] || ENV['RAILS_ENV'] || :development),
+      ( ENV['DEPLOY_ENV'] ||
+        ENV['env']        ||
+        ENV['RACK_ENV']   ||
+        ENV['RAILS_ENV']  ||
+        :development ),
     'level'               => 'info',
     'max_deploy_versions' => 5,
     'remote_checkouts'    => false,
