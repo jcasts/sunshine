@@ -70,7 +70,7 @@ module Sunshine
     # Checks if dependency type is valid for a given shell.
     # Defaults to false. Override in subclass.
 
-    def self.valid? shell=nil
+    def self.system_manager? shell=nil
       false
     end
 

@@ -338,7 +338,7 @@ fi
     def pkg_manager
       @pkg_manager ||=
         DependencyLib.dependency_types.detect do |dt|
-          dt.valid? @shell
+          dt.system_manager? @shell
         end
     end
 
