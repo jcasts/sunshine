@@ -1,7 +1,7 @@
 namespace :sunshine do
 
   ##
-  # If using rails, have rails information available by updating :app task to:
+  # If using Rails, have the environment available by updating :app task to:
   #   task :app => :environment do
   #     ...
   #   end
@@ -10,9 +10,11 @@ namespace :sunshine do
   task :app do
     require 'sunshine'
 
-    deploy_env = ENV['env'] || ENV['RACK_ENV'] || ENV['RAILS_ENV']
-
-    Sunshine.setup 'deploy_env' => ( deploy_env || "development" )
+    # By default, Sunshine will deploy with env set from (in order):
+    # ENV['DEPLOY_ENV'] || ENV['env'] || ENV['RACK_ENV'] || ENV['RAILS_ENV']
+    #
+    # If using Rails, you may want to setup Sunshine with the same environment:
+    # Sunshine.setup 'deploy_env' => Rails.environment
 
 
     # View the Sunshine README, scripts in the sunshine/examples
@@ -24,6 +26,9 @@ namespace :sunshine do
     # @app = Sunshine::App.new app_config_hash
   end
 
+
+  ##
+  # Put your deploy-specific logic in the deploy task...
 
   desc "Deploy the app"
   task :deploy => :app do
@@ -42,6 +47,18 @@ namespace :sunshine do
     end
   end
 
+
+  ##
+  # Server setup logic that doesn't need to be run on every deploy
+  # can be put in the :setup task.
+  #
+  # Note: By default, Sunshine will attempt to install missing server
+  # dependencies that it uses if they are not present (e.g. Nginx, Apache...).
+  # If you would like to disable this behavior and handle these dependencies
+  # explicitely, add this setup configuration to your :app or :deploy task:
+  #   Sunshine.setup 'auto_dependencies' => false
+  #
+  # If you do so, ensure that the dependency bins are available in $PATH.
 
   desc "Sets up deploy servers"
   task :setup => :app do
