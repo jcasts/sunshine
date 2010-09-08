@@ -191,7 +191,7 @@ module Sunshine
         yield(server_app) if block_given?
 
         begin
-          server_app.send cmd.to_sym
+          server_app.run_script cmd
           server_app.running? ? 'running' : 'down'
 
         rescue CmdError => e

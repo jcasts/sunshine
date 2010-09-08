@@ -12,6 +12,7 @@ lib/commands/list.rb
 lib/commands/restart.rb
 lib/commands/rm.rb
 lib/commands/run.rb
+lib/commands/script.rb
 lib/commands/start.rb
 lib/commands/stop.rb
 lib/sunshine.rb

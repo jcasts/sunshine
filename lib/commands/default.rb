@@ -101,6 +101,8 @@ Sunshine is an object oriented deploy tool for rack applications.
     list      Display deployed apps
     restart   Restart a deployed app
     rm        Unregister an app with #{opt.program_name}
+    run       Run a Sunshine ruby file
+    script    Run an app script
     start     Start a deployed app
     stop      Stop a deployed app
 

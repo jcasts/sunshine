@@ -27,7 +27,7 @@ module Sunshine
 
   ##
   # Commands supported by Sunshine.
-  COMMANDS = %w{add list restart rm run start stop}
+  COMMANDS = %w{add list restart rm run script start stop}
 
   ##
   # File DATA from Sunshine run files.
@@ -413,6 +413,7 @@ module Sunshine
   require 'commands/run'
   require 'commands/restart'
   require 'commands/rm'
+  require 'commands/script'
   require 'commands/start'
   require 'commands/stop'
 end

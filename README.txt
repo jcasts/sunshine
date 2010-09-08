@@ -554,7 +554,8 @@ The Sunshine commands are as follows:
   list      Display deployed apps
   restart   Restart a deployed app
   rm        Unregister an app with sunshine
-  run       Run a Sunshine script
+  run       Run a Sunshine ruby file
+  script    Run an app script
   start     Start a deployed app
   stop      Stop a deployed app
 
@@ -562,6 +563,41 @@ For more help on sunshine commands, use 'sunshine COMMAND --help'.
 For more information about control scripts, see the
 Sunshine::App#build_control_scripts method.
 
+=== Remote Scripts and Permissions:
+
+Important:
+
+Applications are deployed on a per-user basis. When calling
+commands that require superuser permissions (e.g. calling restart on an
+app that runs on Apache, port 80), make sure that the user used to log in
+has sudo permissions.
+
+Example:
+
+I've deployed an application logged in as 'superuser' but for a
+'peon' user with a lower permission level using something like:
+  Sunshine.setup 'sudo' => 'peon'
+  @app = Sunshine::App.new :remote_shells => 'superuser@myserver.com'
+
+Using any of the following will fail to return since 'peon' has
+no sudo priviledges:
+  $ sunshine restart app -r peon@myserver.com
+  $ sunshine restart app -r peon@myserver.com -S
+
+Yet, if you only log in as 'superuser' the app will not be found as it will
+be looking for apps deployed and run for 'superuser', hence this is wrong too:
+  $ sunshine restart app -r superuser@myserver.com
+
+To run the script correctly, use the same setup used for your deploy,
+in this case:
+  $ sunshine restart app -r superuser@myserver.com -S peon
+
+This is true for the following commands:
+  $ sunshine list --status
+  $ sunshine restart
+  $ sunshine script
+  $ sunshine start
+  $ sunshine stop
 
 == Licence
 
