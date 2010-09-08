@@ -48,7 +48,7 @@ module Sunshine
     'max_deploy_versions' => 5,
     'remote_checkouts'    => false,
     'timeout'             => 300,
-    'web_directory'       => '/var/www'
+    'web_directory'       => '/srv/http'
   }
 
   ##
