@@ -707,6 +707,18 @@ module Sunshine
 
 
     ##
+    # Run the given script of a deployed app on the specified
+    # deploy servers.
+    # Post-deploy only.
+
+    def run_script name, options=nil
+      with_server_apps options,
+        :msg  => "Running #{name} script",
+        :send => [:run_script, name, options]
+    end
+
+
+    ##
     # Run a sass task on any or all deploy servers.
 
     def sass *sass_names

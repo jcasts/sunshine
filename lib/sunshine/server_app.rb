@@ -433,12 +433,23 @@ fi
 
 
     ##
+    # Runs a script from the script_path.
+    # Post-deploy only.
+
+    def run_script name, options=nil, &block
+      options ||= {}
+      @shell.call \
+        File.join(self.root_path, name.to_s), options, &block rescue false
+    end
+
+
+    ##
     # Check if the app pids are present.
     # Post-deploy only.
 
     def running?
       # Permissions are handled by the script, use: :sudo => false
-      @shell.call "#{self.root_path}/status", :sudo => false rescue false
+      run_script :status, :sudo => false
     end
 
 
@@ -479,7 +490,7 @@ fi
       end
 
       # Permissions are handled by the script, use: :sudo => false
-      @shell.call "#{self.root_path}/start", :sudo => false rescue false
+      run_script :start, :sudo => false
     end
 
 
@@ -497,7 +508,7 @@ fi
 
     def stop
       # Permissions are handled by the script, use: :sudo => false
-      @shell.call "#{self.root_path}/stop", :sudo => false rescue false
+      run_script :stop, :sudo => false
     end
 
 

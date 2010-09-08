@@ -1,8 +1,8 @@
-=== 1.1.3 / 2010-09-03
+=== 1.1.3 / 2010-09-08
 
 * Improvements:
 
-  * Added support for custom env/start/stop/restart scripts.
+  * Added better support for custom env/start/stop/restart scripts.
 
   * Deploy env defaults to ENV 'DEPLOY_ENV', 'env', 'RACK_ENV', or 'RAILS_ENV'.
 
