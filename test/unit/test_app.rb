@@ -311,6 +311,8 @@ class TestApp < Test::Unit::TestCase
     check_ruby = "test \"$(yum list installed #{ruby_dep.pkg} | "+
       "grep -c #{ruby_dep.pkg})\" -ge 1"
 
+    set_mock_response_for @app, 1, "apt-get --version" => [:err, ""]
+    set_mock_response_for @app, 0, "yum --version" => [:out, "1.0"]
 
     set_mock_response_for @app, 1,
       {check_nginx => [:err, ""],

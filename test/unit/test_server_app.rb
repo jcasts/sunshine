@@ -193,8 +193,8 @@ class TestServerApp < Test::Unit::TestCase
 
     @sa.install_deps "ruby", nginx_dep
 
-    assert_dep_install 'ruby'
-    assert_dep_install 'nginx'
+    assert_dep_install 'ruby',  Sunshine::Yum
+    assert_dep_install 'nginx', Sunshine::Yum
   end
 
 
@@ -235,7 +235,7 @@ class TestServerApp < Test::Unit::TestCase
   def test_rake
     @sa.rake "db:migrate"
 
-    assert_dep_install 'rake'
+    assert_dep_install 'rake', @sa.pkg_manager
     assert_server_call "cd #{@app.checkout_path} && rake db:migrate"
   end
 
@@ -317,7 +317,7 @@ class TestServerApp < Test::Unit::TestCase
   def test_run_bundler
     @sa.run_bundler
 
-    assert_dep_install 'bundler'
+    assert_dep_install 'bundler', @sa.pkg_manager
     assert_server_call "cd #{@app.checkout_path} && gem bundle"
   end
 
@@ -325,7 +325,7 @@ class TestServerApp < Test::Unit::TestCase
   def test_run_geminstaller
     @sa.run_geminstaller
 
-    assert_dep_install 'geminstaller'
+    assert_dep_install 'geminstaller', @sa.pkg_manager
     assert_server_call "cd #{@app.checkout_path} && geminstaller -e"
   end
 
@@ -335,7 +335,7 @@ class TestServerApp < Test::Unit::TestCase
 
     @sa.sass(*sass_files)
 
-    assert_dep_install 'haml'
+    assert_dep_install 'haml', @sa.pkg_manager
 
     sass_files.each do |file|
       sass_file = "public/stylesheets/sass/#{file}.sass"

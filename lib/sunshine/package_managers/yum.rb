@@ -30,6 +30,15 @@ module Sunshine
     end
 
 
+    ##
+    # Checks if dependency type is valid for a given shell.
+
+    def self.valid? shell=nil
+      shell ||= Sunshine.shell
+      shell.call("yum --version") && true rescue false
+    end
+
+
     private
 
     def build_pkg_name pkg_name, options={}

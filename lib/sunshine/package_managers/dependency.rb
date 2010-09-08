@@ -66,6 +66,15 @@ module Sunshine
     end
 
 
+    ##
+    # Checks if dependency type is valid for a given shell.
+    # Defaults to false. Override in subclass.
+
+    def self.valid? shell=nil
+      false
+    end
+
+
     attr_reader :name, :pkg, :parents, :children
 
     def initialize name, options={}, &block

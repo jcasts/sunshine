@@ -61,8 +61,7 @@ module HelperMethods
   end
 
 
-  def assert_dep_install dep_name, type=Sunshine::Yum
-    prefered = type rescue nil
+  def assert_dep_install dep_name, prefered=nil
     args = [{:call => @remote_shell, :prefer => prefered}]
 
     dep = if Sunshine::Dependency === dep_name

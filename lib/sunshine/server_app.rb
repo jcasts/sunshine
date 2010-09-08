@@ -337,7 +337,9 @@ fi
 
     def pkg_manager
       @pkg_manager ||=
-        (@shell.call("yum --version") && Yum) rescue Apt
+        DependencyLib.dependency_types.detect do |dt|
+          dt.valid? @shell
+        end
     end
 
 
