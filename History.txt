@@ -1,8 +1,10 @@
-=== 1.1.3 / 2010-09-08
+=== 1.2.0 / 2010-09-08
 
 * Improvements:
 
   * Added better support for custom env/start/stop/restart scripts.
+
+  * Added scripts sunshine command to call custom scripts remotely.
 
   * Deploy env defaults to ENV 'DEPLOY_ENV', 'env', 'RACK_ENV', or 'RAILS_ENV'.
 
