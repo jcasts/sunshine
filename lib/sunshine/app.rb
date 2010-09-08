@@ -285,9 +285,10 @@ module Sunshine
           build_crontab
 
           register_as_deployed
-          remove_old_deploys
 
           start :force => true
+
+          remove_old_deploys
         end
       end
 
@@ -333,8 +334,25 @@ module Sunshine
     ##
     # Add a command to the crontab to be generated remotely:
     #   add_to_crontab "reboot", "@reboot /path/to/app/start", :role => :web
+    #
+    # Note: This method will append jobs to already existing cron jobs for this
+    # application and job name, including previous deploys.
 
     def add_to_crontab name, cronjob, options=nil
+      with_server_apps options do |server_app|
+        server_app.crontab[name] << cronjob
+      end
+    end
+
+
+    ##
+    # Add a command to the crontab to be generated remotely:
+    #   cronjob "reboot", "@reboot /path/to/app/start", :role => :web
+    #
+    # Note: This method will override already existing cron jobs for this
+    # application and job name, including previous deploys.
+
+    def cronjob name, cronjob, options=nil
       with_server_apps options do |server_app|
         server_app.crontab[name] = cronjob
       end

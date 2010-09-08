@@ -16,6 +16,24 @@ module Sunshine
 
 
     ##
+    # Access the jobs hash. Equivalent to:
+    #   crontab.jobs[key]
+
+    def [] key
+      self.jobs[key]
+    end
+
+
+    ##
+    # Set a value in the jobs hash.Equivalent to:
+    #   crontab.jobs[key] = value
+
+    def []= key, value
+      self.jobs[key] = value
+    end
+
+
+    ##
     # Get the jobs matching this crontab. Loads them from the crontab
     # if @jobs hasn't been set yet.
 
@@ -31,7 +49,10 @@ module Sunshine
       crontab.strip!
 
       jobs.each do |namespace, cron_job|
-        crontab = delete_jobs crontab, namespace
+        cron_job = cron_job.join("\n") if Array === cron_job
+        crontab  = delete_jobs crontab, namespace
+
+        next if cron_job.nil? || cron_job.empty?
 
         start_id, end_id = get_job_ids namespace
         cron_str = "\n#{start_id}\n#{cron_job.chomp}\n#{end_id}\n\n"
@@ -85,7 +106,7 @@ module Sunshine
     # Returns a hash of namespace/jobs pairs.
 
     def parse string
-      jobs = Hash.new
+      jobs = Hash.new{|hash, key| hash[key] = Array.new}
 
       namespace = nil
 
@@ -98,12 +119,12 @@ module Sunshine
         end
 
         if namespace
-          jobs[namespace] ||= String.new
-          jobs[namespace] << line
+          line = line.strip
+          jobs[namespace] << line unless line.empty?
         end
       end
 
-      jobs
+      jobs unless jobs.empty?
     end
 
 

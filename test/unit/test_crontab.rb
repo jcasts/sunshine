@@ -37,9 +37,9 @@ job for otherapp
 
   def test_parse
     jobs = @cron.parse @crontab_str
-    assert_equal "this job should stay\n", jobs['job1']
-    assert_equal "job2 part 1\njob2 part 2\n", jobs['job2']
-    assert jobs['blah'].nil?
+    assert_equal ["this job should stay"], jobs['job1']
+    assert_equal ["job2 part 1","job2 part 2"], jobs['job2']
+    assert jobs['blah'].empty?
   end
 
 
@@ -76,6 +76,7 @@ job for otherapp
   def test_write!
     @cron.jobs["job2"] << "new job2"
     @cron.jobs["job3"] = "new job3"
+    @cron.jobs["invalid"] = nil
 
     @shell.set_mock_response 0, "crontab -l" => [:out, @crontab_str]
 
@@ -84,6 +85,7 @@ job for otherapp
     assert_cronjob "job1", "this job should stay"
     assert_cronjob "job2", "job2 part 1\njob2 part 2\nnew job2"
     assert_cronjob "job3", "new job3"
+    assert_not_cronjob "invalid"
 
     assert_cronjob "blah", "otherapp blah job", @othercron
     assert_cronjob "job1", "job for otherapp", @othercron
@@ -118,10 +120,18 @@ job for otherapp
   end
 
 
+  def assert_not_cronjob namespace, crontab=@cron
+    job = cronjob(namespace, [], crontab).split("\n")
+    assert !@crontab_str.include?(job[0])
+  end
+
+
   def cronjob namespace, job, crontab
+    job = job.join("\n") if Array === job
+
 <<-STR
 # sunshine #{crontab.name}:#{namespace}:begin
-#{job}
+#{ job }
 # sunshine #{crontab.name}:#{namespace}:end
 STR
   end
