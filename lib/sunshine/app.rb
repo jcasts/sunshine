@@ -287,10 +287,10 @@ module Sunshine
 
           register_as_deployed
 
-          start :force => true
+          success = start :force => true
 
           remove_old_deploys
-          success = deployed?
+          success &&= deployed?
         end
       end
 
@@ -480,7 +480,8 @@ module Sunshine
     # Check if app has been deployed successfully.
 
     def deployed? options=nil
-      with_server_apps options, :no_threads => true do |server_app|
+      with_server_apps options,
+        :msg => "Checking deploy", :no_threads => true do |server_app|
         return false unless server_app.deployed?
       end
 

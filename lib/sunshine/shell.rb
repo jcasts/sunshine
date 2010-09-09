@@ -67,7 +67,7 @@ module Sunshine
     # Execute a command on the local system and return the output.
 
     def call cmd, options={}, &block
-      Sunshine.logger.info @host, "Running: #{command_str}" do
+      Sunshine.logger.info @host, "Running: #{cmd}" do
         execute sudo_cmd(cmd, options), &block
       end
     end

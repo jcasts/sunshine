@@ -127,6 +127,7 @@ module Sunshine
     # To add to, or define a control script, see App#add_to_script.
 
     def build_control_scripts
+      @shell.call "mkdir -p #{self.scripts_path}"
 
       write_script "env", make_env_bash_script
 
@@ -196,7 +197,7 @@ module Sunshine
     def deploy_details reload=false
       return @deploy_details if @deploy_details && !reload
       @deploy_details =
-        YAML.load @shell.call("cat #{self.current_path}/info") rescue nil
+        YAML.load @shell.call("cat #{self.root_path}/info") rescue nil
 
       @deploy_details = nil unless Hash === @deploy_details
 
