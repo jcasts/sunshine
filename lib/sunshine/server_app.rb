@@ -152,9 +152,6 @@ module Sunshine
 
         write_script name, bash
       end
-
-      # Symlink pre-existing user scripts.
-      @shell.symlink "#{self.scripts_path}/*", "#{self.root_path}/."
     end
 
 
@@ -197,7 +194,7 @@ module Sunshine
     def deploy_details reload=false
       return @deploy_details if @deploy_details && !reload
       @deploy_details =
-        YAML.load @shell.call("cat #{self.root_path}/info") rescue nil
+        YAML.load @shell.call("cat #{self.scripts_path}/info") rescue nil
 
       @deploy_details = nil unless Hash === @deploy_details
 
@@ -447,7 +444,7 @@ fi
     def run_script name, options=nil, &block
       options ||= {}
       @shell.call \
-        File.join(self.root_path, name.to_s), options, &block rescue false
+        File.join(self.scripts_path, name.to_s), options, &block rescue false
     end
 
 

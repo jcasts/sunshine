@@ -119,7 +119,7 @@ class TestServerApp < Test::Unit::TestCase
     deploy_details = {:item => "thing"}
     other_details  = {:key  => "value"}
 
-    @sa.shell.mock :call, :args   => ["cat #{@sa.current_path}/info"],
+    @sa.shell.mock :call, :args   => ["cat #{@sa.scripts_path}/info"],
                           :return => other_details.to_yaml
 
     @sa.instance_variable_set "@deploy_details", deploy_details

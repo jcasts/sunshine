@@ -279,7 +279,7 @@ class TestApp < Test::Unit::TestCase
 
   def test_deployed?
     set_mock_response_for @app, 0,
-      "cat #{@app.current_path}/info" => [:out,
+      "cat #{@app.scripts_path}/info" => [:out,
           "---\n:deploy_name: '#{@app.deploy_name}'"]
 
     deployed = @app.deployed?
