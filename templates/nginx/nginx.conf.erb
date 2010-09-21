@@ -25,7 +25,31 @@ http {
   client_body_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
   proxy_temp_path <%= darwin ? '/var/tmp/nginx' : '/dev/shm' %>;
 
+  <%
+  mime_types = "#{File.dirname(shell.call("which nginx"))}/../conf/mime.types"
+
+  if shell.file? mime_types
+  -%>
   include <%= File.dirname shell.call("which nginx") %>/../conf/mime.types;
+
+  <% else -%>
+
+	types {
+		application/x-plist    plist;
+		application/json     json;
+	  image/gif     gif;
+	  image/jpeg    jpg;
+	  image/png     png;
+	  image/x-icon  ico;
+	  text/css      css;
+	  text/html    html;
+	  text/plain    bob;
+	  text/plain    txt;
+		application/vnd.android.package-archive apk;
+	}
+
+  <% end -%>
+
   default_type  application/octet-stream;
 
   log_format sunshine '$remote_addr - $remote_user [$time_local] '
