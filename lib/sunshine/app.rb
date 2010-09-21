@@ -176,6 +176,8 @@ module Sunshine
 
       @deploy_name = options[:deploy_name] || Time.now.to_i.to_s
 
+      @deploy_env = options[:deploy_env] if options[:deploy_env]
+
       set_deploy_paths options[:root_path]
 
       @server_apps = server_apps_from_config options[:remote_shells]
