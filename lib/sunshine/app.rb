@@ -266,8 +266,8 @@ module Sunshine
       prev_connection = connected?
 
       deploy_trap = Sunshine.add_trap "Reverting deploy of #{@name}" do
-        revert! options
-        start options
+        revert! options if symlinked
+        start options   if stopped
         disconnect options unless prev_connection
       end
 
@@ -314,7 +314,7 @@ module Sunshine
       end
 
     ensure
-      disconnect options unless prev_connection
+      disconnect options unless prev_connection || !connected?
       Sunshine.delete_trap deploy_trap
 
       success
@@ -351,7 +351,7 @@ module Sunshine
     # application and job name, including previous deploys.
 
     def add_to_crontab name, cronjob, options=nil
-      with_server_apps options do |server_app|
+      each options do |server_app|
         server_app.crontab[name] << cronjob
       end
     end
@@ -365,7 +365,7 @@ module Sunshine
     # application and job name, including previous deploys.
 
     def cronjob name, cronjob, options=nil
-      with_server_apps options do |server_app|
+      each options do |server_app|
         server_app.crontab[name] = cronjob
       end
     end
@@ -377,7 +377,7 @@ module Sunshine
     #   add_to_script :start, "start_mail", :role => :mail
 
     def add_to_script name, script, options=nil
-      with_server_apps options do |server_app|
+      each options do |server_app|
         server_app.scripts[name] << script
       end
     end
@@ -771,6 +771,8 @@ module Sunshine
       @shell_env.merge!(env_hash)
 
       with_server_apps :all,
+        :no_threads => true,
+        :no_session => true,
         :msg => "Shell env: #{@shell_env.inspect}" do |server_app|
         server_app.shell_env.merge!(@shell_env)
       end
@@ -824,6 +826,8 @@ module Sunshine
 
     def sudo=(value)
       with_server_apps :all,
+        :no_threads => true,
+        :no_session => true,
         :msg => "Using sudo = #{value.inspect}" do |server_app|
         server_app.shell.sudo = value
       end
@@ -924,6 +928,7 @@ module Sunshine
     # a session to avoid multiple ssh login prompts. Supports all App#find
     # options, plus:
     # :no_threads:: bool - disable threaded execution
+    # :no_session:: bool - disable auto session creation
     # :msg:: "some message" - log message
     #
     #   app.with_server_apps :all, :msg => "doing something" do |server_app|
@@ -933,12 +938,16 @@ module Sunshine
     #   app.with_server_apps :role => :db, :user => "bob" do |server_app|
     #     # do something here
     #   end
+    #
+    # Note: App#with_server_apps calls App#with_session. If you do not need
+    # or want a server connection you can pass :no_session.
 
     def with_server_apps search_options, options={}
       options = search_options.merge options if Hash === search_options
 
       message = options[:msg]
       method  = options[:no_threads] ? :each : :threaded_each
+      auto_session = !options[:no_session]
 
       block = lambda do
         send(method, search_options) do |server_app|
@@ -953,7 +962,7 @@ module Sunshine
       end
 
 
-      with_session options do
+      msg_block = lambda do
         if message
           Sunshine.logger.info(:app, message, &block)
 
@@ -961,6 +970,8 @@ module Sunshine
           block.call
         end
       end
+
+      auto_session ? with_session(&msg_block) : msg_block.call
     end
 
 
