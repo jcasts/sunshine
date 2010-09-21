@@ -966,7 +966,7 @@ module Sunshine
       prev_connection = connected?(options)
       connect options unless prev_connection
 
-      yield
+      yield self
 
     ensure
       disconnect options unless prev_connection
