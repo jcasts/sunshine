@@ -256,7 +256,13 @@ module Sunshine
     # run App#start.
 
     def deploy options=nil
+      raise CriticalDeployError, "No servers defined for #{@name}" if
+        @server_apps.empty?
+
       success = false
+      stopped = false
+      symlinked = false
+
       prev_connection = connected?
 
       deploy_trap = Sunshine.add_trap "Reverting deploy of #{@name}" do
@@ -273,9 +279,9 @@ module Sunshine
           make_app_directories
           checkout_codebase
 
-          stop
+          stopped = stop
 
-          symlink_current_dir
+          symlinked = symlink_current_dir
 
           yield(self) if block_given?
 
@@ -303,8 +309,8 @@ module Sunshine
 
       Sunshine.logger.error :app, message do
         Sunshine.logger.error '>>', e.backtrace.join("\n")
-        revert! options
-        start options
+        revert! options if symlinked
+        start options   if stopped
       end
 
     ensure
