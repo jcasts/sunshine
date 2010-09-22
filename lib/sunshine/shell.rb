@@ -136,18 +136,28 @@ module Sunshine
     ##
     # Start an interactive shell.
 
+    include HighLine::SystemExtensions
+
     def interactive!
       sync do
         puts "Starting Sunshine shell on #{@host}"
         while true do
           user = execute "whoami"
           print "#{user}@#{@host}> "
-          cmd = gets
+          cmd = ""
+
+          until cmd.to_s[-1..-1] == "\n" do
+            char = get_character.chr
+            char = "\n" if char == "\r"
+            cmd << char
+            print char
+          end
+          #cmd = gets
           if cmd == "exit\n"
             puts "Exiting Sunshine shell..."
             break
           end
-          puts call(cmd)
+          puts call(cmd) if cmd && cmd[-1..-1] == "\n"
         end
       end
     end
