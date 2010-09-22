@@ -136,29 +136,12 @@ module Sunshine
     ##
     # Start an interactive shell.
 
-    include HighLine::SystemExtensions
-
     def interactive!
       sync do
-        puts "Starting Sunshine shell on #{@host}"
-        while true do
-          user = execute "whoami"
-          print "#{user}@#{@host}> "
-          cmd = ""
-
-          until cmd.to_s[-1..-1] == "\n" do
-            char = get_character.chr
-            char = "\n" if char == "\r"
-            cmd << char
-            print char
-          end
-          #cmd = gets
-          if cmd == "exit\n"
-            puts "Exiting Sunshine shell..."
-            break
-          end
-          puts call(cmd) if cmd && cmd[-1..-1] == "\n"
+        pid = fork do
+          exec sudo_cmd(env_cmd("sh -il")).join(" ")
         end
+        Process.waitpid pid
       end
     end
 
@@ -349,7 +332,9 @@ module Sunshine
       log_methods = {out => :debug, err => :error}
 
       result, status = process_streams(pid, out, err) do |stream, data|
-        stream_name = stream == out ? :out : :err
+        stream_name = :out if stream == out
+        stream_name = :err if stream == err
+        stream_name = :inn if stream == inn
 
 
         # User blocks should run with sync threads to avoid badness.
