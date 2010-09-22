@@ -134,6 +134,26 @@ module Sunshine
 
 
     ##
+    # Start an interactive shell.
+
+    def interactive!
+      sync do
+        puts "Starting Sunshine shell on #{@host}"
+        while true do
+          user = execute "whoami"
+          print "#{user}@#{@host}> "
+          cmd = gets
+          if cmd == "exit\n"
+            puts "Exiting Sunshine shell..."
+            break
+          end
+          puts call(cmd)
+        end
+      end
+    end
+
+
+    ##
     # Write a file. Compatibility method with RemoteShell.
 
     def make_file filepath, content, options={}
