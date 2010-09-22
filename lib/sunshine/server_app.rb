@@ -108,6 +108,9 @@ module Sunshine
 
       @crontab = Crontab.new name, @shell
       @health  = Healthcheck.new shared_path, @shell
+
+      @all_deploy_names = nil
+      @previous_deploy_name = nil
     end
 
 
@@ -152,6 +155,8 @@ module Sunshine
 
         write_script name, bash
       end
+
+      symlink_scripts_to_root
     end
 
 
@@ -194,7 +199,7 @@ module Sunshine
     def deploy_details reload=false
       return @deploy_details if @deploy_details && !reload
       @deploy_details =
-        YAML.load @shell.call("cat #{self.scripts_path}/info") rescue nil
+        YAML.load @shell.call("cat #{self.root_path}/info") rescue nil
 
       @deploy_details = nil unless Hash === @deploy_details
 
@@ -349,6 +354,31 @@ fi
 
 
     ##
+    # Returns an array of all deploys in the deploys_path dir,
+    # starting with the oldest.
+
+    def all_deploy_names reload=false
+      return @all_deploy_names if @all_deploy_names && !reload
+
+      @all_deploy_names =
+        @shell.call("ls -rc1 #{self.deploys_path}").split("\n")
+    end
+
+
+    ##
+    # Returns the name of the previous deploy.
+
+    def previous_deploy_name reload=false
+      return @previous_deploy_name if @previous_deploy_name && !reload
+
+      arr = all_deploy_names(reload)
+      arr.delete(@deploy_name)
+
+      @previous_deploy_name = arr.last
+    end
+
+
+    ##
     # Run a rake task the deploy server.
 
     def rake command
@@ -370,7 +400,7 @@ fi
     # based on Sunshine's max_deploy_versions.
 
     def remove_old_deploys
-      deploys = @shell.call("ls -1 #{self.deploys_path}").split("\n")
+      deploys = all_deploy_names true
 
       return unless deploys.length > Sunshine.max_deploy_versions
 
@@ -399,7 +429,7 @@ fi
     def revert!
       @shell.call "rm -rf #{self.checkout_path}"
 
-      last_deploy = @shell.call("ls -rc1 #{self.deploys_path}").split("\n").last
+      last_deploy = previous_deploy_name(true)
 
       if last_deploy && !last_deploy.empty?
         @shell.symlink "#{self.deploys_path}/#{last_deploy}", self.current_path
@@ -443,8 +473,9 @@ fi
 
     def run_script name, options=nil, &block
       options ||= {}
-      @shell.call \
-        File.join(self.scripts_path, name.to_s), options, &block rescue false
+
+      script_path = File.join self.root_path, name.to_s
+      @shell.call script_path, options, &block rescue false
     end
 
 
@@ -526,6 +557,22 @@ fi
 
 
     ##
+    # Creates a symlink of every script in the scripts_path dir in the
+    # app's root directory for easy access.
+
+    def symlink_scripts_to_root
+      scripts = @shell.call("ls -1 #{self.scripts_path}").split("\n")
+
+      scripts.each do |name|
+        script_file = File.join self.scripts_path, name
+        pointer_file = File.join self.root_path, name
+
+        @shell.symlink script_file, pointer_file
+      end
+    end
+
+
+    ##
     # Assumes the passed code_dir is the root directory of the checked out
     # codebase and uploads it to the checkout_path.
 
@@ -583,8 +630,6 @@ fi
 
       @shell.make_file script_file, contents,
         :flags => '--chmod=ugo=rwx' unless @shell.file? script_file
-
-      @shell.symlink script_file, "#{self.root_path}/#{name}"
     end
 
 

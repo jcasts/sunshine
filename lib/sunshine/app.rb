@@ -222,7 +222,7 @@ module Sunshine
 
 
     ##
-    # Check if server apps are connected. Supports any App#find options.
+    # Check if all server apps are connected. Supports any App#find options.
 
     def connected? options=nil
       each options do |server_app|
@@ -230,6 +230,18 @@ module Sunshine
       end
 
       true
+    end
+
+
+    ##
+    # Check if any server apps are connected. Supports any App#find options.
+
+    def any_connected? options=nil
+      each options do |server_app|
+        return true if server_app.shell.connected?
+      end
+
+      false
     end
 
 
@@ -295,7 +307,8 @@ module Sunshine
 
           register_as_deployed
 
-          success = start :force => true
+          success = start(:force => true) ||
+                    raise(CriticalDeployError, "Could not start #{@name}")
 
           remove_old_deploys
           success &&= deployed?
@@ -314,7 +327,7 @@ module Sunshine
       end
 
     ensure
-      disconnect options unless prev_connection || !connected?
+      disconnect options unless prev_connection || !any_connected?
       Sunshine.delete_trap deploy_trap
 
       success

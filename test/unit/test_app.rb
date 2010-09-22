@@ -279,7 +279,7 @@ class TestApp < Test::Unit::TestCase
 
   def test_deployed?
     set_mock_response_for @app, 0,
-      "cat #{@app.scripts_path}/info" => [:out,
+      "cat #{@app.root_path}/info" => [:out,
           "---\n:deploy_name: '#{@app.deploy_name}'"]
 
     deployed = @app.deployed?
@@ -437,7 +437,7 @@ class TestApp < Test::Unit::TestCase
     returned_dirs = %w{old_deploy1 old_deploy2 old_deploy3 main_deploy}
     old_deploys = returned_dirs[0..-2].map{|d| "#{@app.deploys_path}/#{d}"}
 
-    list_cmd = "ls -1 #{@app.deploys_path}"
+    list_cmd = "ls -rc1 #{@app.deploys_path}"
     rm_cmd   = "rm -rf #{old_deploys.join(" ")}"
 
     set_mock_response_for @app, 0,

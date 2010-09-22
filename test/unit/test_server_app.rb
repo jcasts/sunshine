@@ -119,7 +119,7 @@ class TestServerApp < Test::Unit::TestCase
     deploy_details = {:item => "thing"}
     other_details  = {:key  => "value"}
 
-    @sa.shell.mock :call, :args   => ["cat #{@sa.scripts_path}/info"],
+    @sa.shell.mock :call, :args   => ["cat #{@sa.root_path}/info"],
                           :return => other_details.to_yaml
 
     @sa.instance_variable_set "@deploy_details", deploy_details
@@ -257,7 +257,7 @@ class TestServerApp < Test::Unit::TestCase
     deploys = %w{ploy1 ploy2 ploy3 ploy4 ploy5}
 
     @sa.shell.mock :call,
-      :args   => ["ls -1 #{@app.deploys_path}"],
+      :args   => ["ls -rc1 #{@app.deploys_path}"],
       :return => "#{deploys.join("\n")}\n"
 
     removed = deploys[0..1].map{|d| "#{@app.deploys_path}/#{d}"}
@@ -435,9 +435,18 @@ class TestServerApp < Test::Unit::TestCase
             "script contents", {:flags => "--chmod=ugo=rwx"}]
 
     assert @sa.shell.method_called?(:make_file, :args => args)
+  end
+
+
+  def test_symlink_scripts_to_root
+    @sa.shell.mock :call,
+      :args   => ["ls -1 #{@sa.scripts_path}"],
+      :return => "script_name\n"
 
     args = ["#{@app.scripts_path}/script_name",
             "#{@app.root_path}/script_name"]
+
+    @sa.symlink_scripts_to_root
 
     assert @sa.shell.method_called?(:symlink, :args => args)
   end
@@ -452,10 +461,5 @@ class TestServerApp < Test::Unit::TestCase
             "script contents", {:flags => "--chmod=ugo=rwx"}]
 
     assert !@sa.shell.method_called?(:make_file, :args => args)
-
-    args = ["#{@app.scripts_path}/script_name",
-            "#{@app.root_path}/script_name"]
-
-    assert @sa.shell.method_called?(:symlink, :args => args)
   end
 end
