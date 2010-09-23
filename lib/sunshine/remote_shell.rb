@@ -176,12 +176,16 @@ module Sunshine
 
     ##
     # Start an interactive shell with preset permissions and env.
+    # Optionally pass a command to be run first.
 
-    def interactive!
+    def tty! cmd=nil
       sync do
+        cmd = [cmd, "sh -il"].compact.join " && "
+        cmd = quote_cmd cmd
+
         pid = fork do
           exec \
-            ssh_cmd(sudo_cmd(env_cmd("sh -il")), :flags => "-t").to_a.join(" ")
+            ssh_cmd(sudo_cmd(env_cmd(cmd)), :flags => "-t").to_a.join(" ")
         end
         Process.waitpid pid
       end

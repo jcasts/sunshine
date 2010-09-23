@@ -135,11 +135,13 @@ module Sunshine
 
     ##
     # Start an interactive shell with preset permissions and env.
+    # Optionally pass a command to be run first.
 
-    def interactive!
+    def tty! cmd=nil
       sync do
+        cmd = [cmd, "sh -il"].compact.join " && "
         pid = fork do
-          exec sudo_cmd(env_cmd("sh -il")).to_a.join(" ")
+          exec sudo_cmd(env_cmd(cmd)).to_a.join(" ")
         end
         Process.waitpid pid
       end
