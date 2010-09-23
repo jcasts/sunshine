@@ -175,6 +175,19 @@ module Sunshine
 
 
     ##
+    # Start an interactive shell.
+
+    def interactive!
+      sync do
+        pid = fork do
+          exec ssh_cmd(sudo_cmd(env_cmd("sh -il")), :flags => "-t").join(" ")
+        end
+        Process.waitpid pid
+      end
+    end
+
+
+    ##
     # Create a file remotely
 
     def make_file filepath, content, options={}
