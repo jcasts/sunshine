@@ -239,6 +239,7 @@ module Sunshine
         :deployed_as => @shell.call("whoami"),
         :deployed_by => Sunshine.shell.user,
         :deploy_name => File.basename(self.checkout_path),
+        :env         => shell_env,
         :roles       => @roles,
         :path        => self.root_path
       }.merge @info
