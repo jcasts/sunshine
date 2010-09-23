@@ -175,7 +175,7 @@ module Sunshine
 
 
     ##
-    # Start an interactive shell.
+    # Start an interactive shell with preset permissions and env.
 
     def interactive!
       sync do
