@@ -180,7 +180,8 @@ module Sunshine
     def interactive!
       sync do
         pid = fork do
-          exec ssh_cmd(sudo_cmd(env_cmd("sh -il")), :flags => "-t").join(" ")
+          exec \
+            ssh_cmd(sudo_cmd(env_cmd("sh -il")), :flags => "-t").to_a.join(" ")
         end
         Process.waitpid pid
       end

@@ -139,7 +139,7 @@ module Sunshine
     def interactive!
       sync do
         pid = fork do
-          exec sudo_cmd(env_cmd("sh -il")).join(" ")
+          exec sudo_cmd(env_cmd("sh -il")).to_a.join(" ")
         end
         Process.waitpid pid
       end
