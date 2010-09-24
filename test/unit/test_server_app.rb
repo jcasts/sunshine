@@ -15,6 +15,27 @@ class TestServerApp < Test::Unit::TestCase
   end
 
 
+  def test_from_info_file
+    info_data = @sa.get_deploy_info.to_yaml
+    @sa.shell.mock :call, :args => "cat info/path", :return => info_data
+
+    server_app = Sunshine::ServerApp.from_info_file "info/path", @sa.shell
+
+    assert_equal @sa.root_path,     server_app.root_path
+    assert_equal @sa.checkout_path, server_app.checkout_path
+    assert_equal @sa.current_path,  server_app.current_path
+    assert_equal @sa.deploys_path,  server_app.deploys_path
+    assert_equal @sa.log_path,      server_app.log_path
+    assert_equal @sa.shared_path,   server_app.shared_path
+    assert_equal @sa.scripts_path,  server_app.scripts_path
+    assert_equal @sa.roles,         server_app.roles
+
+    assert_equal @sa.shell.env,   server_app.shell_env
+    assert_equal @sa.name,        server_app.name
+    assert_equal @sa.deploy_name, server_app.deploy_name
+  end
+
+
   def test_init
     default_info = {:ports => {}}
     assert_equal default_info, @sa.info
@@ -158,6 +179,8 @@ class TestServerApp < Test::Unit::TestCase
       :deployed_as => @sa.shell.call("whoami"),
       :deployed_by => Sunshine.shell.user,
       :deploy_name => File.basename(@app.checkout_path),
+      :name        => @sa.name,
+      :env         => @sa.shell_env,
       :roles       => @sa.roles,
       :path        => @app.root_path
     }.merge @sa.info

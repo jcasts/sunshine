@@ -77,7 +77,7 @@ module Sunshine
     ##
     # Creates a ServerApp instance from a deploy info file.
 
-    def from_info_file path, shell=nil
+    def self.from_info_file path, shell=nil
       shell ||= Sunshine.shell
 
       opts = YAML.load shell.call("cat #{path}")
@@ -85,7 +85,7 @@ module Sunshine
 
       sa_shell = shell.dup
       sa_shell.env = opts[:env] || Hash.new
-      sa_shell.connect
+      sa_shell.connect if shell.connected?
 
       new opts[:name], sa_shell, opts
     end
@@ -263,6 +263,7 @@ module Sunshine
         :deployed_as => @shell.call("whoami"),
         :deployed_by => Sunshine.shell.user,
         :deploy_name => File.basename(self.checkout_path),
+        :name        => self.name,
         :env         => shell_env,
         :roles       => @roles,
         :path        => self.root_path
