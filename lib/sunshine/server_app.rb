@@ -74,12 +74,36 @@ module Sunshine
     end
 
 
+    ##
+    # Creates a ServerApp instance from a deploy info file.
+
+    def from_info_file path, shell=nil
+      shell ||= Sunshine.shell
+
+      opts = YAML.load shell.call("cat #{path}")
+      opts[:root_path] = opts.delete :path
+
+      sa_shell = shell.dup
+      sa_shell.env = opts[:env] || Hash.new
+      sa_shell.connect
+
+      new opts[:name], sa_shell, opts
+    end
+
+
     app_attr :name, :deploy_name
     app_attr :root_path, :checkout_path, :current_path
     app_attr :deploys_path, :log_path, :shared_path, :scripts_path
 
     attr_accessor :app, :roles, :scripts, :info, :shell, :crontab, :health
     attr_writer :pkg_manager
+
+    ##
+    # Create a server app instance. Supports the following
+    # argument configurations:
+    #
+    #   ServerApp.new app_inst, "myserver.com", :roles => :web
+    #   ServerApp.new "app_name", shell_inst, options_hash
 
     def initialize app, host, options={}
 
