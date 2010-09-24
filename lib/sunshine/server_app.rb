@@ -266,7 +266,8 @@ module Sunshine
         :name        => self.name,
         :env         => shell_env,
         :roles       => @roles,
-        :path        => self.root_path
+        :path        => self.root_path,
+        :sunshine_version => Sunshine::VERSION
       }.merge @info
     end
 

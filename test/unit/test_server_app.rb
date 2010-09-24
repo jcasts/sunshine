@@ -182,7 +182,8 @@ class TestServerApp < Test::Unit::TestCase
       :name        => @sa.name,
       :env         => @sa.shell_env,
       :roles       => @sa.roles,
-      :path        => @app.root_path
+      :path        => @app.root_path,
+      :sunshine_version => Sunshine::VERSION
     }.merge @sa.info
 
     deploy_info = @sa.get_deploy_info
