@@ -80,7 +80,7 @@ module Sunshine
     # Defaults to false. Subclasses must override this method to enable
     # auto detecting of a given scm implementation.
 
-    def self.valid?
+    def self.valid? *args
       false
     end
 
