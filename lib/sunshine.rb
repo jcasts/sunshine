@@ -11,6 +11,9 @@ require 'optparse'
 require 'time'
 require 'fileutils'
 require 'tmpdir'
+require 'irb'
+
+IRB.setup nil unless defined?(IRB::UnrecognizedSwitch)
 
 ##
 # Main module, used for configuration and running commands.

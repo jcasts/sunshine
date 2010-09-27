@@ -454,6 +454,34 @@ module Sunshine
 
 
     ##
+    # Starts an IRB console with the instance's binding.
+
+    def console!
+      workspace = IRB::WorkSpace.new binding
+      irb = IRB::Irb.new workspace
+
+      irb.context.irb_name = "sunshine(#{@name})"
+      irb.context.prompt_c = "%N:%03n:%i* "
+      irb.context.prompt_i = "%N:%03n:%i> "
+      irb.context.prompt_n = "%N:%03n:%i> "
+
+      IRB.class_eval do
+        @CONF[:IRB_RC].call(irb.context) if @CONF[:IRB_RC]
+        @CONF[:MAIN_CONTEXT] = irb.context
+      end
+
+      #TODO: remove sigint trap when irb session is closed
+      #trap("INT") do
+      #  irb.signal_handle
+      #end
+
+      catch(:IRB_EXIT) do
+        irb.eval_input
+      end
+    end
+
+
+    ##
     # Checks out the app's codebase to one or all deploy servers.
     # Supports all App#find options, plus:
     # :copy:: Bool - Checkout locally and rsync; defaults to false.
