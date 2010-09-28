@@ -277,11 +277,12 @@ module Sunshine
 
       prev_connection = connected?
 
-      deploy_trap = Sunshine.add_trap "Reverting deploy of #{@name}" do
-        revert! options if symlinked
-        start options   if stopped
-        disconnect options unless prev_connection
-      end
+      deploy_trap =
+        TrapStack.add_trap "Reverting deploy of #{@name}" do
+          revert! options if symlinked
+          start options   if stopped
+          disconnect options unless prev_connection
+        end
 
       Sunshine.logger.info :app, "Beginning deploy of #{@name}"
 
@@ -328,7 +329,7 @@ module Sunshine
 
     ensure
       disconnect options unless prev_connection || !any_connected?
-      Sunshine.delete_trap deploy_trap
+      TrapStack.delete_trap deploy_trap
 
       success
     end

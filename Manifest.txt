@@ -46,6 +46,7 @@ lib/sunshine/repos/rsync_repo.rb
 lib/sunshine/repos/svn_repo.rb
 lib/sunshine/server_app.rb
 lib/sunshine/shell.rb
+lib/sunshine/trap_stack.rb
 templates/apache/apache.conf.erb
 templates/mongrel_rails/mongrel_rails.conf.erb
 templates/nginx/nginx.conf.erb

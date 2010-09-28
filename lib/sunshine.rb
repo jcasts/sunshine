@@ -189,42 +189,6 @@ module Sunshine
   end
 
 
-  ##
-  # Adds an INT signal trap with its description on the stack.
-  # Returns a trap_item Array.
-
-  def self.add_trap desc, &block
-    trap_item = [desc, block]
-    (@trap_stack ||= []).unshift trap_item
-    trap_item
-  end
-
-  add_trap "Disconnecting all remote shells." do
-    RemoteShell.disconnect_all
-  end
-
-
-  ##
-  # Call a trap item and display it's message.
-
-  def self.call_trap trap_item
-    return unless trap_item
-
-    msg, block = trap_item
-
-    logger.info :INT, msg do
-      block.call
-    end
-  end
-
-
-  ##
-  # Remove a trap_item from the stack.
-
-  def self.delete_trap trap_item
-    @trap_stack.delete trap_item
-  end
-
 
   ##
   # Global value of sudo to use. Returns true, nil, or a username.
@@ -285,14 +249,18 @@ module Sunshine
   def self.setup new_config={}, reset=false
     @config = DEFAULT_CONFIG.dup if reset
 
-    trap "INT" do
+
+    TrapStack.trap_signal :INT do |msg|
       $stderr << "\n\n"
       logger.indent = 0
       logger.fatal :INT, "Caught INT signal!"
-
-      call_trap @trap_stack.shift
-      exit 1
+      logger.info :INT, msg
     end
+
+    TrapStack.add_trap "Disconnecting all remote shells." do
+      RemoteShell.disconnect_all
+    end
+
 
     require_libs(*new_config['require'])
 
@@ -372,6 +340,7 @@ module Sunshine
 
 
   require 'sunshine/exceptions'
+  require 'sunshine/trap_stack'
 
   require 'sunshine/shell'
   require 'sunshine/remote_shell'
