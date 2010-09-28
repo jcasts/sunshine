@@ -286,34 +286,32 @@ module Sunshine
 
       Sunshine.logger.info :app, "Beginning deploy of #{@name}"
 
-      with_session options do
+      with_session options do |app|
 
-        with_filter options do |app|
-          make_app_directories
-          checkout_codebase
+        make_app_directories
+        checkout_codebase
 
-          stopped = stop
+        stopped = stop
 
-          symlinked = symlink_current_dir
+        symlinked = symlink_current_dir
 
-          yield(self) if block_given?
+        yield(self) if block_given?
 
-          run_post_user_lambdas
+        run_post_user_lambdas
 
-          health :enable
+        health :enable
 
-          build_control_scripts
-          build_deploy_info_file
-          build_crontab
+        build_control_scripts
+        build_deploy_info_file
+        build_crontab
 
-          register_as_deployed
+        register_as_deployed
 
-          success = start(:force => true) ||
-                    raise(CriticalDeployError, "Could not start #{@name}")
+        success = start(:force => true) ||
+                  raise(CriticalDeployError, "Could not start #{@name}")
 
-          remove_old_deploys
-          success &&= deployed?
-        end
+        remove_old_deploys
+        success &&= deployed?
       end
 
       Sunshine.logger.info :app, "Ending deploy of #{@name}"
@@ -1023,14 +1021,18 @@ module Sunshine
     # already exists. Supports all App#find options.
 
     def with_session options=nil
+      with_filter options do
+        begin
 
-      prev_connection = connected?(options)
-      connect options unless prev_connection
+          prev_connection = connected?
+          connect unless prev_connection
 
-      yield self
+          yield self
 
-    ensure
-      disconnect options unless prev_connection
+        ensure
+          disconnect unless prev_connection
+        end
+      end
     end
 
 
