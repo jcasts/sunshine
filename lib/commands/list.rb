@@ -16,6 +16,7 @@ module Sunshine
   #   -f, --format FORMAT      Set the output format (txt, yml, json)
   #   -u, --user USER          User to use for remote login. Use with -r
   #   -r, --remote svr1,svr2   Run on one or more remote servers.
+  #   -S, --sudo               Run remote commands using sudo or sudo -u USER
   #   -v, --verbose            Run in verbose mode.
 
   class ListCommand < DefaultCommand
@@ -268,7 +269,7 @@ module Sunshine
     # Load the app list yaml file from the server.
 
     def self.load_list server
-      yml_list = server.call "cat #{Sunshine::APP_LIST_PATH} || echo ''"
+      yml_list = server.call "cat #{Sunshine::APP_LIST_PATH} || echo"
 
       list = YAML.load yml_list
       list = {} unless Hash === list
