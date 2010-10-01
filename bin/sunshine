@@ -1,5 +1,12 @@
 #!/usr/bin/env ruby -w
 
-require 'sunshine'
+begin
+  require 'sunshine'
+rescue LoadError => e
+  raise e unless e.message =~ %r{no such file to load -- sunshine}
+
+  $: << File.join(File.dirname(__FILE__), "../lib")
+  require 'sunshine'
+end
 
 Sunshine.run
