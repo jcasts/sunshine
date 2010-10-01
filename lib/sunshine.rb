@@ -38,21 +38,16 @@ module Sunshine
   ##
   # Default configuration.
   DEFAULT_CONFIG = {
-    'auto'                => false,
-    'auto_dependencies'   => true,
-    'deploy_env'          =>
-      ( ENV['DEPLOY_ENV'] ||
-        ENV['env']        ||
-        ENV['RACK_ENV']   ||
-        ENV['RAILS_ENV']  ||
-        :development ),
+    'auto'                   => false,
+    'auto_dependencies'      => true,
+    'deploy_env'             => :development,
     'failed_deploy_behavior' => :revert,
-    'level'               => 'info',
-    'max_deploy_versions' => 5,
-    'remote_checkouts'    => false,
-    'timeout'             => 300,
-    'sigint_behavior'     => :revert,
-    'web_directory'       => '/srv/http'
+    'level'                  => 'info',
+    'max_deploy_versions'    => 5,
+    'remote_checkouts'       => false,
+    'timeout'                => 300,
+    'sigint_behavior'        => :revert,
+    'web_directory'          => '/srv/http'
   }
 
   ##
@@ -260,6 +255,15 @@ module Sunshine
     end
 
     load_config_file USER_CONFIG_FILE
+
+    @config['deploy_env'] =
+      ENV['DEPLOY_ENV'] ||
+      ENV['env']        ||
+      ENV['RACK_ENV']   ||
+      ENV['RAILS_ENV']  ||
+      @config['deploy_env']
+
+    @config
   end
 
 
@@ -277,7 +281,6 @@ module Sunshine
 
   def self.setup new_config={}, reset=false
     @config = DEFAULT_CONFIG.dup if reset
-
 
     TrapStack.trap_signal :INT do |msg|
       $stderr << "\n\n"

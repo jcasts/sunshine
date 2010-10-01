@@ -323,7 +323,7 @@ module Sunshine
           handle_interrupted_deploy Sunshine.failed_deploy_behavior, state
         end
 
-        remove_old_deploys rescue
+        remove_old_deploys if state[:success] rescue
           Sunshine.logger.error :app, "Could not remove old deploys"
 
         state[:success] &&= deployed?
