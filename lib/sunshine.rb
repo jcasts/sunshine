@@ -13,7 +13,6 @@ require 'fileutils'
 require 'tmpdir'
 require 'irb'
 
-IRB.setup nil unless defined?(IRB::UnrecognizedSwitch)
 
 ##
 # Main module, used for configuration and running commands.
@@ -47,10 +46,12 @@ module Sunshine
         ENV['RACK_ENV']   ||
         ENV['RAILS_ENV']  ||
         :development ),
+    'failed_deploy_behavior' => :revert,
     'level'               => 'info',
     'max_deploy_versions' => 5,
     'remote_checkouts'    => false,
     'timeout'             => 300,
+    'sigint_behavior'     => :revert,
     'web_directory'       => '/srv/http'
   }
 
@@ -116,6 +117,20 @@ module Sunshine
 
 
   ##
+  # Defines what to do when deploy raises an exception.
+  # Supported values are:
+  #   ::revert:  Revert to the previous deploy.
+  #   ::console: Start an interactive ruby shell within the app's context.
+  #   ::exit:    Stop deploy and exit, leaving deploy in unfinished state.
+  #   ::prompt:  Ask what to do.
+  # Defaults to :revert. Overridden in the config.
+
+  def self.failed_deploy_behavior
+    @config['failed_deploy_behavior'] || :revert
+  end
+
+
+  ##
   # Should sunshine ever ask for user input? True by default; overridden with
   # the -a option.
 
@@ -155,6 +170,20 @@ module Sunshine
 
   def self.shell
     @shell ||= Sunshine::Shell.new
+  end
+
+
+  ##
+  # Defines what to do when sigint is sent during deploys.
+  # Supported values are:
+  #   ::revert:  Revert to the previous deploy.
+  #   ::console: Start an interactive ruby shell within the app's context.
+  #   ::exit:    Stop deploy and exit, leaving deploy in unfinished state.
+  #   ::prompt:  Ask what to do.
+  # Defaults to :revert. Overridden in the config.
+
+  def self.sigint_behavior
+    @config['sigint_behavior'] || :revert
   end
 
 

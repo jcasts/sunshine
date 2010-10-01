@@ -193,8 +193,6 @@ module Sunshine
       shell_env options[:shell_env]
 
       @post_user_lambdas = []
-
-      @has_session = false
     end
 
 
@@ -261,6 +259,13 @@ module Sunshine
     # Deploy the application to deploy servers and
     # call user's post-deploy code. Supports any App#find options.
     #
+    # If the deploy fails or an exception is raised, it will attempt to
+    # run the Sunshine.failed_deploy_behavior, which is set to :revert by
+    # default.
+    #
+    # If the deploy is interrupted by a SIGINT, it will attempt to run
+    # the Sunshine.sigint_behavior, which is set to :revert by default.
+    #
     # Note: The deploy method will stop the former deploy just before
     # symlink and the passed block is run.
     #
@@ -268,68 +273,109 @@ module Sunshine
     # run App#start.
 
     def deploy options=nil
-      raise CriticalDeployError, "No servers defined for #{@name}" if
-        @server_apps.empty?
 
-      success = false
-      stopped = false
-      symlinked = false
-
-      prev_connection = connected?
+      state = {
+        :success   => false,
+        :stopped   => false,
+        :symlinked => false
+      }
 
       deploy_trap =
-        TrapStack.add_trap "Reverting deploy of #{@name}" do
-          revert! options if symlinked
-          start options   if stopped
-          disconnect options unless prev_connection
+        TrapStack.add_trap "Interrupted deploy of #{@name}" do
+          handle_interrupted_deploy Sunshine.sigint_behavior, state
         end
 
       Sunshine.logger.info :app, "Beginning deploy of #{@name}"
 
       with_session options do |app|
 
-        make_app_directories
-        checkout_codebase
+        begin
+          raise CriticalDeployError, "No servers defined for #{@name}" if
+            @server_apps.empty?
 
-        stopped = stop
+          make_app_directories
+          checkout_codebase
 
-        symlinked = symlink_current_dir
+          state[:stopped] = stop
 
-        yield(self) if block_given?
+          state[:symlinked] = symlink_current_dir
 
-        run_post_user_lambdas
+          yield(self) if block_given?
 
-        health :enable
+          run_post_user_lambdas
 
-        build_control_scripts
-        build_deploy_info_file
-        build_crontab
+          health :enable
 
-        register_as_deployed
+          build_control_scripts
+          build_deploy_info_file
+          build_crontab
 
-        success = start(:force => true) ||
-                  raise(CriticalDeployError, "Could not start #{@name}")
+          register_as_deployed
 
-        remove_old_deploys
-        success &&= deployed?
+          state[:success] = start(:force => true) ||
+            raise(CriticalDeployError, "Could not start #{@name}")
+
+        rescue => e
+          Sunshine.logger.error :app, "#{e.class}: #{e.message}" do
+            Sunshine.logger.error '>>', e.backtrace.join("\n")
+          end
+
+          handle_interrupted_deploy Sunshine.failed_deploy_behavior, state
+        end
+
+        remove_old_deploys rescue
+          Sunshine.logger.error :app, "Could not remove old deploys"
+
+        state[:success] &&= deployed?
       end
 
-      Sunshine.logger.info :app, "Ending deploy of #{@name}"
-
-    rescue => e
-      message = "#{e.class}: #{e.message}"
-
-      Sunshine.logger.error :app, message do
-        Sunshine.logger.error '>>', e.backtrace.join("\n")
-        revert! options if symlinked
-        start options   if stopped
-      end
+      Sunshine.logger.info :app, "Finished deploy of #{@name}"
 
     ensure
-      disconnect options unless prev_connection || !any_connected?
       TrapStack.delete_trap deploy_trap
+      state[:success]
+    end
 
-      success
+
+    ##
+    # Handles the behavior of a failed or interrupted deploy.
+    # Takes a behavior symbol defining how to handle the interruption
+    # and a hash representing the state of the deploy when it was
+    # interrupted.
+    #
+    # Supported bahavior symbols are:
+    # ::revert:   Revert to previous deploy (default)
+    # ::console:  Start an interactive console with the app's binding
+    # ::exit:     Stop deploy and exit
+    # ::prompt:   Ask what to do
+    #
+    # The state hash supports the following keys:
+    # ::stopped:    Was the previous deploy stopped.
+    # ::symlinked:  Was the new deployed symlinked as the current deploy.
+
+    def handle_interrupted_deploy behavior, state={}
+      case behavior
+
+      when :revert
+        revert!    if state[:symlinked]
+        start      if state[:stopped]
+
+      when :console
+        self.console!
+
+      when :exit
+        Sunshine.exit 1, "Error: Deploy of #{@name} failed"
+
+      when :prompt
+        Sunshine.shell.choose do |menu|
+          menu.prompt = "Deploy interrupted:"
+          menu.choice(:revert) { handle_interrupted_deploy :revert,  state }
+          menu.choice(:console){ handle_interrupted_deploy :console, state }
+          menu.choice(:exit)   { handle_interrupted_deploy :exit, state }
+        end
+
+      else
+      end
     end
 
 
@@ -456,6 +502,8 @@ module Sunshine
     # Starts an IRB console with the instance's binding.
 
     def console!
+      IRB.setup nil unless defined?(IRB::UnrecognizedSwitch)
+
       workspace = IRB::WorkSpace.new binding
       irb = IRB::Irb.new workspace
 
@@ -1019,14 +1067,16 @@ module Sunshine
     # Runs block ensuring a connection to remote_shells.
     # Connecting and disconnecting will be ignored if a session
     # already exists. Supports all App#find options.
+    #
+    # Ensures that servers are disconnected after the block is run
+    # if servers were not previously connected.
 
     def with_session options=nil
       with_filter options do
+        prev_connection = connected?
+
         begin
-
-          prev_connection = connected?
           connect unless prev_connection
-
           yield self
 
         ensure
