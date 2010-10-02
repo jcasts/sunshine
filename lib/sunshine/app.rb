@@ -312,8 +312,7 @@ module Sunshine
 
           register_as_deployed
 
-          state[:success] = start(:force => true) ||
-            raise(CriticalDeployError, "Could not start #{@name}")
+          state[:success] = start! :force => true
 
         rescue => e
           Sunshine.logger.error :app, "#{e.class}: #{e.message}" do

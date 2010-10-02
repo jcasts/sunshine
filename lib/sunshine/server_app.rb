@@ -445,7 +445,18 @@ fi
     # Post-deploy only.
 
     def restart
-      @shell.call "#{self.root_path}/restart" rescue false
+      # Permissions are handled by the script, use: :sudo => false
+      run_script :stop, :sudo => false
+    end
+
+
+    ##
+    # Run the app's restart script. Raises an exception on failure.
+    # Post-deploy only.
+
+    def restart!
+      # Permissions are handled by the script, use: :sudo => false
+      run_script! :restart, :sudo => false
     end
 
 
@@ -495,14 +506,25 @@ fi
 
 
     ##
-    # Runs a script from the script_path.
+    # Runs a script from the root_path.
     # Post-deploy only.
 
     def run_script name, options=nil, &block
       options ||= {}
+      run_script! name, options=nil, &block rescue false
+    end
+
+
+    ##
+    # Runs a script from the root_path. Raises an exception if the status
+    # code is not 0.
+    # Post-deploy only.
+
+    def run_script! name, options=nil, &block
+      options ||= {}
 
       script_path = File.join self.root_path, name.to_s
-      @shell.call script_path, options, &block rescue false
+      @shell.call script_path, options, &block
     end
 
 
@@ -558,6 +580,23 @@ fi
 
 
     ##
+    # Run the app's start script. Raises an exception on failure.
+    # Post-deploy only.
+
+    def start! options=nil
+      options ||= {}
+
+      if running?
+        return unless options[:force]
+        stop!
+      end
+
+      # Permissions are handled by the script, use: :sudo => false
+      run_script! :start, :sudo => false
+    end
+
+
+    ##
     # Get the app's status: :running or :down.
 
     def status
@@ -572,6 +611,16 @@ fi
     def stop
       # Permissions are handled by the script, use: :sudo => false
       run_script :stop, :sudo => false
+    end
+
+
+    ##
+    # Run the app's stop script. Raises an exception on failure.
+    # Post-deploy only.
+
+    def stop
+      # Permissions are handled by the script, use: :sudo => false
+      run_script! :stop, :sudo => false
     end
 
 
