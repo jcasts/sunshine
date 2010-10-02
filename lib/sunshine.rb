@@ -41,7 +41,7 @@ module Sunshine
     'auto'                   => false,
     'auto_dependencies'      => true,
     'deploy_env'             => :development,
-    'failed_deploy_behavior' => :revert,
+    'exception_behavior'     => :revert,
     'level'                  => 'info',
     'max_deploy_versions'    => 5,
     'remote_checkouts'       => false,
@@ -120,8 +120,8 @@ module Sunshine
   #   ::prompt:  Ask what to do.
   # Defaults to :revert. Overridden in the config.
 
-  def self.failed_deploy_behavior
-    @config['failed_deploy_behavior'] || :revert
+  def self.exception_behavior
+    @config['exception_behavior'] || :revert
   end
 
 

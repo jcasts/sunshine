@@ -193,6 +193,8 @@ module Sunshine
       shell_env options[:shell_env]
 
       @post_user_lambdas = []
+
+      @on_sigint = @on_exception = nil
     end
 
 
@@ -280,27 +282,21 @@ module Sunshine
         :symlinked => false
       }
 
-      deploy_trap =
-        TrapStack.add_trap "Interrupted deploy of #{@name}" do
-          handle_interrupted_deploy Sunshine.sigint_behavior, state
-        end
-
       Sunshine.logger.info :app, "Beginning deploy of #{@name}"
 
       with_session options do |app|
 
-        begin
+        interruptable state do
           raise CriticalDeployError, "No servers defined for #{@name}" if
             @server_apps.empty?
 
           make_app_directories
           checkout_codebase
 
-          state[:stopped] = stop
-
+          state[:stopped]   = stop
           state[:symlinked] = symlink_current_dir
 
-          yield(self) if block_given?
+          yield self if block_given?
 
           run_post_user_lambdas
 
@@ -313,13 +309,6 @@ module Sunshine
           register_as_deployed
 
           state[:success] = start! :force => true
-
-        rescue => e
-          Sunshine.logger.error :app, "#{e.class}: #{e.message}" do
-            Sunshine.logger.error '>>', e.backtrace.join("\n")
-          end
-
-          handle_interrupted_deploy Sunshine.failed_deploy_behavior, state
         end
 
         remove_old_deploys if state[:success] rescue
@@ -329,10 +318,74 @@ module Sunshine
       end
 
       Sunshine.logger.info :app, "Finished deploy of #{@name}"
+      state[:success]
+    end
+
+
+    ##
+    # Handles SIGINTs and exceptions according to rules set by
+    # Sunshine.sigint_behavior and Sunshine.exception_behavior
+    # or with the override hooks App#on_sigint and App#on_exception.
+
+    def interruptable options={}
+      interrupt_trap =
+        TrapStack.add_trap "Interrupted #{@name}" do
+          handle_sigint options
+        end
+
+      yield if block_given?
+
+    rescue => e
+      Sunshine.logger.error :app, "#{e.class}: #{e.message}" do
+        Sunshine.logger.error '>>', e.backtrace.join("\n")
+      end
+
+      handle_exception options
 
     ensure
-      TrapStack.delete_trap deploy_trap
-      state[:success]
+      TrapStack.delete_trap interrupt_trap
+    end
+
+
+    ##
+    # Calls the Apps on_sigint hook or the default Sunshine.sigint_behavior.
+
+    def handle_sigint state={}
+      return @on_sigint.call(self, state) if @on_sigint
+      handle_interruption Sunshine.sigint_behavior, state
+    end
+
+
+    ##
+    # Calls the Apps on_exception hook or the default
+    # Sunshine.exception_behavior.
+
+    def handle_exception state={}
+      return @on_exception.call(self, state) if @on_exception
+      handle_interruption Sunshine.exception_behavior, state
+    end
+
+
+    ##
+    # Set this to define the behavior of SIGINT during a deploy.
+    # Defines what to do when an INT signal is received when running
+    # a proc through App#interruptable. Used primarily to catch SIGINTs
+    # during deploys.
+
+    def on_sigint &block
+      @on_sigint = block
+    end
+
+
+
+    ##
+    # Set this to define the behavior of exceptions during a deploy.
+    # Defines what to do when an exception is received when running
+    # a proc through App#interruptable. Used primarily to catch exceptions
+    # during deploys.
+
+    def on_exception &block
+      @on_exception = block
     end
 
 
@@ -352,12 +405,12 @@ module Sunshine
     # ::stopped:    Was the previous deploy stopped.
     # ::symlinked:  Was the new deployed symlinked as the current deploy.
 
-    def handle_interrupted_deploy behavior, state={}
+    def handle_interruption behavior, state={}
       case behavior
 
       when :revert
-        revert!    if state[:symlinked]
-        start      if state[:stopped]
+        revert! if state[:symlinked]
+        start   if state[:stopped]
 
       when :console
         self.console!
