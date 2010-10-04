@@ -841,6 +841,18 @@ module Sunshine
 
 
     ##
+    # Run the restart script of a deployed app on the specified
+    # deploy servers. Raises an exception on failure.
+    # Post-deploy only.
+
+    def restart! options=nil
+      with_server_apps options,
+        :msg  => "Running restart script",
+        :send => :restart!
+    end
+
+
+    ##
     # Runs bundler on deploy servers.
 
     def run_bundler options=nil
@@ -890,6 +902,18 @@ module Sunshine
 
 
     ##
+    # Run the given script of a deployed app on the specified
+    # deploy servers. Raises an exception on failure.
+    # Post-deploy only.
+
+    def run_script! name, options=nil
+      with_server_apps options,
+        :msg  => "Running #{name} script",
+        :send => [:run_script!, name, options]
+    end
+
+
+    ##
     # Run a sass task on any or all deploy servers.
 
     def sass *sass_names
@@ -934,6 +958,18 @@ module Sunshine
 
 
     ##
+    # Run the start script of a deployed app on the specified
+    # deploy servers. Raises an exception on failure.
+    # Post-deploy only.
+
+    def start! options=nil
+      with_server_apps options,
+        :msg  => "Running start script",
+        :send => [:start!, options]
+    end
+
+
+    ##
     # Get a hash of which deploy server apps are :running or :down.
     # Post-deploy only.
 
@@ -957,6 +993,18 @@ module Sunshine
       with_server_apps options,
         :msg  => "Running stop script",
         :send => :stop
+    end
+
+
+    ##
+    # Run the stop script of a deployed app on the specified
+    # deploy servers. Raises an exception on failure.
+    # Post-deploy only.
+
+    def stop! options=nil
+      with_server_apps options,
+        :msg  => "Running stop script",
+        :send => :stop!
     end
 
 

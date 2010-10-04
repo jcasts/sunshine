@@ -618,7 +618,7 @@ fi
     # Run the app's stop script. Raises an exception on failure.
     # Post-deploy only.
 
-    def stop
+    def stop!
       # Permissions are handled by the script, use: :sudo => false
       run_script! :stop, :sudo => false
     end
