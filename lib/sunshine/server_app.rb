@@ -511,7 +511,7 @@ fi
 
     def run_script name, options=nil, &block
       options ||= {}
-      run_script! name, options=nil, &block rescue false
+      run_script! name, options, &block rescue false
     end
 
 

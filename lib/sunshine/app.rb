@@ -282,7 +282,7 @@ module Sunshine
         :symlinked => false
       }
 
-      Sunshine.logger.info :app, "Beginning deploy of #{@name}"
+      Sunshine.logger.info :app, "Beginning #{@name} deploy"
 
       with_session options do |app|
 
@@ -317,7 +317,7 @@ module Sunshine
         state[:success] &&= deployed?
       end
 
-      Sunshine.logger.info :app, "Finished deploy of #{@name}"
+      Sunshine.logger.info :app, "Finished #{@name} deploy" if state[:success]
       state[:success]
     end
 
