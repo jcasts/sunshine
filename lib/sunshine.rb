@@ -14,6 +14,10 @@ require 'tmpdir'
 require 'irb'
 
 
+# Turn off EOF tracking to be able to prompt on deploy exceptions.
+HighLine.track_eof = false
+
+
 ##
 # Main module, used for configuration and running commands.
 

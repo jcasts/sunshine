@@ -76,7 +76,7 @@ module Sunshine
     ##
     # Prompt the user to make a choice.
 
-    def choose(&block)
+    def choose &block
       sync{ @input.choose(&block) }
     end
 

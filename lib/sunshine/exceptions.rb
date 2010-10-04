@@ -43,7 +43,7 @@ module Sunshine
 
 
   ##
-  # The error is so serious that all no more action can be taken.
+  # The error is so serious that no more action can be taken.
   # Sunshine will attempt to close any ssh connections and stop the deploy.
   class FatalDeployError < DeployError; end
 
