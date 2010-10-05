@@ -377,7 +377,6 @@ module Sunshine
     end
 
 
-
     ##
     # Set this to define the behavior of exceptions during a deploy.
     # Defines what to do when an exception is received when running
@@ -586,7 +585,7 @@ module Sunshine
     # :copy:: Bool - Checkout locally and rsync; defaults to false.
 
     def checkout_codebase options=nil
-      copy_option = options && options.has_key?(:copy) && options[:copy]
+      copy_option = options[:copy] if options
 
       if @remote_checkout && !copy_option
         with_server_apps options,
@@ -762,7 +761,7 @@ module Sunshine
         :send => :make_app_directories
 
     rescue => e
-      raise FatalDeployError, e
+      raise CriticalDeployError, e
     end
 
 

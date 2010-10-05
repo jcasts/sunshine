@@ -43,12 +43,13 @@ module Sunshine
 
 
   ##
-  # The error is so serious that all no more action can be taken.
+  # The error is so serious that no more action can be taken. The app deploy
+  # may be in a critical or unusable state.
   # Sunshine will attempt to close any ssh connections and stop the deploy.
   class FatalDeployError < DeployError; end
 
+
   ##
   # A dependency could not be installed.
-  class DependencyError < FatalDeployError; end
-
+  class DependencyError < CriticalDeployError; end
 end
