@@ -121,7 +121,7 @@ class TestServer < Test::Unit::TestCase
 
     server.start do |sa|
       assert_equal @server_app, sa
-      assert_ssh_call server.start_cmd, sa.shell, :sudo => true
+      assert_ssh_call server._start_cmd, sa.shell, :sudo => true
     end
 
     assert server.method_called?(:setup)
@@ -135,7 +135,7 @@ class TestServer < Test::Unit::TestCase
 
     server.start do |sa|
       assert_equal @server_app, sa
-      assert_ssh_call server.start_cmd, sa.shell, :sudo => true
+      assert_ssh_call server._start_cmd, sa.shell, :sudo => true
     end
 
     assert !server.method_called?(:setup)
@@ -147,7 +147,7 @@ class TestServer < Test::Unit::TestCase
 
     server.stop do |sa|
       assert_equal @server_app, sa
-      assert_ssh_call server.stop_cmd, sa.shell, :sudo => true
+      assert_ssh_call server._stop_cmd, sa.shell, :sudo => true
     end
   end
 
@@ -157,7 +157,7 @@ class TestServer < Test::Unit::TestCase
 
     server.restart do |sa|
       assert_equal @server_app, sa
-      assert_ssh_call server.restart_cmd, sa.shell, :sudo => true
+      assert_ssh_call server._restart_cmd, sa.shell, :sudo => true
     end
   end
 
@@ -181,7 +181,7 @@ class TestServer < Test::Unit::TestCase
 
     server.restart do |sa|
       assert_equal @server_app, sa
-      assert_ssh_call server.restart_cmd, sa.shell, :sudo => true
+      assert_ssh_call server._restart_cmd, sa.shell, :sudo => true
     end
 
     assert server.method_called?(:setup)

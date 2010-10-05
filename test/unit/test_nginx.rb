@@ -87,13 +87,16 @@ class TestNginx < Test::Unit::TestCase
   ## Helper methods
 
   def start_cmd svr
-    "#{svr.bin} -c #{svr.config_file_path}"
+    svr.exit_on_failure "#{svr.bin} -c #{svr.config_file_path}", 10,
+      "Could not start #{svr.name} for #{svr.app.name}"
   end
 
 
   def stop_cmd svr
-    "test -f #{svr.pid} && kill -#{svr.sigkill} $(cat #{svr.pid}) && "+
-      "sleep 1 && rm -f #{svr.pid} || "+
-      "echo 'Could not kill #{svr.name} pid for #{svr.app.name}';"
+    cmd = "test -f #{svr.pid} && kill -#{svr.sigkill} $(cat #{svr.pid}) && "+
+            "sleep 1 && rm -f #{svr.pid}"
+
+    svr.exit_on_failure cmd, 11,
+      "Could not kill #{svr.name} pid for #{svr.app.name}"
   end
 end

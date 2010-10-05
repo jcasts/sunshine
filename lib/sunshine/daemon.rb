@@ -11,6 +11,10 @@ module Sunshine
 
   class Daemon
 
+    START_FAILED_CODE   = 10
+    STOP_FAILED_CODE    = 11
+    RESTART_FAILED_CODE = 12
+    STATUS_FAILED_CODE  = 13
 
     ##
     # Returns an array of method names to assign to the binder
@@ -186,7 +190,7 @@ module Sunshine
 
         each_server_app do |server_app|
           begin
-            server_app.shell.call start_cmd,
+            server_app.shell.call _start_cmd,
               :sudo => pick_sudo(server_app.shell)
 
             yield(server_app) if block_given?
@@ -203,7 +207,7 @@ module Sunshine
 
     def status
       each_server_app do |server_app|
-        server_app.shell.call status_cmd, :sudo => pick_sudo(server_app.shell)
+        server_app.shell.call _status_cmd, :sudo => pick_sudo(server_app.shell)
       end
       true
 
@@ -220,7 +224,7 @@ module Sunshine
 
         each_server_app do |server_app|
           begin
-            server_app.shell.call stop_cmd,
+            server_app.shell.call _stop_cmd,
               :sudo => pick_sudo(server_app.shell)
 
             yield(server_app) if block_given?
@@ -242,7 +246,7 @@ module Sunshine
       Sunshine.logger.info @name, "Restarting #{@name} daemon" do
         each_server_app do |server_app|
           begin
-            server_app.shell.call restart_cmd,
+            server_app.shell.call _restart_cmd,
               :sudo => pick_sudo(server_app.shell)
 
             yield(server_app) if block_given?
@@ -255,12 +259,29 @@ module Sunshine
 
 
     ##
+    # Wrap a command with a fail-specific exitcode and message.
+
+    def exit_on_failure cmd, exitcode=1, message=nil
+      "(#{cmd}) || (echo '#{message}' && exit #{exitcode});"
+    end
+
+
+    ##
     # Gets the command that starts the daemon.
     # Should be overridden by child classes.
 
     def start_cmd
-      raise DaemonError, "@start_cmd undefined for #{@name}" unless @start_cmd
-      "(#{@start_cmd}) || echo 'Could not start #{@name} for #{@app.name}';"
+      return @start_cmd if @start_cmd
+      raise DaemonError, "start_cmd undefined for #{@name}"
+    end
+
+
+    ##
+    # Start command wrapped with an exit_on_failure handler.
+
+    def _start_cmd
+      exit_on_failure start_cmd, START_FAILED_CODE,
+        "Could not start #{@name} for #{@app.name}"
     end
 
 
@@ -269,23 +290,56 @@ module Sunshine
 
     def stop_cmd
       "test -f #{@pid} && kill -#{@sigkill} $(cat #{@pid}) && sleep 1 && "+
-        "rm -f #{@pid} || echo 'Could not kill #{@name} pid for #{@app.name}';"
+        "rm -f #{@pid}"
+    end
+
+
+    ##
+    # Stop command wrapped with an exit_on_failure handler.
+
+    def _stop_cmd
+      exit_on_failure stop_cmd, STOP_FAILED_CODE,
+        "Could not kill #{@name} pid for #{@app.name}"
     end
 
 
     ##
     # Gets the command that restarts the daemon.
+    # Should be overridden by child classes if different
+    # from start_cmd && stop_cmd.
 
     def restart_cmd
-      @restart_cmd || [stop_cmd, start_cmd].map{|c| "(#{c})"}.join(" && ")
+      @restart_cmd
+    end
+
+
+    ##
+    # Restart command wrapped with an exit_on_failure handler.
+
+    def _restart_cmd
+      if restart_cmd
+        exit_on_failure restart_cmd, RESTART_FAILED_CODE,
+          "Could not restart #{@name} for #{@app.name}"
+      else
+        "(#{_stop_cmd}) && (#{_start_cmd});"
+      end
+    end
+
+
+    ##
+    # Status command wrapped with an exit_on_failure handler.
+
+    def status_cmd
+      @status_cmd || "test -f #{@pid} && kill -0 $(cat #{@pid})"
     end
 
 
     ##
     # Get the command to check if the daemon is running.
 
-    def status_cmd
-      @status_cmd || "test -f #{@pid} && kill -0 $(cat #{@pid})"
+    def _status_cmd
+      exit_on_failure status_cmd, STATUS_FAILED_CODE,
+        "#{@app.name} #{@name} is not running"
     end
 
 
@@ -419,7 +473,7 @@ module Sunshine
           %w{start stop restart status}.each do |script|
             script_file = "#{@config_path}/#{script}"
 
-            cmd = send "#{script}_cmd"
+            cmd = send "_#{script}_cmd"
 
             sa.shell.make_file script_file, cmd,
               :flags => '--chmod=ugo=rwx'
