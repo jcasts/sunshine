@@ -354,6 +354,32 @@ class TestServerApp < Test::Unit::TestCase
   end
 
 
+  def test_running?
+    set_mock_response_for @sa, 0,
+      "#{@sa.root_path}/status" => [:out, "THE SYSTEM OK!"]
+
+    assert_equal true, @sa.running?
+  end
+
+
+  def test_not_running?
+    set_mock_response_for @sa, 13,
+      "#{@sa.root_path}/status" => [:err, "THE SYSTEM IS DOWN!"]
+
+    assert_equal false, @sa.running?
+  end
+
+
+  def test_errored_running?
+    set_mock_response_for @sa, 1,
+      "#{@sa.root_path}/status" => [:err, "KABLAM!"]
+
+    assert_raises Sunshine::CmdError do
+      @sa.running?
+    end
+  end
+
+
   def test_sass
     sass_files = %w{file1 file2 file3}
 

@@ -534,7 +534,12 @@ fi
 
     def running?
       # Permissions are handled by the script, use: :sudo => false
-      run_script :status, :sudo => false
+      run_script! :status, :sudo => false
+      true
+
+    rescue CmdError => e
+      return false if e.exit_code == Daemon::STATUS_DOWN_CODE
+      raise e
     end
 
 

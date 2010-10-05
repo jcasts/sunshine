@@ -14,7 +14,7 @@ module Sunshine
     START_FAILED_CODE   = 10
     STOP_FAILED_CODE    = 11
     RESTART_FAILED_CODE = 12
-    STATUS_FAILED_CODE  = 13
+    STATUS_DOWN_CODE  = 13
 
     ##
     # Returns an array of method names to assign to the binder
@@ -338,7 +338,7 @@ module Sunshine
     # Get the command to check if the daemon is running.
 
     def _status_cmd
-      exit_on_failure status_cmd, STATUS_FAILED_CODE,
+      exit_on_failure status_cmd, STATUS_DOWN_CODE,
         "#{@app.name} #{@name} is not running"
     end
 
