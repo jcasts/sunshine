@@ -259,8 +259,8 @@ module Sunshine
     # Should be overridden by child classes.
 
     def start_cmd
-      return @start_cmd ||
-        raise(DaemonError, "@start_cmd undefined. Can't start #{@name}")
+      raise DaemonError, "@start_cmd undefined for #{@name}" unless @start_cmd
+      "(#{@start_cmd}) || echo 'Could not start #{@name} for #{@app.name}';"
     end
 
 
@@ -419,7 +419,7 @@ module Sunshine
           %w{start stop restart status}.each do |script|
             script_file = "#{@config_path}/#{script}"
 
-            cmd = send "#{script}_cmd".to_sym
+            cmd = send "#{script}_cmd"
 
             sa.shell.make_file script_file, cmd,
               :flags => '--chmod=ugo=rwx'

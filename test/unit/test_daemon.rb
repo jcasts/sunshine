@@ -19,7 +19,7 @@ class TestDaemon < Test::Unit::TestCase
       daemon.start_cmd
       raise "Should have thrown DaemonError but didn't :("
     rescue Sunshine::DaemonError => e
-      assert_equal "@start_cmd undefined. Can't start daemon", e.message
+      assert_equal "@start_cmd undefined for daemon", e.message
     end
   end
 

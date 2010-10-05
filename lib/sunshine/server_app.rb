@@ -167,7 +167,7 @@ module Sunshine
       end
 
       if build_scripts[:status].empty?
-        build_scripts[:status] << "echo 'No daemons for #{self.name}'; exit 1;"
+        build_scripts[:status] << "echo 'No status for #{self.name}'; exit 1;"
       end
 
       build_scripts.each do |name, cmds|
