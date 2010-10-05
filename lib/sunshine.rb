@@ -38,16 +38,16 @@ module Sunshine
   ##
   # Default configuration.
   DEFAULT_CONFIG = {
-    'auto'                   => false,
-    'auto_dependencies'      => true,
-    'deploy_env'             => :development,
-    'exception_behavior'     => :revert,
-    'level'                  => 'info',
-    'max_deploy_versions'    => 5,
-    'remote_checkouts'       => false,
-    'timeout'                => 300,
-    'sigint_behavior'        => :revert,
-    'web_directory'          => '/srv/http'
+    'auto'                => false,
+    'auto_dependencies'   => true,
+    'deploy_env'          => :development,
+    'exception_behavior'  => :revert,
+    'level'               => 'info',
+    'max_deploy_versions' => 5,
+    'remote_checkouts'    => false,
+    'timeout'             => 300,
+    'sigint_behavior'     => :revert,
+    'web_directory'       => '/srv/http'
   }
 
   ##
