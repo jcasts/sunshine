@@ -17,16 +17,13 @@ module Sunshine
 
   ##
   # An error occurred when attempting to run a command on the local system
-  class CmdError < Exception; end
+  class CmdError < Exception;
+    attr_reader :exit_code
 
-
-  ##
-  # An ssh call returned a non-zero exit code
-  class SSHCmdError < CmdError
-    attr_reader :shell
-    def initialize message=nil, shell=nil
-      @shell = shell
-      super(message)
+    def initialize exit_code, cmd=nil
+      message = "Execution failed with status #{exit_code}: #{cmd}"
+      super message
+      @exit_code = exit_code
     end
   end
 

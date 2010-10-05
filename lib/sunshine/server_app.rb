@@ -33,7 +33,7 @@ module Sunshine
 
 
     ##
-    # Define an attribue that will get a value from app, or locally if
+    # Define an attribute that will get a value from app, or locally if
     # @app isn't set.
 
     def self.app_attr *attribs
