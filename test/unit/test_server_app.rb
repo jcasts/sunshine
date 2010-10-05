@@ -228,7 +228,7 @@ class TestServerApp < Test::Unit::TestCase
     @sa.install_deps nginx_dep, :type => Sunshine::Gem
     raise "Didn't raise missing dependency when it should have."
 
-  rescue Sunshine::DependencyLib::MissingDependency => e
+  rescue Sunshine::MissingDependency => e
     assert_equal "No dependency 'nginx' [Sunshine::Gem]", e.message
   end
 

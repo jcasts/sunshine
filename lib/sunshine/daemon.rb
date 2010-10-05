@@ -156,7 +156,7 @@ module Sunshine
       @setup_successful = true
 
     rescue => e
-      raise CriticalDeployError.new(e, "Could not setup #{@name}")
+      raise DaemonError.new(e, "Could not setup #{@name}")
     end
 
 
@@ -191,7 +191,7 @@ module Sunshine
 
             yield(server_app) if block_given?
           rescue => e
-            raise CriticalDeployError.new(e, "Could not start #{@name}")
+            raise DaemonError.new(e, "Could not start #{@name}")
           end
         end
       end
@@ -225,7 +225,7 @@ module Sunshine
 
             yield(server_app) if block_given?
           rescue => e
-            raise CriticalDeployError.new(e, "Could not stop #{@name}")
+            raise DaemonError.new(e, "Could not stop #{@name}")
           end
         end
       end
@@ -247,7 +247,7 @@ module Sunshine
 
             yield(server_app) if block_given?
           rescue => e
-            raise CriticalDeployError.new(e, "Could not restart #{@name}")
+            raise DaemonError.new(e, "Could not restart #{@name}")
           end
         end
       end
@@ -260,7 +260,7 @@ module Sunshine
 
     def start_cmd
       return @start_cmd ||
-        raise(CriticalDeployError, "@start_cmd undefined. Can't start #{@name}")
+        raise(DaemonError, "@start_cmd undefined. Can't start #{@name}")
     end
 
 

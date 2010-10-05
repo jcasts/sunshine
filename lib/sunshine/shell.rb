@@ -7,8 +7,6 @@ module Sunshine
 
     include Open4
 
-    class TimeoutError < CriticalDeployError; end
-
     LOCAL_USER = `whoami`.chomp
     LOCAL_HOST = `hostname`.chomp
 

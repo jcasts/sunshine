@@ -159,8 +159,7 @@ class TestApp < Test::Unit::TestCase
 
   def test_app_deploy_error_handling
     [ MockError,
-      Sunshine::CriticalDeployError,
-      Sunshine::FatalDeployError ].each do |error|
+      Sunshine::DeployError ].each do |error|
 
       begin
         app = Sunshine::App.deploy @config do |app|
@@ -500,7 +499,7 @@ class TestApp < Test::Unit::TestCase
 
     @app.threaded_each do |server_app|
       if server_app.shell.host == err_host
-        raise Sunshine::CriticalDeployError, server_app.shell.host
+        raise Sunshine::DeployError, server_app.shell.host
       else
         finished = finished.next
       end
@@ -508,7 +507,7 @@ class TestApp < Test::Unit::TestCase
 
     raise "Didn't raise threaded error when it should have"
 
-  rescue Sunshine::CriticalDeployError => e
+  rescue Sunshine::DeployError => e
     host = @app.server_apps.first.shell.host
 
     assert_equal host, e.message

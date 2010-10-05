@@ -222,7 +222,8 @@ module Sunshine
 
 
     ##
-    # Check if all server apps are connected. Supports any App#find options.
+    # Check if all server apps are connected and returns a boolean.
+    # Supports any App#find options.
 
     def connected? options=nil
       each options do |server_app|
@@ -234,7 +235,8 @@ module Sunshine
 
 
     ##
-    # Check if any server apps are connected. Supports any App#find options.
+    # Check if any server apps are connected and returns a boolean.
+    # Supports any App#find options.
 
     def any_connected? options=nil
       each options do |server_app|
@@ -287,7 +289,7 @@ module Sunshine
       with_session options do |app|
 
         interruptable state do
-          raise CriticalDeployError, "No servers defined for #{@name}" if
+          raise DeployError, "No servers defined for #{@name}" if
             @server_apps.empty?
 
           make_app_directories
@@ -437,6 +439,7 @@ module Sunshine
         end
 
       else
+        raise DeployError, "Deploy of #{@name} was interrupted."
       end
     end
 
@@ -596,7 +599,7 @@ module Sunshine
     # :copy:: Bool - Checkout locally and rsync; defaults to false.
 
     def checkout_codebase options=nil
-      copy_option = options && options.has_key?(:copy) && options[:copy]
+      copy_option = options[:copy] if options
 
       if @remote_checkout && !copy_option
         with_server_apps options,
@@ -613,9 +616,6 @@ module Sunshine
             :send => [:upload_codebase, tmp_path, scm_info]
         end
       end
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 
@@ -770,9 +770,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Creating #{@name} directories",
         :send => :make_app_directories
-
-    rescue => e
-      raise FatalDeployError, e
     end
 
 
@@ -869,9 +866,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Running Bundler",
         :send => [:run_bundler, options]
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 
@@ -882,9 +876,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Running GemInstaller",
         :send => [:run_geminstaller, options]
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 
@@ -1041,9 +1032,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Symlinking #{@checkout_path} -> #{@current_path}",
         :send => :symlink_current_dir
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 

@@ -11,8 +11,6 @@ module Sunshine
 
   class RemoteShell < Shell
 
-    class ConnectionError < FatalDeployError; end
-
     ##
     # The loop to keep the ssh connection open.
     LOGIN_LOOP = "echo ok; echo ready; "+

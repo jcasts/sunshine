@@ -29,23 +29,44 @@ module Sunshine
 
 
   ##
+  # A shell command timed out.
+  class TimeoutError < Exception; end
+
+
+  ##
+  # Remote connection to server failed.
+  class ConnectionError < Exception; end
+
+
+  ##
   # Something went wrong with a deploy-specific item.
   class DeployError < Exception; end
 
 
   ##
-  # The error is serious enough that deploy cannot proceed.
-  # Sunshine will attempt to revert to a previous deploy if available.
-  class CriticalDeployError < DeployError; end
+  # Something went wrong with a daemon-specific item.
+  class DaemonError < Exception; end
 
 
   ##
-  # The error is so serious that no more action can be taken.
-  # Sunshine will attempt to close any ssh connections and stop the deploy.
-  class FatalDeployError < DeployError; end
+  # Something went wrong with a dependency-specific item.
+  class DependencyError < Exception; end
+
 
   ##
-  # A dependency could not be installed.
-  class DependencyError < FatalDeployError; end
+  # Dependency requested could not be found.
+  class MissingDependency < DependencyError; end
 
+
+  ##
+  # Dependency failed to install.
+  class InstallError < DependencyError; end
+
+  ##
+  # Dependency failed to uninstall.
+  class UninstallError < DependencyError; end
+
+  ##
+  # Something went wrong with a scm-specific item.
+  class RepoError < Exception; end
 end
