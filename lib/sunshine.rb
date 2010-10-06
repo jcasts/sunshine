@@ -42,7 +42,7 @@ module Sunshine
   ##
   # Default configuration.
   DEFAULT_CONFIG = {
-    'auto'                => false,
+    'interactive'         => true,
     'auto_dependencies'   => true,
     'deploy_env'          => :development,
     'exception_behavior'  => :revert,
@@ -125,16 +125,24 @@ module Sunshine
   # Defaults to :revert. Overridden in the config.
 
   def self.exception_behavior
-    @config['exception_behavior'] || :revert
+    @config['exception_behavior']
   end
 
 
   ##
-  # Should sunshine ever ask for user input? True by default; overridden with
-  # the -a option.
+  # Array of paths or globs that should be excluded from the checkout.
+
+  def self.exclude_paths
+    @config['exclude_paths']
+  end
+
+
+  ##
+  # Should sunshine ever ask for user input? True by default.
+  # Overridden in the config or with the -a option.
 
   def self.interactive?
-    !@config['auto']
+    @config['interactive']
   end
 
 
@@ -182,7 +190,7 @@ module Sunshine
   # Defaults to :revert. Overridden in the config.
 
   def self.sigint_behavior
-    @config['sigint_behavior'] || :revert
+    @config['sigint_behavior']
   end
 
 

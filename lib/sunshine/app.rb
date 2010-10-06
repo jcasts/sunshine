@@ -419,17 +419,17 @@ module Sunshine
     def handle_interruption behavior, state={}
       case behavior
 
+      when :exit
+        Sunshine.exit 1, "Error: Deploy of #{@name} failed"
+
       when :revert
         revert! if state[:symlinked]
         start   if state[:stopped]
 
-      when :console
+      when Sunshine.interactive? && :console
         self.console!
 
-      when :exit
-        Sunshine.exit 1, "Error: Deploy of #{@name} failed"
-
-      when :prompt
+      when Sunshine.interactive? && :prompt
         Sunshine.shell.choose do |menu|
           menu.prompt = "Deploy interrupted:"
           menu.choice(:revert) { handle_interruption :revert,  state }
