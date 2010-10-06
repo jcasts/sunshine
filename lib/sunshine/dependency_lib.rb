@@ -36,8 +36,6 @@ module Sunshine
 
   class DependencyLib
 
-    class MissingDependency < Exception; end
-
     ##
     # Array of all dependency classes. Appended to automatically when
     # DependencyLib::Dependency is inherited.

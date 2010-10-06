@@ -177,7 +177,11 @@ module Sunshine
 
     def status(*app_names)
       each_app(*app_names) do |server_app|
-        server_app.status
+        begin
+          server_app.status
+        rescue => e
+          e.message
+        end
       end
     end
 
@@ -193,10 +197,10 @@ module Sunshine
 
         begin
           server_app.run_script cmd
-          server_app.running? ? 'running' : 'down'
+          server_app.status.to_s
 
         rescue CmdError => e
-          raise "Failed running #{cmd}: #{server_app.status}"
+          raise "Failed running #{cmd}: #{server_app.status rescue :not_found}"
         end
       end
     end

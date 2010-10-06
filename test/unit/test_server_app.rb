@@ -228,7 +228,7 @@ class TestServerApp < Test::Unit::TestCase
     @sa.install_deps nginx_dep, :type => Sunshine::Gem
     raise "Didn't raise missing dependency when it should have."
 
-  rescue Sunshine::DependencyLib::MissingDependency => e
+  rescue Sunshine::MissingDependency => e
     assert_equal "No dependency 'nginx' [Sunshine::Gem]", e.message
   end
 
@@ -351,6 +351,32 @@ class TestServerApp < Test::Unit::TestCase
 
     assert_dep_install 'geminstaller', @sa.pkg_manager
     assert_server_call "cd #{@app.checkout_path} && geminstaller -e"
+  end
+
+
+  def test_running?
+    set_mock_response_for @sa, 0,
+      "#{@sa.root_path}/status" => [:out, "THE SYSTEM OK!"]
+
+    assert_equal true, @sa.running?
+  end
+
+
+  def test_not_running?
+    set_mock_response_for @sa, 13,
+      "#{@sa.root_path}/status" => [:err, "THE SYSTEM IS DOWN!"]
+
+    assert_equal false, @sa.running?
+  end
+
+
+  def test_errored_running?
+    set_mock_response_for @sa, 1,
+      "#{@sa.root_path}/status" => [:err, "KABLAM!"]
+
+    assert_raises Sunshine::CmdError do
+      @sa.running?
+    end
   end
 
 

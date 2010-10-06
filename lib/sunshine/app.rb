@@ -222,7 +222,8 @@ module Sunshine
 
 
     ##
-    # Check if all server apps are connected. Supports any App#find options.
+    # Check if all server apps are connected and returns a boolean.
+    # Supports any App#find options.
 
     def connected? options=nil
       each options do |server_app|
@@ -234,7 +235,8 @@ module Sunshine
 
 
     ##
-    # Check if any server apps are connected. Supports any App#find options.
+    # Check if any server apps are connected and returns a boolean.
+    # Supports any App#find options.
 
     def any_connected? options=nil
       each options do |server_app|
@@ -263,7 +265,7 @@ module Sunshine
     #
     # If the deploy fails or an exception is raised, it will attempt to
     # run the Sunshine.failed_deploy_behavior, which is set to :revert by
-    # default.
+    # default. However, this is not true of ssh connection failures.
     #
     # If the deploy is interrupted by a SIGINT, it will attempt to run
     # the Sunshine.sigint_behavior, which is set to :revert by default.
@@ -282,19 +284,19 @@ module Sunshine
         :symlinked => false
       }
 
-      Sunshine.logger.info :app, "Beginning deploy of #{@name}"
+      Sunshine.logger.info :app, "Beginning #{@name} deploy"
 
       with_session options do |app|
 
         interruptable state do
-          raise CriticalDeployError, "No servers defined for #{@name}" if
+          raise DeployError, "No servers defined for #{@name}" if
             @server_apps.empty?
 
           make_app_directories
           checkout_codebase
 
-          state[:stopped]   = stop
-          state[:symlinked] = symlink_current_dir
+          state[:stopped]   = true if stop
+          state[:symlinked] = true if symlink_current_dir
 
           yield self if block_given?
 
@@ -308,7 +310,7 @@ module Sunshine
 
           register_as_deployed
 
-          state[:success] = start! :force => true
+          state[:success] = true if start! :force => true
         end
 
         remove_old_deploys if state[:success] rescue
@@ -317,7 +319,7 @@ module Sunshine
         state[:success] &&= deployed?
       end
 
-      Sunshine.logger.info :app, "Finished deploy of #{@name}"
+      Sunshine.logger.info :app, "Finished #{@name} deploy" if state[:success]
       state[:success]
     end
 
@@ -340,7 +342,7 @@ module Sunshine
         Sunshine.logger.error '>>', e.backtrace.join("\n")
       end
 
-      handle_exception options
+      handle_exception e, options
 
     ensure
       TrapStack.delete_trap interrupt_trap
@@ -351,7 +353,7 @@ module Sunshine
     # Calls the Apps on_sigint hook or the default Sunshine.sigint_behavior.
 
     def handle_sigint state={}
-      return @on_sigint.call(self, state) if @on_sigint
+      return @on_sigint.call(state) if @on_sigint
       handle_interruption Sunshine.sigint_behavior, state
     end
 
@@ -360,8 +362,8 @@ module Sunshine
     # Calls the Apps on_exception hook or the default
     # Sunshine.exception_behavior.
 
-    def handle_exception state={}
-      return @on_exception.call(self, state) if @on_exception
+    def handle_exception exception, state={}
+      return @on_exception.call(exception, state) if @on_exception
       handle_interruption Sunshine.exception_behavior, state
     end
 
@@ -370,7 +372,12 @@ module Sunshine
     # Set this to define the behavior of SIGINT during a deploy.
     # Defines what to do when an INT signal is received when running
     # a proc through App#interruptable. Used primarily to catch SIGINTs
-    # during deploys.
+    # during deploys. Passes the block a hash with the state of the deploy:
+    #
+    #   app.on_sigint do |deploy_state_hash|
+    #     deploy_state_hash
+    #     #=> {:stopped => true, :symlinked => true, :success => false}
+    #   end
 
     def on_sigint &block
       @on_sigint = block
@@ -381,7 +388,12 @@ module Sunshine
     # Set this to define the behavior of exceptions during a deploy.
     # Defines what to do when an exception is received when running
     # a proc through App#interruptable. Used primarily to catch exceptions
-    # during deploys.
+    # during deploys. Passes the block the exception and a hash with the
+    # state of the deploy:
+    #
+    #   app.on_exception do |exception, deploy_state_hash|
+    #     # do something...
+    #   end
 
     def on_exception &block
       @on_exception = block
@@ -420,12 +432,13 @@ module Sunshine
       when :prompt
         Sunshine.shell.choose do |menu|
           menu.prompt = "Deploy interrupted:"
-          menu.choice(:revert) { handle_interrupted_deploy :revert,  state }
-          menu.choice(:console){ handle_interrupted_deploy :console, state }
-          menu.choice(:exit)   { handle_interrupted_deploy :exit, state }
+          menu.choice(:revert) { handle_interruption :revert,  state }
+          menu.choice(:console){ handle_interruption :console, state }
+          menu.choice(:exit)   { handle_interruption :exit, state }
         end
 
       else
+        raise DeployError, "Deploy of #{@name} was interrupted."
       end
     end
 
@@ -602,9 +615,6 @@ module Sunshine
             :send => [:upload_codebase, tmp_path, scm_info]
         end
       end
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 
@@ -759,9 +769,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Creating #{@name} directories",
         :send => :make_app_directories
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 
@@ -840,15 +847,24 @@ module Sunshine
 
 
     ##
+    # Run the restart script of a deployed app on the specified
+    # deploy servers. Raises an exception on failure.
+    # Post-deploy only.
+
+    def restart! options=nil
+      with_server_apps options,
+        :msg  => "Running restart script",
+        :send => :restart!
+    end
+
+
+    ##
     # Runs bundler on deploy servers.
 
     def run_bundler options=nil
       with_server_apps options,
         :msg  => "Running Bundler",
         :send => [:run_bundler, options]
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 
@@ -859,9 +875,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Running GemInstaller",
         :send => [:run_geminstaller, options]
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 
@@ -885,6 +898,18 @@ module Sunshine
       with_server_apps options,
         :msg  => "Running #{name} script",
         :send => [:run_script, name, options]
+    end
+
+
+    ##
+    # Run the given script of a deployed app on the specified
+    # deploy servers. Raises an exception on failure.
+    # Post-deploy only.
+
+    def run_script! name, options=nil
+      with_server_apps options,
+        :msg  => "Running #{name} script",
+        :send => [:run_script!, name, options]
     end
 
 
@@ -933,6 +958,18 @@ module Sunshine
 
 
     ##
+    # Run the start script of a deployed app on the specified
+    # deploy servers. Raises an exception on failure.
+    # Post-deploy only.
+
+    def start! options=nil
+      with_server_apps options,
+        :msg  => "Running start script",
+        :send => [:start!, options]
+    end
+
+
+    ##
     # Get a hash of which deploy server apps are :running or :down.
     # Post-deploy only.
 
@@ -960,6 +997,18 @@ module Sunshine
 
 
     ##
+    # Run the stop script of a deployed app on the specified
+    # deploy servers. Raises an exception on failure.
+    # Post-deploy only.
+
+    def stop! options=nil
+      with_server_apps options,
+        :msg  => "Running stop script",
+        :send => :stop!
+    end
+
+
+    ##
     # Use sudo on deploy servers. Set to true/false, or
     # a username to use 'sudo -u'.
 
@@ -982,9 +1031,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Symlinking #{@checkout_path} -> #{@current_path}",
         :send => :symlink_current_dir
-
-    rescue => e
-      raise CriticalDeployError, e
     end
 
 

@@ -17,9 +17,9 @@ class TestDaemon < Test::Unit::TestCase
 
     begin
       daemon.start_cmd
-      raise "Should have thrown CriticalDeployError but didn't :("
-    rescue Sunshine::CriticalDeployError => e
-      assert_equal "@start_cmd undefined. Can't start daemon", e.message
+      raise "Should have thrown DaemonError but didn't :("
+    rescue Sunshine::DaemonError => e
+      assert_equal "start_cmd undefined for daemon", e.message
     end
   end
 

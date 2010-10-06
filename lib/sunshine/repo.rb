@@ -1,7 +1,5 @@
 module Sunshine
 
-  class RepoError < Exception; end
-
   ##
   # An abstract class to wrap simple basic scm features. The primary function
   # of repo objects is to get information about the scm branch that is being

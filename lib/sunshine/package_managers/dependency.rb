@@ -43,11 +43,6 @@ module Sunshine
 
   class Dependency
 
-    class CmdError < Exception; end
-    class InstallError < Exception; end
-    class UninstallError < Exception; end
-
-
     ##
     # Check if sudo should be used
 

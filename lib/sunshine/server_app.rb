@@ -33,7 +33,7 @@ module Sunshine
 
 
     ##
-    # Define an attribue that will get a value from app, or locally if
+    # Define an attribute that will get a value from app, or locally if
     # @app isn't set.
 
     def self.app_attr *attribs
@@ -167,7 +167,7 @@ module Sunshine
       end
 
       if build_scripts[:status].empty?
-        build_scripts[:status] << "echo 'No daemons for #{self.name}'; exit 1;"
+        build_scripts[:status] << "echo 'No status for #{self.name}'; exit 1;"
       end
 
       build_scripts.each do |name, cmds|
@@ -511,7 +511,7 @@ fi
 
     def run_script name, options=nil, &block
       options ||= {}
-      run_script! name, options=nil, &block rescue false
+      run_script! name, options, &block rescue false
     end
 
 
@@ -534,7 +534,12 @@ fi
 
     def running?
       # Permissions are handled by the script, use: :sudo => false
-      run_script :status, :sudo => false
+      run_script! :status, :sudo => false
+      true
+
+    rescue CmdError => e
+      return false if e.exit_code == Daemon::STATUS_DOWN_CODE
+      raise e
     end
 
 
@@ -618,7 +623,7 @@ fi
     # Run the app's stop script. Raises an exception on failure.
     # Post-deploy only.
 
-    def stop
+    def stop!
       # Permissions are handled by the script, use: :sudo => false
       run_script! :stop, :sudo => false
     end

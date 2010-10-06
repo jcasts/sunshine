@@ -17,18 +17,25 @@ module Sunshine
 
   ##
   # An error occurred when attempting to run a command on the local system
-  class CmdError < Exception; end
+  class CmdError < Exception;
+    attr_reader :exit_code
+
+    def initialize exit_code, cmd=nil
+      message = "Execution failed with status #{exit_code}: #{cmd}"
+      super message
+      @exit_code = exit_code
+    end
+  end
 
 
   ##
-  # An ssh call returned a non-zero exit code
-  class SSHCmdError < CmdError
-    attr_reader :shell
-    def initialize message=nil, shell=nil
-      @shell = shell
-      super(message)
-    end
-  end
+  # A shell command timed out.
+  class TimeoutError < Exception; end
+
+
+  ##
+  # Remote connection to server failed.
+  class ConnectionError < Exception; end
 
 
   ##
@@ -37,19 +44,29 @@ module Sunshine
 
 
   ##
-  # The error is serious enough that deploy cannot proceed.
-  # Sunshine will attempt to revert to a previous deploy if available.
-  class CriticalDeployError < DeployError; end
+  # Something went wrong with a daemon-specific item.
+  class DaemonError < Exception; end
 
 
   ##
-  # The error is so serious that no more action can be taken. The app deploy
-  # may be in a critical or unusable state.
-  # Sunshine will attempt to close any ssh connections and stop the deploy.
-  class FatalDeployError < DeployError; end
+  # Something went wrong with a dependency-specific item.
+  class DependencyError < Exception; end
 
 
   ##
-  # A dependency could not be installed.
-  class DependencyError < CriticalDeployError; end
+  # Dependency requested could not be found.
+  class MissingDependency < DependencyError; end
+
+
+  ##
+  # Dependency failed to install.
+  class InstallError < DependencyError; end
+
+  ##
+  # Dependency failed to uninstall.
+  class UninstallError < DependencyError; end
+
+  ##
+  # Something went wrong with a scm-specific item.
+  class RepoError < Exception; end
 end

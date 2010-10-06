@@ -1,3 +1,23 @@
+=== 1.2.1 / 2010-10-05
+
+* Improvements:
+
+  * Added customizable behaviors for sigint and failures during deploys.
+
+  * Added Sunshine irb shell to work directly with deploying apps.
+
+  * Added ability to launch a pseudo terminal from a RemoteShell.
+
+  * Added exit code to CmdError.
+
+* Bugfixes:
+
+  * Fixed custom scripts.
+
+  * Fixed deploy env defaults.
+
+  * Removed Shell#update_timeout as it was unnecessary.
+
 === 1.2.0 / 2010-09-08
 
 * Improvements:

@@ -7,8 +7,6 @@ module Sunshine
 
     include Open4
 
-    class TimeoutError < Exception; end
-
     LOCAL_USER = `whoami`.chomp
     LOCAL_HOST = `hostname`.chomp
 
@@ -32,8 +30,6 @@ module Sunshine
       @password = options[:password]
 
       @timeout = options[:timeout] || Sunshine.timeout
-
-      @cmd_activity = nil
 
       @mutex = nil
     end
@@ -76,7 +72,7 @@ module Sunshine
     ##
     # Prompt the user to make a choice.
 
-    def choose(&block)
+    def choose &block
       sync{ @input.choose(&block) }
     end
 
@@ -268,17 +264,9 @@ module Sunshine
     ##
     # Checks if timeout occurred.
 
-    def timed_out? start_time=@cmd_activity, max_time=@timeout
+    def timed_out? start_time, max_time=@timeout
       return unless max_time
       Time.now.to_i - start_time.to_i > max_time
-    end
-
-
-    ##
-    # Update the time of the last command activity
-
-    def update_timeout
-      @cmd_activity = Time.now
     end
 
 
@@ -378,8 +366,8 @@ module Sunshine
     private
 
     def raise_command_failed(status, cmd)
-      raise CmdError,
-        "Execution failed with status #{status.exitstatus}: #{[*cmd].join ' '}"
+      err = CmdError.new status.exitstatus, [*cmd].join(" ")
+      raise err
     end
 
 
@@ -405,7 +393,7 @@ module Sunshine
 
     def process_streams pid, *streams
       result = Hash.new{|h,k| h[k] = []}
-      update_timeout
+      start_time = Time.now
 
       # Handle process termination ourselves
       status = nil
@@ -417,13 +405,13 @@ module Sunshine
         # don't busy loop
         selected, = select streams, nil, nil, 0.1
 
-        raise TimeoutError if timed_out?
+        raise TimeoutError if timed_out? start_time
 
         next if selected.nil? or selected.empty?
 
         selected.each do |stream|
 
-          update_timeout
+          start_time = Time.now
 
           if stream.eof? then
             streams.delete stream if status # we've quit, so no more writing
