@@ -59,7 +59,7 @@ module Sunshine
 
       @user ||= options[:user]
 
-      @rsync_flags = ["-azP"]
+      @rsync_flags = ["-azrP"]
       @rsync_flags.concat [*options[:rsync_flags]] if options[:rsync_flags]
 
       @ssh_flags = [
@@ -218,7 +218,7 @@ module Sunshine
 
 
     ##
-    # Uploads a file via rsync
+    # Uploads a file via rsync.
 
     def upload from_path, to_path, options={}, &block
       to_path = "#{@host}:#{to_path}"

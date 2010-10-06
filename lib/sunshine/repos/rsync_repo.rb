@@ -12,7 +12,7 @@ module Sunshine
 
     def initialize url, options={}
       super
-      @flags << '-r' << '--exclude .svn/' << '--exclude .git/'
+      @flags << '--exclude .svn/' << '--exclude .git/'
       @url << "/" unless @url[-1..-1] == "/"
     end
 

@@ -123,7 +123,7 @@ fi
       "--rsync-path='#{ path }' "
     end
 
-    rsync_cmd = "rsync -azP #{rsync_path}-e \"ssh #{ds.ssh_flags.join(' ')}\""
+    rsync_cmd = "rsync -azrP #{rsync_path}-e \"ssh #{ds.ssh_flags.join(' ')}\""
 
     error_msg = "No such command in remote_shell log [#{ds.host}]\n#{rsync_cmd}"
     error_msg << "#{from.inspect} #{to.inspect}"
