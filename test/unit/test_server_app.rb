@@ -476,6 +476,50 @@ class TestServerApp < Test::Unit::TestCase
   end
 
 
+  def test_upload_codebase
+    @sa.shell.mock(:upload)
+
+    @sa.upload_codebase "tmp/thing/", :test_scm => "info"
+    assert_equal({:test_scm => "info"} , @sa.info[:scm])
+    assert @sa.shell.method_called?(
+      :upload, :args => ["tmp/thing/", @sa.checkout_path,
+        {:flags => ["--exclude .svn/","--exclude .git/"]}])
+  end
+
+
+  def test_upload_codebase_with_exclude
+    @sa.shell.mock(:upload)
+
+    @sa.upload_codebase "tmp/thing/",
+      :test_scm => "info",
+      :exclude  => "bad/path/"
+
+    assert_equal({:test_scm => "info"} , @sa.info[:scm])
+    assert @sa.shell.method_called?(
+      :upload, :args => ["tmp/thing/", @sa.checkout_path,
+        {:flags => ["--exclude bad/path/",
+                    "--exclude .svn/",
+                    "--exclude .git/"]}])
+  end
+
+
+  def test_upload_codebase_with_excludes
+    @sa.shell.mock(:upload)
+
+    @sa.upload_codebase "tmp/thing/",
+      :test_scm => "info",
+      :exclude  => ["bad/path/", "other/exclude/"]
+
+    assert_equal({:test_scm => "info"} , @sa.info[:scm])
+    assert @sa.shell.method_called?(
+      :upload, :args => ["tmp/thing/", @sa.checkout_path,
+        {:flags => ["--exclude bad/path/",
+                    "--exclude other/exclude/",
+                    "--exclude .svn/",
+                    "--exclude .git/"]}])
+  end
+
+
   def test_write_script
     @sa.shell.mock :file?, :return => false
 

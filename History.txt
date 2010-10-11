@@ -10,6 +10,8 @@
 
   * Added exit code to CmdError.
 
+  * Added exclude paths for checkout by copy.
+
 * Bugfixes:
 
   * Fixed custom scripts.
@@ -17,6 +19,8 @@
   * Fixed deploy env defaults.
 
   * Removed Shell#update_timeout as it was unnecessary.
+
+  * RemoteShell rsync recurses by default.
 
 === 1.2.0 / 2010-09-08
 

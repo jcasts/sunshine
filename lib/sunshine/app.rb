@@ -611,6 +611,9 @@ module Sunshine
           tmp_path = File.join Sunshine::TMP_DIR, "#{@name}_checkout"
           scm_info = @repo.checkout_to tmp_path
 
+          scm_info[:exclude] =
+            [Sunshine.exclude_paths, options.delete(:exclude)].flatten.compact
+
           with_server_apps options,
             :send => [:upload_codebase, tmp_path, scm_info]
         end

@@ -26,6 +26,7 @@ class TestApp < Test::Unit::TestCase
   end
 
   def teardown
+    Sunshine.exclude_paths.clear
     FileUtils.rm_rf @tmpdir
   end
 
@@ -272,6 +273,48 @@ class TestApp < Test::Unit::TestCase
 
       assert_ssh_call setup_cmd
       assert_ssh_call checkout_cmd
+    end
+  end
+
+
+  def test_checkout_local_codebase
+    tmp_path = File.join Sunshine::TMP_DIR, "#{@app.name}_checkout"
+    @app.repo.extend MockObject
+    @app.repo.mock :checkout_to, :args   => [tmp_path],
+                                 :return => {:test => "scm info"}
+
+    @app.each do |sa|
+      sa.mock :upload_codebase
+    end
+
+    @app.checkout_codebase :copy => true
+
+    @app.each do |sa|
+      assert sa.method_called?(:upload_codebase,
+        :args => [tmp_path, {:test => "scm info", :exclude => []}])
+    end
+  end
+
+
+  def test_checkout_local_codebase_with_exludes
+    Sunshine.exclude_paths.concat ["path1/", "path2/"]
+
+    tmp_path = File.join Sunshine::TMP_DIR, "#{@app.name}_checkout"
+    @app.repo.extend MockObject
+
+    @app.repo.mock :checkout_to, :args   => [tmp_path],
+                                 :return => {:test => "scm info"}
+
+    @app.each do |sa|
+      sa.mock :upload_codebase
+    end
+
+    @app.checkout_codebase :copy => true, :exclude => ["path3/", "path4/"]
+
+    @app.each do |sa|
+      assert sa.method_called?(:upload_codebase,
+        :args => [tmp_path, {:test => "scm info",
+                  :exclude => ["path1/", "path2/", "path3/", "path4/"]}])
     end
   end
 

@@ -83,7 +83,7 @@ module Sunshine
     end
 
 
-    attr_reader :url, :scm
+    attr_accessor :url, :scm, :flags
 
     def initialize url, options={}
       @scm = self.class.name.split("::").last.sub('Repo', '').downcase
@@ -104,9 +104,10 @@ module Sunshine
       shell.call "test -d #{path} && rm -rf #{path} || echo false"
       shell.call "mkdir -p #{path}"
 
-      do_checkout   path, shell
-      get_repo_info path, shell
+      do_checkout     path, shell
+      get_repo_info   path, shell
     end
+
 
 
     ##

@@ -46,6 +46,7 @@ module Sunshine
     'auto_dependencies'   => true,
     'deploy_env'          => :development,
     'exception_behavior'  => :revert,
+    'exclude_paths'       => [],
     'level'               => 'info',
     'max_deploy_versions' => 5,
     'remote_checkouts'    => false,
@@ -131,6 +132,7 @@ module Sunshine
 
   ##
   # Array of paths or globs that should be excluded from the checkout.
+  # Does not work with remote_checkouts enabled.
 
   def self.exclude_paths
     @config['exclude_paths']

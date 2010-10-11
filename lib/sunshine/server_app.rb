@@ -658,7 +658,13 @@ fi
     # codebase and uploads it to the checkout_path.
 
     def upload_codebase code_dir, scm_info={}
-      RsyncRepo.new(code_dir).checkout_to self.checkout_path, @shell
+      excludes = scm_info.delete :exclude if scm_info[:exclude]
+      excludes = [excludes].flatten.compact
+      excludes.map!{|e| "--exclude #{e}"}
+
+      repo = RsyncRepo.new code_dir, :flags => excludes
+      repo.checkout_to self.checkout_path, @shell
+
       @info[:scm] = scm_info
     end
 
