@@ -256,7 +256,7 @@ module Sunshine
     ##
     # Returns true if command was run successfully, otherwise returns false.
 
-    def syscall cmd, options=nil
+    def system cmd, options=nil
       call(cmd, options) && true rescue false
     end
 

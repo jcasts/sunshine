@@ -168,7 +168,7 @@ module Sunshine
     # Checks if the given file exists
 
     def file? filepath
-      syscall "test -f #{filepath}"
+      self.system "test -f #{filepath}"
     end
 
 

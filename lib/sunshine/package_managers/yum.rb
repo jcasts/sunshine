@@ -34,7 +34,7 @@ module Sunshine
     # Checks if dependency type is valid for a given shell.
 
     def self.system_manager? shell=nil
-      (shell || Sunshine.shell).syscall "yum --version"
+      (shell || Sunshine.shell).system "yum --version"
     end
 
 
