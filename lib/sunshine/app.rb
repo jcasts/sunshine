@@ -598,7 +598,8 @@ module Sunshine
     # :copy:: Bool - Checkout locally and rsync; defaults to false.
 
     def checkout_codebase options=nil
-      copy_option = options[:copy] if options
+      copy_option = options[:copy]          if options
+      exclude     = options.delete(:exclude) if options
 
       if @remote_checkout && !copy_option
         with_server_apps options,
@@ -612,7 +613,7 @@ module Sunshine
           scm_info = @repo.checkout_to tmp_path
 
           scm_info[:exclude] =
-            [Sunshine.exclude_paths, options.delete(:exclude)].flatten.compact
+            [Sunshine.exclude_paths, exclude].flatten.compact
 
           with_server_apps options,
             :send => [:upload_codebase, tmp_path, scm_info]
