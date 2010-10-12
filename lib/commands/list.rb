@@ -190,13 +190,13 @@ module Sunshine
     # Runs a command and returns the status for each app_name:
     #   status_after_command 'restart', ['app1', 'app2']
 
-    def status_after_command cmd, app_names
+    def status_after_command cmd, app_names, options=nil
       each_app(*app_names) do |server_app|
 
         yield(server_app) if block_given?
 
         begin
-          server_app.run_script cmd
+          server_app.run_script! cmd, options
           server_app.status.to_s
 
         rescue CmdError => e

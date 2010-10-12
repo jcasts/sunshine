@@ -39,7 +39,7 @@ module Sunshine
     # Restart specified apps.
 
     def restart app_names
-      status_after_command :restart, app_names
+      status_after_command :restart, app_names, :sudo => false
     end
 
 

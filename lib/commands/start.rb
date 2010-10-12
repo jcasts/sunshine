@@ -42,7 +42,7 @@ module Sunshine
     # Start specified apps.
 
     def start app_names, force=false
-      status_after_command :start, app_names do |server_app|
+      status_after_command :start, app_names, :sudo => false do |server_app|
 
         server_app.stop if server_app.running? && force
       end

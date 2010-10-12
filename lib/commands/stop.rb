@@ -39,7 +39,7 @@ module Sunshine
     # Stop specified apps.
 
     def stop app_names
-      status_after_command :stop, app_names
+      status_after_command :stop, app_names, :sudo => false
     end
 
     ##
