@@ -146,7 +146,7 @@ module Sunshine
           binder = config_binding server_app.shell
 
           configure_remote_dirs server_app.shell
-          touch_log_files server_app.shell
+          chown_log_files server_app.shell
 
           yield(server_app, binder) if block_given?
 
@@ -444,7 +444,7 @@ module Sunshine
     ##
     # Make sure log files are owned by the daemon's user.
 
-    def touch_log_files shell
+    def chown_log_files shell
       files = @log_files.values.join(" ")
 
       sudo = pick_sudo(shell)
@@ -455,8 +455,8 @@ module Sunshine
                nil
              end
 
-      shell.call "touch #{files}", :sudo => true
-      shell.call "chown #{user} #{files}", :sudo => true if user
+      return unless user
+      shell.call "chown -f #{user} #{files}", :sudo => true rescue nil
     end
 
 

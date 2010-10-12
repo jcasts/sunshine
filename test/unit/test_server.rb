@@ -69,7 +69,7 @@ class TestServer < Test::Unit::TestCase
       assert sa.method_called?(:install_deps, :args => ["rainbows"])
 
       assert server.method_called?(:configure_remote_dirs, :args => [sa.shell])
-      assert server.method_called?(:touch_log_files, :args => [sa.shell])
+      assert server.method_called?(:chown_log_files, :args => [sa.shell])
       assert server.method_called?(:upload_config_files, :args => [sa.shell])
     end
 
