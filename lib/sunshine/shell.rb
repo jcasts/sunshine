@@ -10,8 +10,20 @@ module Sunshine
     LOCAL_USER = `whoami`.chomp
     LOCAL_HOST = `hostname`.chomp
 
-    SUDO_FAILED = /^Sorry, try again./
-    SUDO_PROMPT = /^Password:/
+    class << self
+      # The message to match in stderr to determine logging in has failed.
+      # Defaults to:
+      #   /^Sorry, try again./
+      attr_accessor :sudo_failed_matcher
+
+      # The message to match in stderr to determine a password is required.
+      # Defaults to:
+      #   /^Password:/
+      attr_accessor :sudo_prompt_matcher
+    end
+
+    self.sudo_failed_matcher = /^Sorry, try again./
+    self.sudo_prompt_matcher = /^Password:/
 
     attr_reader :user, :host, :password, :input, :output, :mutex
     attr_accessor :env, :sudo, :timeout
@@ -372,12 +384,12 @@ module Sunshine
 
 
     def password_required? stream_name, data
-      stream_name == :err && data =~ SUDO_PROMPT
+      stream_name == :err && data =~ Shell.sudo_prompt_matcher
     end
 
 
     def send_password_to_stream inn, data
-      prompt_for_password if data =~ SUDO_FAILED
+      prompt_for_password if data =~ Shell.sudo_failed_matcher
       inn.puts @password || prompt_for_password
     end
 
