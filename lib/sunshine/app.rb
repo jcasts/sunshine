@@ -243,11 +243,13 @@ module Sunshine
     # If the deploy is interrupted by a SIGINT, it will attempt to run
     # the Sunshine.sigint_behavior, which is set to :revert by default.
     #
-    # Note: The deploy method will stop the former deploy just before
+    # The deploy method will stop the former deploy just before
     # symlink and the passed block is run.
     #
-    # Note: Once deployment is complete, the deploy method will attempt to
-    # run App#start.
+    # Once deployment is complete, the deploy method will attempt to
+    # run App#start! which will run any start script checked into
+    # App#scripts_path, or the start script that will have been generated
+    # by using Sunshine server setups.
 
     def deploy options=nil
 
@@ -274,8 +276,6 @@ module Sunshine
           yield self if block_given?
 
           run_post_user_lambdas
-
-          health :enable
 
           build_control_scripts
           build_deploy_info_file
@@ -679,43 +679,6 @@ module Sunshine
       with_server_apps options,
         :msg  => "Gpg decrypt: #{gpg_file}",
         :send => [:gpg_decrypt, gpg_file, options]
-    end
-
-
-    ##
-    # Gets or sets the healthcheck state. Returns a hash of host/state
-    # pairs. State values are :enabled, :disabled, and :down. The method
-    # argument can be omitted or take a value of :enable, :disable, or :remove:
-    #   app.health
-    #   #=> Returns the health status for all server_apps
-    #
-    #   app.health :role => :web
-    #   #=> Returns the status of all server_apps of role :web
-    #
-    #   app.health :enable
-    #   #=> Enables all health checking and returns the status
-    #
-    #   app.health :disable, :role => :web
-    #   #=> Disables health checking for :web server_apps and returns the status
-
-    def health method=nil, options=nil
-      valid_methods = [:enable, :disable, :remove]
-      options = method if options.nil? && Hash === method
-
-      valid_method = valid_methods.include? method
-
-      message   = "#{method.to_s.capitalize[0..-2]}ing" if valid_method
-      message ||= "Getting status of"
-      message   = "#{message} healthcheck"
-
-      statuses = {}
-      with_server_apps options, :msg => message do |server_app|
-        server_app.health.send method if valid_method
-
-        statuses[server_app.shell.host] = server_app.health.status
-      end
-
-      statuses
     end
 
 

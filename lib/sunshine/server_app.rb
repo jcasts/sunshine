@@ -95,7 +95,7 @@ module Sunshine
     app_attr :root_path, :checkout_path, :current_path
     app_attr :deploys_path, :log_path, :shared_path, :scripts_path
 
-    attr_accessor :app, :roles, :scripts, :info, :shell, :crontab, :health
+    attr_accessor :app, :roles, :scripts, :info, :shell, :crontab
     attr_writer :pkg_manager
 
     ##
@@ -131,7 +131,6 @@ module Sunshine
                end
 
       @crontab = Crontab.new name, @shell
-      @health  = Healthcheck.new shared_path, @shell
 
       @all_deploy_names = nil
       @previous_deploy_name = nil

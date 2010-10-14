@@ -1,3 +1,11 @@
+=== 1.3.0 / 2010
+
+* Bugfixes:
+
+  * Removed superfluous App#upload_tasks method.
+
+  * Lots of rdoc updates.
+
 === 1.2.2 / 2010-10-13
 
 * Bugfixes:
