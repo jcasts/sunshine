@@ -670,45 +670,6 @@ fi
 
 
     ##
-    # Upload common rake tasks from a local path or the sunshine lib.
-    #   app.upload_tasks
-    #     #=> upload all tasks
-    #   app.upload_tasks 'app', 'common', ...
-    #     #=> upload app and common rake files
-    #
-    # File paths may also be used instead of the file's base name but
-    # directory structures will not be followed:
-    #   app.upload_tasks 'lib/common/app.rake', 'lib/do_thing.rake'
-    #
-    # Allows options:
-    # :local_path:: str - the path to get rake tasks from
-    # :remote_path:: str - the remote absolute path to upload the files to
-
-    def upload_tasks *files
-      options     = Hash === files[-1] ? files.delete_at(-1) : {}
-      remote_path = options[:remote_path] || "#{self.checkout_path}/lib/tasks"
-      local_path  = options[:local_path] || "#{Sunshine::ROOT}/templates/tasks"
-
-      @shell.call "mkdir -p #{remote_path}"
-
-      files.map! do |file|
-        if File.basename(file) == file
-          File.join(local_path, "#{file}.rake")
-        else
-          file
-        end
-      end
-
-      files = Dir.glob("#{Sunshine::ROOT}/templates/tasks/*") if files.empty?
-
-      files.each do |file|
-        remote_file = File.join remote_path, File.basename(file)
-        @shell.upload file, remote_file
-      end
-    end
-
-
-    ##
     # Write an executable bash script to the app's scripts dir
     # on the deploy server, and symlink them to the root dir.
 

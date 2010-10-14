@@ -3,19 +3,34 @@ module Sunshine
   ##
   # App objects are the core of Sunshine deployment. The Sunshine paradygm
   # is to construct an app object, and run custom deploy code by passing
-  # a block to its deploy method:
+  # a block to its deploy method. The following is the simplest way to
+  # instantiate an app:
+  #
+  #   app = Sunshine::App.new :remote_shells => "deploy_server.com"
+  #
+  # By default, Sunshine will look in the pwd for scm information and will
+  # extract the app's name. The default root deploy path is specified by
+  # Sunshine.web_directory, in this case: "/srv/http/app_name".
+  #
+  # More complex setups may look like the following:
   #
   #   someserver = Sunshine::RemoteShell.new "user@someserver.com",
   #                                          :roles => [:web, :app]
   #
-  #   options = {
-  #     :name => 'myapp',
-  #     :repo => {:type => :svn, :url => 'svn://blah...'},
-  #     :root_path => '/usr/local/myapp',
-  #     :remote_shells => 'user@someserver.com'
-  #   }
+  #   myapprepo = Sunshine::SvnRepo.new "svn://my_repo/myapp/tags/release"
   #
-  #   app = Sunshine::App.new(options)
+  #   app = Sunshine::App.new :name          => 'myapp',
+  #                           :repo          => myapprepo,
+  #                           :root_path     => '/usr/local/myapp',
+  #                           :remote_shells => someserver
+  #
+  # Note: The instantiation options :repo and :remote_shells support
+  # the same data format that their respective initialize methods support.
+  # The :remote_shells option also supports arrays of remote shell instance
+  # arguments.
+  #
+  # Once an App is instantiated it can be manipulated in a variety of ways,
+  # including deploying it:
   #
   #   app.deploy do |app|
   #
@@ -26,36 +41,18 @@ module Sunshine
   #     web_server.setup
   #   end
   #
-  # Multiple apps can be defined, and deployed from a single deploy script.
-  # The constructor also supports passing a yaml file path:
+  # The constructor also supports reading multi-env configs fom a yaml file,
+  # which can also be the deploy script's DATA, to allow for concise,
+  # encapsulated deploy files:
   #
-  #   Sunshine::App.new("path/to/config.yml")
+  #   # Load from an explicit yaml file:
+  #   Sunshine::App.new "path/to/config.yml"
   #
-  # Deployment can be expressed more concisely by calling App::deploy:
-  #
-  #   App.deploy("path/to/config.yml") do |app|
-  #     Sunshine::Rainbows.new(app).setup
-  #   end
-  #
-  #
-  # An App holds information about where to deploy an application to and
-  # how to deploy it, as well as many convenience methods to setup and
-  # manipulate the deployment process. Most of these methods support passing
-  # remote shell find options:
-  #
-  #   app.rake 'db:migrate', :role => :db
-  #   app.deploy :host => 'server1.com'
-  #
-  # See App#find for more information.
-  #
-  # App instantiation can be done in several ways:
-  #  App.new instantiation_hash
-  #  App.new "path/to/config.yml", optional_extra_hash
-  #  App.new #=> will attempt to load ruby's file DATA as yaml
+  #   # Load from the yaml in the script file's DATA:
+  #   Sunshine::App.new
   #
   # Yaml files must define settings on a per-environment basis. The default
-  # environment will be used if the deploy_env is not found in the config.
-  # Let's consider the following config:
+  # environment will be used as a base for all other environments:
   #
   #   #config.yml:
   #   ---
@@ -65,78 +62,23 @@ module Sunshine
   #       :url:  http://subversion/repo/tags/release-001
   #     :remote_shells: dev.myserver.com
   #
-  #   :qa:
+  #   qa:
   #     :remote_shells:
   #       - qa1.myserver.com
   #       - qa2.myserver.com
   #
-  #   :qa_special:
-  #     :inherits: :qa
+  #   qa_special:
+  #     :inherits: qa
   #     :root_path: /path/to/application
+  #     :deploy_env: qa
   #
-  # By default, environment definitions inherit the :default environment. In
-  # this instance, :qa_special also inherits from :qa.
-  # With the given config, I could setup the App instance as so:
-  #
-  #   App.new "config.yml", :deploy_env => :development
-  #   # Note: by default, App will get the deploy_env value
-  #   # from Sunshine.deploy_env
-  #
-  # The above will simply load the default config. The following, however,
-  # will load the :qa_special config which inherits from
-  # both :qa and :default:
-  #
-  #   App.new "config.yml", :deploy_env => :qa_special
-  #
-  #
-  # Another way of instantiating an App is to pass it a hash. Unlike the yaml
-  # config file, the hash is not on a per-environment basis and isexpected
-  # to already have the correct values for the given environment.
-  # The following is equivalent to loading the above :default environment:
-  #
-  #   App.new :remote_shells => "dev.myserver.com",
-  #           :repo => {
-  #             :type => :svn,
-  #             :url => "http://subversion/repo/tags/release-001"
-  #           }
-  #
-  # In theory, the minimum amount of information required to instantiate
-  # an app is the repo and remote_shells. If the repo option is omitted,
-  # the App will attempt to detect if the pwd is a checkout out repo and
-  # use that information. If you would like to deploy an application that
-  # is not under source countrol, you may do so by using Sunshine::RsyncRepo,
-  # or passing :rsync in your hash as your repo type.
-  #
-  #
-  # Options supported by App.new are the following:
-  #
-  # :deploy_env:: String - specify the env to deploy with; defaults to
-  # Sunshine#deploy_env.
-  #
-  # :deploy_name:: String - if you want to specify a name for your deploy and
-  # checkout directory (affects the checkout_path); defaults to Time.now.to_i.
-  #
-  # :remote_shells:: String|Array|Sunshine::Shell - the shell(s) to use for
-  # deployment. Accepts any single instance or array of a Sunshine::Shell
-  # type instance or Sunshine::Shell instantiator-friendly arguments.
-  #
-  # :repo:: Hash|Sunshine::Repo - the scm and repo to use for deployment.
-  # Accepts any hash that can be passed to Sunshine::Repo::new_of_type
-  # or any Sunshine::Repo object.
-  #
-  # :root_path:: String - the absolute path the deployed application
-  # should live in; defaults to "#{Sunshine.web_directory}/#{@name}".
-  #
-  # :shell_env:: Hash - environment variables to add to deploy shells.
-  #
-  # :sudo:: true|false|nil|String - which sudo value should be assigned to
-  # deploy shells; defaults to Sunshine#sudo. For more information on using
-  # sudo, see the Using Permissions section in README.txt.
+  # By default, App will get the deploy_env value from Sunshine.deploy_env, but
+  # it may also be passed in explicitely as an option.
 
   class App
 
     ##
-    # Initialize and deploy an application.
+    # Initialize and deploy an application in a single step.
     # Takes any arguments supported by the constructor.
 
     def self.deploy(*args, &block)
@@ -156,6 +98,34 @@ module Sunshine
     #  App.new instantiation_hash
     #  App.new "path/to/config.yml", optional_extra_hash
     #  App.new #=> will attempt to load ruby's file DATA as yaml
+    #
+    # Options supported are:
+    #
+    # :deploy_env:: String - specify the env to deploy with; defaults to
+    # Sunshine#deploy_env.
+    #
+    # :deploy_name:: String - if you want to specify a name for your deploy and
+    # checkout directory (affects the checkout_path); defaults to Time.now.to_i.
+    #
+    # :remote_checkout:: Boolean - when true, will checkout the codebase
+    # directly from the deploy servers; defaults to false.
+    #
+    # :remote_shells:: String|Array|Sunshine::Shell - the shell(s) to use for
+    # deployment. Accepts any single instance or array of a Sunshine::Shell
+    # type instance or Sunshine::Shell instantiator-friendly arguments.
+    #
+    # :repo:: Hash|Sunshine::Repo - the scm and repo to use for deployment.
+    # Accepts any hash that can be passed to Sunshine::Repo::new_of_type
+    # or any Sunshine::Repo object.
+    #
+    # :root_path:: String - the absolute path the deployed application
+    # should live in; defaults to "#{Sunshine.web_directory}/#{@name}".
+    #
+    # :shell_env:: Hash - environment variables to add to deploy shells.
+    #
+    # :sudo:: true|false|nil|String - which sudo value should be assigned to
+    # deploy shells; defaults to Sunshine#sudo. For more information on using
+    # sudo, see the Using Permissions section in README.txt.
 
     def initialize config_file=Sunshine::DATA, options={}
       options, config_file = config_file, Sunshine::DATA if Hash === config_file
@@ -199,8 +169,10 @@ module Sunshine
 
 
     ##
-    # Call a command on specified server apps.
-    # Supports any App#find and Shell#call options.
+    # Call a command on specified server apps. Returns an array of responses.
+    # Supports any App#find and Shell#call options:
+    #   app.call "ls -1", :sudo => true, :host => "web.app.com"
+    #   #=> [".\n..\ndir1", ".\n..\ndir1", ".\n..\ndir2"]
 
     def call cmd, options=nil, &block
       with_server_apps options, :msg => "Running #{cmd}" do |server_app|
@@ -210,7 +182,8 @@ module Sunshine
 
 
     ##
-    # Connect server apps. Supports any App#find options.
+    # Start a persistant connection to app servers.
+    # Supports any App#find options.
 
     def connect options=nil
       Sunshine.logger.info :app, "Connecting..." do
@@ -248,7 +221,7 @@ module Sunshine
 
 
     ##
-    # Disconnect server apps. Supports any App#find options.
+    # Disconnect from app servers. Supports any App#find options.
 
     def disconnect options=nil
       Sunshine.logger.info :app, "Disconnecting..." do
@@ -264,7 +237,7 @@ module Sunshine
     # call user's post-deploy code. Supports any App#find options.
     #
     # If the deploy fails or an exception is raised, it will attempt to
-    # run the Sunshine.failed_deploy_behavior, which is set to :revert by
+    # run the Sunshine.exception_behavior, which is set to :revert by
     # default. However, this is not true of ssh connection failures.
     #
     # If the deploy is interrupted by a SIGINT, it will attempt to run
@@ -325,9 +298,10 @@ module Sunshine
 
 
     ##
-    # Handles SIGINTs and exceptions according to rules set by
-    # Sunshine.sigint_behavior and Sunshine.exception_behavior
-    # or with the override hooks App#on_sigint and App#on_exception.
+    # Runs the given block while handling SIGINTs and exceptions
+    # according to rules set by Sunshine.sigint_behavior and
+    # Sunshine.exception_behavior or with the override hooks
+    # App#on_sigint and App#on_exception.
 
     def interruptable options={}
       interrupt_trap =
@@ -446,8 +420,9 @@ module Sunshine
     ##
     # Symlink current directory to previous checkout and remove
     # the current deploy directory. Supports any App#find options.
+    #   app.revert! :role => :web
 
-    def revert!(options=nil)
+    def revert! options=nil
       with_server_apps options,
         :msg  => "Reverting to previous deploy.",
         :send => :revert!
@@ -455,7 +430,7 @@ module Sunshine
 
 
     ##
-    # Add paths the the shell $PATH env.
+    # Add paths the the shell $PATH env on all app shells.
 
     def add_shell_paths(*paths)
       path = @shell_env["PATH"] || "$PATH"
@@ -596,10 +571,12 @@ module Sunshine
     # Checks out the app's codebase to one or all deploy servers.
     # Supports all App#find options, plus:
     # :copy:: Bool - Checkout locally and rsync; defaults to false.
+    # :exclude:: String|Array - Exclude the specified paths during
+    # a deploy via copy.
 
     def checkout_codebase options=nil
       copy_option = options[:copy]          if options
-      exclude     = options.delete(:exclude) if options
+      exclude     = options.delete :exclude if options
 
       if @remote_checkout && !copy_option
         with_server_apps options,
@@ -638,7 +615,8 @@ module Sunshine
 
 
     ##
-    # Check if app has been deployed successfully.
+    # Check if app has been deployed successfully by checking the name of the
+    # deploy on every app server with the instance's deploy name.
 
     def deployed? options=nil
       with_server_apps options,
@@ -651,10 +629,11 @@ module Sunshine
 
 
     ##
-    # Iterate over each server app.
+    # Iterate over each server app. Supports all App#find options.
+    # See Sunshine::ServerApp for more information.
 
-    def each(options=nil, &block)
-      server_apps = find(options)
+    def each options=nil, &block
+      server_apps = find options
       server_apps.each(&block)
     end
 
@@ -687,8 +666,7 @@ module Sunshine
 
 
     ##
-    # Decrypt a file using gpg. Allows all DeployServerDispatcher#find
-    # options, plus:
+    # Decrypt a file using gpg. Supports all App#find options, plus:
     # :output:: str - the path the output file should go to
     # :passphrase:: str - the passphrase gpg should use
 
@@ -768,6 +746,7 @@ module Sunshine
 
     ##
     # Creates the required application directories.
+    # Supports all App#find options.
 
     def make_app_directories options=nil
       with_server_apps options,
@@ -778,10 +757,11 @@ module Sunshine
 
     ##
     # Assign the prefered package manager to all server_apps:
-    #   app.prefer_pkg_manager Settler::Yum
+    #   app.prefer_pkg_manager Sunshine::Yum
     #
     # Package managers are typically detected automatically by each
     # individual server_apps.
+    # Supports all App#find options.
 
     def prefer_pkg_manager pkg_manager, options=nil
       with_server_apps options,
@@ -791,6 +771,7 @@ module Sunshine
 
     ##
     # Run a rake task on any or all deploy servers.
+    # Supports all App#find options.
 
     def rake command, options=nil
       with_server_apps options,
@@ -801,6 +782,7 @@ module Sunshine
 
     ##
     # Adds the app to the deploy servers deployed-apps list.
+    # Supports all App#find options.
 
     def register_as_deployed options=nil
       with_server_apps options,
@@ -814,6 +796,7 @@ module Sunshine
     #   remove_cronjob "reboot", :role => :web
     #   remove_cronjob :all
     #   #=> deletes all cronjobs related to this app
+    # Supports all App#find options.
 
     def remove_cronjob name, options=nil
       with_server_apps options,
@@ -830,6 +813,7 @@ module Sunshine
     ##
     # Removes old deploys from the checkout_dir
     # based on Sunshine's max_deploy_versions.
+    # Supports all App#find options.
 
     def remove_old_deploys options=nil
       with_server_apps options,
@@ -841,7 +825,7 @@ module Sunshine
     ##
     # Run the restart script of a deployed app on the specified
     # deploy servers.
-    # Post-deploy only.
+    # Post-deploy only. Supports all App#find options.
 
     def restart options=nil
       with_server_apps options,
@@ -853,7 +837,7 @@ module Sunshine
     ##
     # Run the restart script of a deployed app on the specified
     # deploy servers. Raises an exception on failure.
-    # Post-deploy only.
+    # Post-deploy only. Supports all App#find options.
 
     def restart! options=nil
       with_server_apps options,
@@ -863,7 +847,7 @@ module Sunshine
 
 
     ##
-    # Runs bundler on deploy servers.
+    # Runs bundler on deploy servers. Supports all App#find options.
 
     def run_bundler options=nil
       with_server_apps options,
@@ -873,7 +857,7 @@ module Sunshine
 
 
     ##
-    # Runs GemInstaller on deploy servers.
+    # Runs GemInstaller on deploy servers. Supports all App#find options.
 
     def run_geminstaller options=nil
       with_server_apps options,
@@ -896,7 +880,7 @@ module Sunshine
     ##
     # Run the given script of a deployed app on the specified
     # deploy servers.
-    # Post-deploy only.
+    # Post-deploy only. Supports all App#find options.
 
     def run_script name, options=nil
       with_server_apps options,
@@ -908,7 +892,7 @@ module Sunshine
     ##
     # Run the given script of a deployed app on the specified
     # deploy servers. Raises an exception on failure.
-    # Post-deploy only.
+    # Post-deploy only. Supports all App#find options.
 
     def run_script! name, options=nil
       with_server_apps options,
@@ -919,6 +903,7 @@ module Sunshine
 
     ##
     # Run a sass task on any or all deploy servers.
+    # Supports all App#find options.
 
     def sass *sass_names
       options = sass_names.delete_at(-1) if Hash === sass_names.last
@@ -932,13 +917,14 @@ module Sunshine
     ##
     # Set and return the remote shell env variables.
     # Also assigns shell environment to the app's deploy servers.
+    # Supports all App#find options.
 
-    def shell_env env_hash=nil
+    def shell_env env_hash=nil, options=nil
       env_hash ||= {}
 
       @shell_env.merge!(env_hash)
 
-      with_server_apps :all,
+      with_server_apps options,
         :no_threads => true,
         :no_session => true,
         :msg => "Shell env: #{@shell_env.inspect}" do |server_app|
@@ -952,7 +938,7 @@ module Sunshine
     ##
     # Run the start script of a deployed app on the specified
     # deploy servers.
-    # Post-deploy only.
+    # Post-deploy only. Supports all App#find options.
 
     def start options=nil
       with_server_apps options,
@@ -964,7 +950,7 @@ module Sunshine
     ##
     # Run the start script of a deployed app on the specified
     # deploy servers. Raises an exception on failure.
-    # Post-deploy only.
+    # Post-deploy only. Supports all App#find options.
 
     def start! options=nil
       with_server_apps options,
@@ -975,7 +961,7 @@ module Sunshine
 
     ##
     # Get a hash of which deploy server apps are :running or :down.
-    # Post-deploy only.
+    # Post-deploy only. Supports all App#find options.
 
     def status options=nil
       statuses = {}
@@ -991,7 +977,7 @@ module Sunshine
     ##
     # Run the stop script of a deployed app on the specified
     # deploy servers.
-    # Post-deploy only.
+    # Post-deploy only. Supports all App#find options.
 
     def stop options=nil
       with_server_apps options,
@@ -1003,7 +989,7 @@ module Sunshine
     ##
     # Run the stop script of a deployed app on the specified
     # deploy servers. Raises an exception on failure.
-    # Post-deploy only.
+    # Post-deploy only. Supports all App#find options.
 
     def stop! options=nil
       with_server_apps options,
@@ -1013,7 +999,7 @@ module Sunshine
 
 
     ##
-    # Use sudo on deploy servers. Set to true/false, or
+    # Use sudo on all the app's deploy servers. Set to true/false, or
     # a username to use 'sudo -u'.
 
     def sudo=(value)
@@ -1030,6 +1016,7 @@ module Sunshine
 
     ##
     # Creates a symlink to the app's checkout path.
+    # Supports all App#find options.
 
     def symlink_current_dir options=nil
       with_server_apps options,
@@ -1041,8 +1028,9 @@ module Sunshine
     ##
     # Iterate over all deploy servers but create a thread for each
     # deploy server. Means you can't return from the passed block!
+    # Supports all App#find options.
 
-    def threaded_each(options=nil, &block)
+    def threaded_each options=nil, &block
       mutex   = Mutex.new
       threads = []
       error   = nil
@@ -1073,33 +1061,12 @@ module Sunshine
 
 
     ##
-    # Upload common rake tasks from the sunshine lib.
-    #   app.upload_tasks
-    #     #=> upload all tasks
-    #   app.upload_tasks 'app', 'common', :role => :web
-    #     #=> upload app and common rake files
-    #
-    # Allows standard DeployServerDispatcher#find options, plus:
-    # :remote_path:: str - the remote absolute path to upload the files to
-
-    def upload_tasks *files
-      options = Hash === files.last ? files.last.dup : {}
-
-      options.delete(:remote_path)
-      options = :all if options.empty?
-
-      with_server_apps options,
-        :msg  => "Uploading tasks: #{files.join(" ")}",
-        :send => [:upload_tasks, *files]
-    end
-
-
-    ##
     # Execute a block with a specified server app filter:
     #   app.with_filter :role => :cdn do |app|
     #     app.sass 'file1', 'file2', 'file3'
     #     app.rake 'asset:packager:build_all'
     #   end
+    # Supports all App#find options.
 
     def with_filter filter_hash
       old_server_apps, @server_apps = @server_apps, find(filter_hash)

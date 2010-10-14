@@ -558,49 +558,6 @@ class TestApp < Test::Unit::TestCase
   end
 
 
-  def test_upload_tasks
-    path = "/path/to/tasks"
-
-    @app.upload_tasks 'common', 'tpkg',
-      :host => 'some_server.com',
-      :remote_path => path
-
-    shell = @app.find(:host => 'some_server.com').first.shell
-
-    use_remote_shell shell
-
-    assert_ssh_call "mkdir -p /path/to/tasks"
-
-    %w{common tpkg}.each do |task|
-      from = "#{Sunshine::ROOT}/templates/tasks/#{task}.rake"
-      to   = "#{shell.host}:#{path}/#{task}.rake"
-
-      assert_rsync from, to
-    end
-  end
-
-
-  def test_upload_tasks_simple
-    @app.upload_tasks
-
-    path  = "#{@app.checkout_path}/lib/tasks"
-
-    tasks =
-      Dir.glob("#{Sunshine::ROOT}/templates/tasks/*").map{|t| File.basename t}
-
-    each_remote_shell do |ds|
-      assert_ssh_call "mkdir -p #{path}"
-
-      tasks.each do |task|
-        from = "#{Sunshine::ROOT}/templates/tasks/#{task}"
-        to   = "#{ds.host}:#{path}/#{task}"
-
-        assert_rsync from, to
-      end
-    end
-  end
-
-
   def test_with_filter
     app = Sunshine::App.new :repo => {:type => "svn", :url => @svn_url},
             :remote_shells => ["user@server1.com", "user@server2.com"]
