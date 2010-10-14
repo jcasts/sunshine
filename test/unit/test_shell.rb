@@ -24,13 +24,13 @@ class TestShell < Test::Unit::TestCase
 
   def test_ask
     @shell.ask "input something!"
-    assert 1, @shell.input.method_call_count(:ask)
+    assert_equal 1, @shell.input.method_call_count(:ask)
   end
 
 
   def test_close
     @shell.close
-    assert 1, @shell.output.method_call_count(:close)
+    assert_equal 1, @shell.output.method_call_count(:close)
   end
 
 

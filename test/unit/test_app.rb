@@ -361,13 +361,12 @@ class TestApp < Test::Unit::TestCase
        check_ruby  => [:err, ""]},
       {:sudo => yum_sudo}
 
-    @app.install_deps 'ruby', nginx_dep
+    @app.install_deps 'ruby', nginx_dep, :no_threads => true
 
 
     each_remote_shell do |ds|
       [nginx_dep, ruby_dep].each do |dep|
-        check =
-          "test \"$(yum list installed #{dep.pkg} | grep -c #{dep.pkg})\" -ge 1"
+        check   = dep.instance_variable_get "@check"
         install = dep.instance_variable_get "@install"
 
         assert_ssh_call check, ds, :sudo => yum_sudo
@@ -392,14 +391,15 @@ class TestApp < Test::Unit::TestCase
       set_mock_response_for @app, 1, {check => [:err, ""]}, {:sudo => gem_sudo}
     end
 
-    @app.install_deps 'rake', bundler_dep
+    @app.install_deps 'rake', bundler_dep, :no_threads => true
 
     each_remote_shell do |ds|
       [rake_dep, bundler_dep].each do |dep|
 
+        check   = dep.instance_variable_get "@check"
         install = dep.instance_variable_get "@install"
 
-        assert_ssh_call checks[dep], ds, :sudo => gem_sudo
+        assert_ssh_call check, ds, :sudo => gem_sudo
         assert_ssh_call install, ds, :sudo => gem_sudo
       end
     end

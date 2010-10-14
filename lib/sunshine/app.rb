@@ -1138,7 +1138,7 @@ module Sunshine
       method  = options[:no_threads] ? :each : :threaded_each
       auto_session = !options[:no_session]
 
-      block = lambda do
+      block = lambda do |*|
         send(method, search_options) do |server_app|
 
           if block_given?
@@ -1151,7 +1151,7 @@ module Sunshine
       end
 
 
-      msg_block = lambda do
+      msg_block = lambda do |*|
         if message
           Sunshine.logger.info(:app, message, &block)
 
