@@ -162,8 +162,11 @@ class TestSunshine < Test::Unit::TestCase
   end
 
   def mock_yaml_load_file
-    YAML.mock :load_file, :args   => [Sunshine::USER_CONFIG_FILE],
-                          :return => Sunshine::DEFAULT_CONFIG
+    YAML.instance_eval do
+      undef load_file
+      def load_file file
+        Sunshine::DEFAULT_CONFIG
+      end
+    end
   end
-
 end
