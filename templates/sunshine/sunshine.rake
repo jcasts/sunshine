@@ -129,31 +129,4 @@ namespace :sunshine do
   task :info => :app do
     puts @app.deploy_details.to_yaml
   end
-
-
-  desc "Get the health state"
-  task :health => :app do
-    puts @app.health.to_yaml
-  end
-
-
-  namespace :health do
-
-    desc "Turn on health check"
-    task :enable => :app do
-      puts @app.health(:enable).to_yaml
-    end
-
-
-    desc "Turn off health check"
-    task :disable => :app do
-      puts @app.health(:disable).to_yaml
-    end
-
-
-    desc "Remove health check"
-    task :remove => :app do
-      puts @app.health(:remove).to_yaml
-    end
-  end
 end
