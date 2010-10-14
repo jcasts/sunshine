@@ -33,7 +33,6 @@ lib/sunshine/daemons/unicorn.rb
 lib/sunshine/dependencies.rb
 lib/sunshine/dependency_lib.rb
 lib/sunshine/exceptions.rb
-lib/sunshine/healthcheck.rb
 lib/sunshine/output.rb
 lib/sunshine/package_managers/apt.rb
 lib/sunshine/package_managers/dependency.rb
@@ -53,7 +52,6 @@ templates/nginx/nginx.conf.erb
 templates/nginx/nginx_optimize.conf
 templates/nginx/nginx_proxy.conf
 templates/rainbows/rainbows.conf.erb
-templates/sunshine/middleware/health.rb
 templates/sunshine/sunshine.rake
 templates/thin/thin.conf.erb
 templates/unicorn/unicorn.conf.erb
@@ -68,7 +66,6 @@ test/unit/test_binder.rb
 test/unit/test_crontab.rb
 test/unit/test_daemon.rb
 test/unit/test_git_repo.rb
-test/unit/test_healthcheck.rb
 test/unit/test_nginx.rb
 test/unit/test_rainbows.rb
 test/unit/test_remote_shell.rb

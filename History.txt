@@ -2,6 +2,8 @@
 
 * Bugfixes:
 
+  * Completely removed the Healthcheck implementation.
+
   * Removed superfluous App#upload_tasks method.
 
   * Lots of rdoc updates.
