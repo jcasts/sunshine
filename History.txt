@@ -1,3 +1,9 @@
+=== 1.2.2 / 2010-10-13
+
+* Bugfixes:
+
+  * Added support for ruby 1.9.2
+
 === 1.2.1 / 2010-10-05
 
 * Improvements:
