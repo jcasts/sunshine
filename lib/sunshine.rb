@@ -259,15 +259,7 @@ module Sunshine
   # config file and exits if not present.
 
   def self.load_user_config
-    unless File.file? USER_CONFIG_FILE
-      File.open(USER_CONFIG_FILE, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml}
-
-      msg = "Missing config file was created for you: #{USER_CONFIG_FILE}\n\n"
-      msg << DEFAULT_CONFIG.to_yaml
-
-      self.exit 1, msg
-    end
-
+    create_default_config!
     load_config_file USER_CONFIG_FILE
 
     @config['deploy_env'] =
@@ -280,6 +272,16 @@ module Sunshine
     @config
   end
 
+  def self.create_default_config!
+    unless File.file? USER_CONFIG_FILE
+      File.open(USER_CONFIG_FILE, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml}
+
+      msg = "Missing config file was created for you: #{USER_CONFIG_FILE}\n\n"
+      msg << DEFAULT_CONFIG.to_yaml
+
+      self.exit 1, msg
+    end
+  end
 
   ##
   # Loads an array of libraries or gems.
