@@ -147,9 +147,9 @@ a block to its deploy method:
   Sunshine::App.deploy(options) do |app|
 
     app_server = Sunshine::Rainbows.new(app)
-    app_server.restart
+    app_server.setup
 
-    Sunshine::Nginx.new(app, :point_to => app_server).restart
+    Sunshine::Nginx.new(app, :point_to => app_server).setup
 
   end
 
@@ -175,7 +175,7 @@ using configuration files.
 The App::new methods support passing a path to a yaml config file:
 
   app = Sunshine::App.new("path/to/config.yml")
-  app.deploy{|app| Sunshine::Rainbows.new(app).restart }
+  app.deploy{|app| Sunshine::Rainbows.new(app).setup }
 
 
 The yaml file can also be any IO stream who's output will parse to yaml.
@@ -186,7 +186,7 @@ information in one place:
     app = Sunshine::App.new
     app = Sunshine::App.new Sunshine::DATA
 
-    app.deploy{|app| Sunshine::Rainbows.new(app).restart }
+    app.deploy{|app| Sunshine::Rainbows.new(app).setup }
 
     __END__
 

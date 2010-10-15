@@ -417,7 +417,7 @@ fi
     # Adds the app to the deploy server's deployed-apps list
 
     def register_as_deployed
-      AddCommand.exec self.root_path, 'servers' => [@shell]
+      AddCommand.exec "#{self.name}:#{self.root_path}", 'servers' => [@shell]
     end
 
 
