@@ -45,7 +45,7 @@ class TestNginx < Test::Unit::TestCase
 
   def test_sudo_cmd
     ds = @passenger.app.server_apps.first.shell
-    ds.set_mock_response 0, "gem list passenger -d" => [:out, @gemout]
+    ds.set_mock_response 0, "gem list passenger -d" => [:out, ""]
 
     @passenger.start
     @passenger.stop

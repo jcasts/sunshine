@@ -26,19 +26,22 @@ Call sunshine to create the config file:
   Missing config file was created for you: /Users/jsmith/.sunshine
 
   --- 
-  web_directory: /var/www
-  max_deploy_versions: 5
   auto_dependencies: true
-  level: info
-  auto: false
-  remote_checkouts: false
   deploy_env: :development
-
+  exception_behavior: :revert
+  exclude_paths: []
+  interactive: true
+  level: info
+  max_deploy_versions: 5
+  remote_checkouts: false
+  timeout: 300
+  sigint_behavior: :revert
+  web_directory: /srv/http
 
 You can either use sunshine by requiring the gem in your script, such as
 in a rakefile (which is more common):
 
-  $ rake sunshine:deploy
+  $ rake sunshine:deploy env=qa
 
 Or you can also call built-in sunshine commands:
 
@@ -58,8 +61,8 @@ You have the deploy information and you need to do things involving that
 specific deploy. Rake tasks are great for that, and Sunshine comes with a
 template rake file that you can modify to fit your needs.
 
-You can copy the template rake file to lib/tasks/ by running:
-  $ sunshine --rakefile lib/tasks/.
+You can copy the template rake file to rake/ by running:
+  $ sunshine --rakefile rake/.
 
 If you open the file, you'll see a variety of tasks that handle deployment, to
 application start/stop/restart-ing, to health checks. Most likely, the two tasks
@@ -110,12 +113,7 @@ to the @app.deploy block. Here's a sample of completed :app and :deploy tasks:
 And that's it! Try running your Sunshine rake tasks!
 
   rake sunshine:app             # Instantiate Sunshine
-  rake sunshine:db_migrate      # Run db:migrate on remote :db servers
   rake sunshine:deploy          # Deploy the app
-  rake sunshine:health          # Get the health state
-  rake sunshine:health:disable  # Turn off health check
-  rake sunshine:health:enable   # Turn on health check
-  rake sunshine:health:remove   # Remove health check
   rake sunshine:info            # Get deployed app info
   rake sunshine:restart         # Run the remote restart script
   rake sunshine:start           # Run the remote start script
@@ -461,6 +459,21 @@ Note: You may notice that you can set a sudo config value on the Sunshine
 module. This is used for the default value of Sunshine::App#sudo and is passed
 along to an app's shells on instantiation.
 
+==== Servers
+
+Because of how unix works with servers and ports, it's not uncommon to have to
+run start/stop/restart server commands with upgraded permissions. This is true
+for Apache and Nginx on ports below 1024. Due to this, servers automatically try
+to adjust their permissions to run their commands correctly. Since servers
+should run their commands consistantly, the only way to affect their sudo value
+is on a server instance basis:
+
+  server = Nginx.new app, :sudo => nil  # let the shell handle sudo
+
+However, the above will most likely cause Nginx's start command to fail if
+shell permissions don't allow running root processes.
+
+Note: Servers will ONLY touch permissions if their port is smaller than 1024.
 
 ==== Dependencies
 
@@ -488,37 +501,26 @@ It can also be set on an individual basis:
   dep.install! :call => shell, :sudo => nil
 
 
-==== Servers
-
-Because of how unix works with servers and ports, it's not uncommon to have to
-run start/stop/restart server commands with upgraded permissions. This is true
-for Apache and Nginx on ports below 1024. Due to this, servers automatically try
-to adjust their permissions to run their commands correctly. Since servers
-should run their commands consistantly, the only way to affect their sudo value
-is on a server instance basis:
-
-  server = Nginx.new app, :sudo => nil  # let the shell handle sudo
-
-However, the above will most likely cause Nginx's start command to fail if
-shell permissions don't allow running root processes.
-
-Note: Servers will ONLY touch permissions if their port is smaller than 1024.
-
-
 == Sunshine Configuration
 
 Aside from passing the sunshine command options, Sunshine can be configured
 both in the deploy script by calling Sunshine.setup and globally in the
 ~/.sunshine file. The following is a list of supported config keys:
 
-'auto'                -> Automate calls; fail instead of prompting the user;
-defaults to false.
-
 'auto_dependencies'   -> Check and install missing deploy dependencies;
 defaults to true.
 
 'deploy_env'          -> The default deploy environment to use;
 defaults to :development.
+
+'exception_behavior'  -> The behavior called when an exception is raised during
+a deploy; defaults to :revert.
+
+'exclude_paths'       -> Paths to exclude in the checkout when deploying code
+with via rsync; defaults to empty Array.
+
+'interactive'         -> Automate calls; fail instead of prompting the user;
+defaults to false.
 
 'level'               -> Logger's debug level; defaults to 'info'.
 
@@ -530,10 +532,16 @@ defaults to false.
 
 'require'             -> Require external ruby libs or gems; defaults to nil.
 
+'timeout'             -> The amount of time in seconds for shells to wait with
+no incoming data before timing out; defaults to 300.
+
+'sigint_behavior'     -> The behavior called when a SIGINT is received during
+a deploy; defaults to :revert.
+
 'trace'               -> Show detailed output messages; defaults to false.
 
 'web_directory'       -> Path to where apps should be deployed to;
-defaults to '/var/www'.
+defaults to '/srv/http'.
 
 
 == Deployed Application Control
@@ -603,7 +611,7 @@ This is true for the following commands:
 
 (The MIT License)
 
-Copyright (c) 2010
+Copyright (c) 2010 At&t Interactive
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

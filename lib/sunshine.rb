@@ -42,11 +42,11 @@ module Sunshine
   ##
   # Default configuration.
   DEFAULT_CONFIG = {
-    'interactive'         => true,
     'auto_dependencies'   => true,
     'deploy_env'          => :development,
     'exception_behavior'  => :revert,
     'exclude_paths'       => [],
+    'interactive'         => true,
     'level'               => 'info',
     'max_deploy_versions' => 5,
     'remote_checkouts'    => false,

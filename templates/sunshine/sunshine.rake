@@ -92,12 +92,6 @@ namespace :sunshine do
 
   # Post-deploy control tasks:
 
-  desc "Run db:migrate on remote :db servers"
-  task :db_migrate => :app do
-    @app.rake 'db:migrate', :role => :db
-  end
-
-
   desc "Run the remote start script"
   task :start => :app do
     @app.start

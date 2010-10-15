@@ -14,7 +14,7 @@ module Sunshine
     START_FAILED_CODE   = 10
     STOP_FAILED_CODE    = 11
     RESTART_FAILED_CODE = 12
-    STATUS_DOWN_CODE  = 13
+    STATUS_DOWN_CODE    = 13
 
     ##
     # Returns an array of method names to assign to the binder
