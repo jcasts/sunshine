@@ -698,7 +698,7 @@ fi
       @shared_path   = "#{@root_path}/shared"
       @log_path      = "#{@shared_path}/log"
       @checkout_path = "#{@deploys_path}/#{@deploy_name}"
-      @scripts_path  = "#{@checkout_path}/sunshine_scripts"
+      @scripts_path  = "#{@current_path}/script"
     end
   end
 end
