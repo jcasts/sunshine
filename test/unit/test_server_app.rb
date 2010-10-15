@@ -270,7 +270,7 @@ class TestServerApp < Test::Unit::TestCase
 
     @sa.register_as_deployed
 
-    args = [@app.root_path, {'servers' => [@sa.shell]}]
+    args = ["#{@app.name}:#{@app.root_path}", {'servers' => [@sa.shell]}]
     assert Sunshine::AddCommand.method_called?(:exec, :args => args)
   end
 
