@@ -258,7 +258,7 @@ module Sunshine
     # Builds a hash with information about the deploy at hand.
 
     def get_deploy_info
-      { :deployed_at => Time.now.to_s,
+      { :deployed_at => @shell.call("date"),
         :deployed_as => @shell.call("whoami"),
         :deployed_by => Sunshine.shell.user,
         :deploy_name => File.basename(self.checkout_path),

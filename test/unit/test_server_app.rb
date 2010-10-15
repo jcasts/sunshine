@@ -174,24 +174,23 @@ class TestServerApp < Test::Unit::TestCase
 
 
   def test_get_deploy_info
+    @sa.shell.mock :call, :args => "whoami", :return => "user"
+    @sa.shell.mock :call, :args => "date", :return => "now"
+
     test_info = {
-      :deployed_at => Time.now.to_s,
-      :deployed_as => @sa.shell.call("whoami"),
+      :deployed_at => "now",
+      :deployed_as => "user",
       :deployed_by => Sunshine.shell.user,
       :deploy_name => File.basename(@app.checkout_path),
       :name        => @sa.name,
       :env         => @sa.shell_env,
       :roles       => @sa.roles,
       :path        => @app.root_path,
+      :ports       => Hash.new,
       :sunshine_version => Sunshine::VERSION
-    }.merge @sa.info
+    }
 
-    deploy_info = @sa.get_deploy_info
-
-    deploy_info.each do |key, val|
-      next if key == :deployed_at
-      assert_equal test_info[key], val
-    end
+    assert_equal test_info, @sa.get_deploy_info
   end
 
 
