@@ -65,7 +65,7 @@ You can copy the template rake file to rake/ by running:
   $ sunshine --rakefile rake/.
 
 If you open the file, you'll see a variety of tasks that handle deployment, to
-application start/stop/restart-ing, to health checks. Most likely, the two tasks
+application start/stop/restart-ing, to status checks. Most likely, the two tasks
 you'll need to update are the :app (for instantiation) and the :deploy tasks.
 
 First off, if you're using rails, you'll probably want to update "task :app" to
@@ -549,13 +549,12 @@ defaults to '/srv/http'.
 Sunshine has a variety of commands that allow simple control of
 remote or locally deployed applications. These include start, stop, restart
 actions to be taken application-wide, as well as querying for the
-health and state of the app:
+state of the app:
 
 Examples:
   sunshine run deploy_script.rb
   sunshine restart myapp -r user@server.com,user@host.com
-  sunshine list myapp myotherapp --health -r user@server.com
-  sunshine list myapp --status
+  sunshine list myapp myotherapp --status -r user@server.com
 
 The Sunshine commands are as follows:
   add       Register an app with sunshine
