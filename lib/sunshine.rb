@@ -423,8 +423,6 @@ module Sunshine
 
   require 'sunshine/crontab'
 
-  require 'sunshine/healthcheck'
-
   require 'commands/default'
   require 'commands/list'
   require 'commands/add'

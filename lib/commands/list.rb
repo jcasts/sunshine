@@ -11,8 +11,6 @@ module Sunshine
   # Options:
   #   -s, --status             Check if an app is running.
   #   -d, --details            Get details about the deployed apps.
-  #   -h, --health [STATUS]    Set or get the healthcheck status.
-  #                            (enable, disable, remove)
   #   -f, --format FORMAT      Set the output format (txt, yml, json)
   #   -u, --user USER          User to use for remote login. Use with -r
   #   -r, --remote svr1,svr2   Run on one or more remote servers.
@@ -153,20 +151,6 @@ module Sunshine
     def exist?(*app_names)
       each_app(*app_names) do |server_app|
         server_app.root_path
-      end
-    end
-
-
-    ##
-    # Get or set the healthcheck state.
-    # Returns a response hash (see ListCommand#each_app).
-
-    def health(*app_names)
-      action = app_names.delete_at(0) if Symbol === app_names.first
-
-      each_app(*app_names) do |server_app|
-        server_app.health.send action if action
-        server_app.health.status
       end
     end
 
@@ -313,14 +297,6 @@ Arguments:
           options['return'] = :details
         end
 
-
-        vals = [:enable, :disable, :remove]
-        desc = "Set or get the healthcheck status. (#{vals.join(", ")})"
-
-        opt.on('-h', '--health [STATUS]', vals, desc) do |status|
-          options['health'] = status.to_sym if status
-          options['return'] = :health
-        end
       end
     end
   end
