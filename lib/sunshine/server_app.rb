@@ -221,6 +221,7 @@ module Sunshine
 
     def deploy_details reload=false
       return @deploy_details if @deploy_details && !reload
+
       @deploy_details =
         YAML.load @shell.call("cat #{self.root_path}/info") rescue nil
 
@@ -268,29 +269,6 @@ module Sunshine
         :path        => self.root_path,
         :sunshine_version => Sunshine::VERSION
       }.merge @info
-    end
-
-
-    ##
-    # Decrypt a file using gpg. Allows options:
-    # :output:: str - the path the output file should go to
-    # :passphrase:: str - the passphrase gpg should use
-
-    def gpg_decrypt gpg_file, options={}
-      output_file     = options[:output] || gpg_file.gsub(/\.gpg$/, '')
-
-      passphrase      = options[:passphrase]
-      passphrase_file = "#{self.root_path}/tmp/gpg_passphrase"
-
-      gpg_cmd = "gpg --batch --no-tty --yes --output #{output_file} "+
-        "--passphrase-file #{passphrase_file} --decrypt #{gpg_file}"
-
-      @shell.call "mkdir -p #{File.dirname(passphrase_file)}"
-
-      @shell.make_file passphrase_file, passphrase
-
-      @shell.call "cd #{self.checkout_path} && #{gpg_cmd}"
-      @shell.call "rm -f #{passphrase_file}"
     end
 
 
