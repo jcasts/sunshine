@@ -500,7 +500,7 @@ fi
     def run_script! name, options=nil, &block
       options ||= {}
 
-      script_path = File.join self.root_path, name.to_s
+      script_path = File.join self.scripts_path, name.to_s
       @shell.call script_path, options, &block
     end
 
@@ -619,11 +619,9 @@ fi
     # app's root directory for easy access.
 
     def symlink_scripts_to_root
-      scripts = @shell.call("ls -1 #{self.scripts_path}").split("\n")
-
-      scripts.each do |name|
-        script_file = File.join self.scripts_path, name
-        pointer_file = File.join self.root_path, name
+      self.scripts.each do |name, val|
+        script_file  = File.join self.scripts_path, name.to_s
+        pointer_file = File.join self.root_path, name.to_s
 
         @shell.symlink script_file, pointer_file
       end

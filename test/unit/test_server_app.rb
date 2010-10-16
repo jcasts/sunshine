@@ -363,7 +363,7 @@ class TestServerApp < Test::Unit::TestCase
 
   def test_not_running?
     set_mock_response_for @sa, 13,
-      "#{@sa.root_path}/status" => [:err, "THE SYSTEM IS DOWN!"]
+      "#{@sa.scripts_path}/status" => [:err, "THE SYSTEM IS DOWN!"]
 
     assert_equal false, @sa.running?
   end
@@ -371,7 +371,7 @@ class TestServerApp < Test::Unit::TestCase
 
   def test_errored_running?
     set_mock_response_for @sa, 1,
-      "#{@sa.root_path}/status" => [:err, "KABLAM!"]
+      "#{@sa.scripts_path}/status" => [:err, "KABLAM!"]
 
     assert_raises Sunshine::CmdError do
       @sa.running?
@@ -465,16 +465,14 @@ class TestServerApp < Test::Unit::TestCase
 
 
   def test_symlink_scripts_to_root
-    @sa.shell.mock :call,
-      :args   => ["ls -1 #{@sa.scripts_path}"],
-      :return => "script_name\n"
-
-    args = ["#{@app.scripts_path}/script_name",
-            "#{@app.root_path}/script_name"]
-
     @sa.symlink_scripts_to_root
 
-    assert @sa.shell.method_called?(:symlink, :args => args)
+    @sa.scripts.each do |name, val|
+    args = ["#{@app.scripts_path}/#{name}",
+            "#{@app.root_path}/#{name}"]
+
+      assert @sa.shell.method_called?(:symlink, :args => args)
+    end
   end
 
 
