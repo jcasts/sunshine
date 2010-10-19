@@ -50,6 +50,7 @@ module Sunshine
     'level'               => 'info',
     'max_deploy_versions' => 5,
     'remote_checkouts'    => false,
+    'threads_enabled'     => true,
     'timeout'             => 300,
     'sigint_behavior'     => :revert,
     'web_directory'       => '/srv/http'
@@ -214,6 +215,15 @@ module Sunshine
 
   def self.trace?
     @config['trace']
+  end
+
+
+  ##
+  # Check if App objects should use threads when iterating over ServerApps.
+  # Defaults to true, overridden with the 'threads_enabled' config.
+
+  def self.use_threads?
+    @config['threads_enabled']
   end
 
 

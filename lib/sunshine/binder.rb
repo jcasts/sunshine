@@ -1,8 +1,7 @@
 module Sunshine
 
   ##
-  # Instantiated per deploy server and used to pass bindings to the config's
-  # ERB build method:
+  # Create a selective binding. Useful for controlling ERB builds:
   #   binder.set :server_name, "blah.com"
   #   binder.forward :server_method, ...
   #   binder.get_binding

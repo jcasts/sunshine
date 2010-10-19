@@ -974,9 +974,12 @@ module Sunshine
     ##
     # Iterate over all deploy servers but create a thread for each
     # deploy server. Means you can't return from the passed block!
+    # Calls App#each if Sunshine.use_threads? is false.
     # Supports all App#find options.
 
     def threaded_each options=nil, &block
+      return each options, &block unless Sunshine.use_threads?
+
       mutex   = Mutex.new
       threads = []
       error   = nil
