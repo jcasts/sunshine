@@ -578,7 +578,7 @@ module Sunshine
       copy_option = options[:copy]          if options
       exclude     = options.delete :exclude if options
 
-      if @remote_checkout && !copy_option
+      if RsyncRepo === @repo || (@remote_checkout && !copy_option)
         with_server_apps options,
           :msg  => "Checking out codebase (remotely)",
           :send => [:checkout_repo, @repo]
