@@ -14,7 +14,7 @@ module Sunshine
     def initialize app, options={}
       super
 
-      @bin = options[:bin] || 'apachectl'
+      @bin = options[:bin] || 'apache2ctl'
 
       @sigkill = 'WINCH'
 
