@@ -6,6 +6,10 @@
 
   * Removed superfluous App#upload_tasks method.
 
+  * Changed Apache#bin from apachectl to apache2ctl.
+
+  * Made RsyncRepo available for remote checkout only.
+
   * Lots of rdoc updates.
 
 === 1.2.2 / 2010-10-13
