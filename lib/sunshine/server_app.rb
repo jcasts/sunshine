@@ -179,7 +179,7 @@ module Sunshine
         write_script name, bash
       end
 
-      symlink_scripts_to_root
+      symlink_scripts_to_root @scripts.keys, "env"
     end
 
 
@@ -615,11 +615,11 @@ fi
 
 
     ##
-    # Creates a symlink of every script in the scripts_path dir in the
+    # Creates a symlink of every script_name from the scripts_path dir to the
     # app's root directory for easy access.
 
-    def symlink_scripts_to_root
-      self.scripts.each do |name, val|
+    def symlink_scripts_to_root *script_names
+      script_names.flatten.each do |name, val|
         script_file  = File.join self.scripts_path, name.to_s
         pointer_file = File.join self.root_path, name.to_s
 
