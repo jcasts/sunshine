@@ -162,7 +162,7 @@ module Sunshine
     ##
     # Update the time of the last command activity
 
-    def update_timeout
+    def update_activity
       @cmd_activity = Time.now
     end
 
@@ -431,7 +431,7 @@ module Sunshine
 
     def process_streams pid, *streams
       result = Hash.new{|h,k| h[k] = []}
-      start_time = Time.now
+      update_activity
 
       # Handle process termination ourselves
       status = nil
@@ -443,13 +443,14 @@ module Sunshine
         # don't busy loop
         selected, = select streams, nil, nil, 0.1
 
-        raise TimeoutError if timed_out? start_time
+        puts "#{@host} IDLE..." if idle?
+        raise TimeoutError if timed_out?
 
         next if selected.nil? or selected.empty?
 
         selected.each do |stream|
 
-          start_time = Time.now
+          update_activity
 
           if stream.eof? then
             streams.delete stream if status # we've quit, so no more writing
