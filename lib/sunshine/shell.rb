@@ -25,7 +25,7 @@ module Sunshine
     self.sudo_failed_matcher = /^Sorry, try again./
     self.sudo_prompt_matcher = /^Password:/
 
-    attr_reader :user, :host, :password, :input, :output, :mutex
+    attr_reader :user, :host, :password, :input, :output, :mutex, :pid
     attr_accessor :env, :sudo, :timeout
 
     def initialize output = $stdout, options={}
@@ -42,8 +42,9 @@ module Sunshine
       @password = options[:password]
 
       @timeout = options[:timeout] || Sunshine.timeout
+      @idle_time = options[:idle_after] || 1
 
-      @mutex = nil
+      @mutex = @pid = nil
     end
 
 
@@ -146,6 +147,31 @@ module Sunshine
 
     def file? filepath
       File.file? filepath
+    end
+
+
+    ##
+    # Checks if timeout occurred.
+
+    def timed_out? start_time=@cmd_activity, max_time=@timeout
+      return unless max_time
+      Time.now.to_f - start_time.to_f > max_time
+    end
+
+
+    ##
+    # Update the time of the last command activity
+
+    def update_timeout
+      @cmd_activity = Time.now
+    end
+
+
+    ##
+    # Checks if shell is still receiving data.
+
+    def idle? start_time=@cmd_activity, max_time=@idle_time
+      timed_out? start_time, max_time
     end
 
 
@@ -336,29 +362,28 @@ module Sunshine
 
     def execute cmd
       cmd = [cmd] unless Array === cmd
-      pid, inn, out, err = popen4(*cmd)
+      @pid, inn, out, err = popen4(*cmd)
 
       inn.sync = true
       log_methods = {out => :debug, err => :error}
 
-      result, status = process_streams(pid, out, err) do |stream, data|
+      result, status = process_streams(@pid, out, err) do |stream, data|
         stream_name = :out if stream == out
         stream_name = :err if stream == err
         stream_name = :inn if stream == inn
 
+        Sunshine.logger.send log_methods[stream],
+          "#{@host}:#{stream_name}", data
 
         # User blocks should run with sync threads to avoid badness.
         sync do
-          Sunshine.logger.send log_methods[stream],
-            "#{@host}:#{stream_name}", data
-
           yield(stream_name, data, inn) if block_given?
         end
 
 
         if password_required?(stream_name, data) then
 
-          kill_process(pid) unless Sunshine.interactive?
+          kill_process(@pid) unless Sunshine.interactive?
 
           send_password_to_stream(inn, data)
         end
@@ -372,6 +397,7 @@ module Sunshine
       inn.close rescue nil
       out.close rescue nil
       err.close rescue nil
+      @pid = nil
     end
 
 

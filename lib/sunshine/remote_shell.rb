@@ -37,7 +37,7 @@ module Sunshine
     end
 
 
-    attr_reader :host, :user, :pid
+    attr_reader :host, :user, :parent_pid
     attr_accessor :ssh_flags, :rsync_flags
 
 
@@ -69,7 +69,7 @@ module Sunshine
       @ssh_flags.concat ["-l", @user] if @user
       @ssh_flags.concat [*options[:ssh_flags]] if options[:ssh_flags]
 
-      @pid, @inn, @out, @err = nil
+      @parent_pid = nil
 
       self.class.register self
     end
@@ -94,15 +94,15 @@ module Sunshine
 
       cmd = ssh_cmd quote_cmd(LOGIN_LOOP), :sudo => false
 
-      @pid, @inn, @out, @err = popen4 cmd.join(" ")
-      @inn.sync = true
+      @parent_pid, inn, out, err = popen4 cmd.join(" ")
+      inn.sync = true
 
       data  = ""
       ready = nil
       start_time = Time.now.to_i
 
-      until ready || @out.eof?
-        data << @out.readpartial(1024)
+      until ready || out.eof?
+        data << out.readpartial(1024)
         ready = data =~ /ready/
 
         raise TimeoutError if timed_out?(start_time, LOGIN_TIMEOUT)
@@ -114,8 +114,11 @@ module Sunshine
         raise ConnectionError, "Can't connect to #{host_info}"
       end
 
-      @inn.close
-      @pid
+      inn.close rescue nil
+      out.close rescue nil
+      err.close rescue nil
+
+      @parent_pid
     end
 
 
@@ -123,7 +126,7 @@ module Sunshine
     # Check if SSH session is open and returns process pid
 
     def connected?
-      Process.kill(0, @pid) && @pid rescue false
+      Process.kill(0, @parent_pid) && @parent_pid rescue false
     end
 
 
@@ -131,13 +134,8 @@ module Sunshine
     # Disconnect from host
 
     def disconnect
-      @inn.close rescue nil
-      @out.close rescue nil
-      @err.close rescue nil
-
-      kill_process @pid, "HUP" rescue nil
-
-      @pid = nil
+      kill_process @parent_pid, "HUP" rescue nil
+      @parent_pid = nil
     end
 
 
