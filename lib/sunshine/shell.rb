@@ -300,15 +300,6 @@ module Sunshine
 
 
     ##
-    # Checks if timeout occurred.
-
-    def timed_out? start_time, max_time=@timeout
-      return unless max_time
-      Time.now.to_i - start_time.to_i > max_time
-    end
-
-
-    ##
     # Execute a block while setting the shell's mutex.
     # Sets the mutex to its original value on exit.
     # Executing commands with a mutex is used for user prompts.
