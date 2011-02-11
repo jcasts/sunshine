@@ -4,7 +4,6 @@ require 'rainbow'
 require 'highline'
 require 'json'
 
-require 'yaml'
 require 'erb'
 require 'logger'
 require 'optparse'
@@ -12,6 +11,7 @@ require 'time'
 require 'fileutils'
 require 'tmpdir'
 require 'irb'
+require 'yaml'
 
 
 # Turn off EOF tracking to be able to prompt on deploy exceptions.
