@@ -37,6 +37,10 @@ Hoe.plugin :isolate
 
 Hoe.spec 'sunshine' do |p|
   developer('Jeremie Castagna', 'jcastagna@attinteractive.com')
+  self.readme_file      = "README.rdoc"
+  self.history_file     = "History.rdoc"
+  self.extra_rdoc_files = FileList['*.rdoc']
+
   self.extra_deps << ['open4',    '~> 1.0.1']
   self.extra_deps << ['rainbow',  '~> 1.0.4']
   self.extra_deps << ['highline', '~> 1.5.1']
