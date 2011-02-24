@@ -1,3 +1,9 @@
+=== 1.2.4 / 2011-02-23
+
+* Bugfixes:
+
+  * Removed "IDLE" from the output.
+
 === 1.2.3 / 2011-02-11
 
 * Bugfixes:
