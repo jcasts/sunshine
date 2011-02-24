@@ -434,7 +434,6 @@ module Sunshine
         # don't busy loop
         selected, = select streams, nil, nil, 0.1
 
-        puts "#{@host} IDLE..." if idle?
         raise TimeoutError if timed_out?
 
         next if selected.nil? or selected.empty?
