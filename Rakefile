@@ -36,7 +36,7 @@ end
 Hoe.plugin :isolate
 
 Hoe.spec 'sunshine' do |p|
-  developer('Jeremie Castagna', 'jcastagna@attinteractive.com')
+  developer('Jeremie Castagna', 'yaksnrainbows@gmail.com')
   self.readme_file      = "README.rdoc"
   self.history_file     = "History.rdoc"
   self.extra_rdoc_files = FileList['*.rdoc']

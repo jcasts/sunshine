@@ -1,16 +1,14 @@
 = Sunshine
 
-http://github.com/yaksnrainbows/sunshine
-
-http://betalabs.yellowpages.com/
+http://yaks.me/sunshine
 
 
 == Description
 
 Sunshine is a framework for rack and rails application deployment.
 
-This gem was made possible by the sponsoring of AT&T Interactive
-(http://attinteractive.com).
+This gem was made possible by the sponsoring of YP.com
+(http://yp.com).
 
 
 == Setup and Usage
